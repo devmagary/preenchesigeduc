@@ -23,9 +23,10 @@ As sugestões são organizadas sob a ótica de engenharia sênior, equilibrando 
 
 ## P1 — Alta Prioridade
 
-### 1. Registro de "Não Realização" de Atividades após Lançamento de Notas
+### 1. Registro de "Não Realização" de Atividades após Lançamento de Notas — `[Concluído]`
 - **Prioridade:** P1 — Alta
 - **Dificuldade:** Média
+- **Status:** Concluído (parser `0`/`0,0` vs vazio/`NF`/`Não Fez`/`FV`/`NR`/`N/R`, fila em `sessionStorage`, auto-aceite em `#formulario:confirmationDialog` nos modos Assistido e Auto-gravação, detecção/scraping/marcação automática em `form_estudantes_realizacoes_avaliacoes_unidade.jsf`).
 - **Contexto:** Ao salvar notas com campos vazios, o SIGEduc exibe o modal *"Verificar e registrar atividades não realizadas após o lançamento de notas"* (`Não` / `Sim`). Ao confirmar, abre uma matriz Estudante × Avaliação com checkboxes de não realização.
 - **Comportamento esperado:**
   - Diferenciar explicitamente na planilha/parser (`src/core/grades.ts`):
@@ -34,25 +35,28 @@ As sugestões são organizadas sob a ótica de engenharia sênior, equilibrando 
   - Detectar o modal pós-lançamento, acionar `Sim` automaticamente (ou sob confirmação do usuário) quando houver pendências de não realização, e marcar os checkboxes correspondentes na tabela do SIGEduc.
 - **Impacto técnico / Riscos:** Requer extensão do parser de notas, novo fluxo no `filler-notas.ts` (aguardando DOM/AJAX do modal e da tabela de checkboxes) e cobertura no `mock-server.mjs` + testes E2E.
 
-### 2. Manter Aba de Mapeamento de Colunas Aberta Durante Seleção/Inserção em Notas
+### 2. Manter Aba de Mapeamento de Colunas Aberta Durante Seleção/Inserção em Notas — `[Concluído]`
 - **Prioridade:** P1 — Alta
 - **Dificuldade:** Baixa
+- **Status:** Concluído (estado persistente em memória para `<details>` de importação e mapeamento durante re-renderizações em Notas e Frequência).
 - **Contexto:** Após importar a planilha e identificar as colunas, ao selecionar outra coluna e clicar para inserir/aplicar no preenchimento de notas, a aba/seção de mapeamento se recolhe sozinha, obrigando o usuário a reabri-la repetidamente.
 - **Comportamento esperado:** Preservar o estado aberto da seção de mapeamento durante re-renderizações ou trocas de coluna, recolhendo apenas por ação explícita do usuário.
 - **Impacto técnico / Riscos:** Ajuste localizado no controle de estado da UI em `src/ui/panel.ts`. Baixo risco de regressão.
 
 ## P2 — Média Prioridade
 
-### 1. Opção de Aumento do Tamanho do Texto (Acessibilidade)
+### 1. Opção de Aumento do Tamanho do Texto (Acessibilidade) — `[Concluído]`
 - **Prioridade:** P2 — Média
 - **Dificuldade:** Baixa
+- **Status:** Concluído (botão de ciclo `100%` / `112%` / `125%` no cabeçalho do painel usando `--ps-scale` no Shadow DOM, persistido em `localStorage`).
 - **Contexto:** Docentes utilizando telas pequenas, mobile (`<=640px`) ou com necessidade de maior legibilidade se beneficiam de controle de escala tipográfica no painel.
 - **Comportamento esperado:** Controle no painel (ex.: `A-` / `A+` ou seletor Normal / Grande / Extra Grande) aplicando escala via variáveis CSS dentro do Shadow DOM (`src/ui/styles.ts` e `src/ui/panel.ts`), com preferência salva localmente.
 - **Impacto técnico / Riscos:** Isolado no Shadow DOM; atenção apenas para não quebrar layout responsivo em `<=640px`.
 
-### 2. Visual Noturno (Dark Mode)
+### 2. Visual Noturno (Dark Mode) — `[Concluído]`
 - **Prioridade:** P2 — Média
 - **Dificuldade:** Baixa
+- **Status:** Concluído (botão de alternância Claro/Escuro no cabeçalho do painel com variáveis CSS no Shadow DOM, contraste WCAG AA e persistência em `localStorage` com fallback `prefers-color-scheme`).
 - **Contexto:** Uso prolongado do painel à noite gera fadiga visual com tema claro.
 - **Comportamento esperado:** Alternância entre tema claro e escuro via tokens CSS no Shadow DOM (`src/ui/styles.ts`), respeitando `prefers-color-scheme` como padrão opcional e salvando a escolha do usuário localmente.
 - **Impacto técnico / Riscos:** Isolado no Shadow DOM (`#preenche-sigeduc-host`), sem interferir no CSS da página do SIGEduc.

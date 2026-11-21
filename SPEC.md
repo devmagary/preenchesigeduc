@@ -46,25 +46,29 @@ Núcleo funcional:
 1. **Detector de contexto de tela do SIGEduc:** Identifica automaticamente em qual tela o professor está:
    - Portal Docente (`docente.jsf` — tabela `turmasProfessorTable` com `idTurmaComponente`, ano, escola, oferta, série/módulo, periodicidade, componente e qtd. de estudantes).
    - Lançar Resultados (`form_estudantes_notas_avaliacoes_unidade.jsf` — abas de `1ª`, `2ª`, `3ª Unidade` [Anual] ou `1ª`, `2ª Unidade` [Semestral] + `Res. Final`, colunas de atividades `av__<idAvaliacao>`, valor máximo da coluna, `nuREC__<unidade>`, `nu__<unidade>` e status habilitado/desabilitado).
+   - Verificar Avaliações não realizadas (`form_estudantes_realizacoes_avaliacoes_unidade.jsf` — matriz Estudante × Avaliação com checkboxes `av__<idAvaliacao>` para registrar não realização).
    - Informar Frequência (`frequencia_aluno/form.jsf` — calendário anual `formCalendarios` com dias clicáveis `A4J.AJAX.Submit`, tabela `formFrequencia` com `#`, `Matrícula`, `Nome`, `Observação` e checkboxes de horários onde marcado = FALTA).
    - Gerenciar Avaliações das Unidades (`grupo_avaliacao_unidade/lista.jsf` e `form.jsf` — unidades e suas atividades com Descrição, Data, Tipo, Categoria, Ordem e Valor).
 2. **Módulo de Scraping Contextual e Exportação:**
    - Extrai os dados estruturados da tela aberta atual:
      - Em *Portal Docente*: lista de turmas (`idTurmaComponente`, turma, ano, escola, oferta, série/módulo, periodicidade, componente, qtd. estudantes).
-     - Em *Lançar Resultados*: turma, unidade selecionada, lista de estudantes, atividades cadastradas (nome + valor máximo) e notas atuais.
+     - Em *Lançar Resultados* e *Verificar Avaliações não realizadas*: turma, unidade selecionada, lista de estudantes, atividades cadastradas (nome + valor máximo) e notas/marcações atuais.
      - Em *Informar Frequência*: turma, horários, lista de estudantes com `Matrícula` e `Nome`, e lista de datas letivas clicáveis no calendário.
      - Em *Gerenciar Avaliações*: turma, unidades e tabela detalhada de atividades.
    - Exporta os dados extraídos em `.xlsx` (já formatado como **planilha-modelo pronta para preencher** notas ou frequências), `.csv` e `.json`.
 3. **Módulo de Importação de Planilhas:**
    - Aceita upload de `.xlsx`, `.xls` e `.csv`, além de área de colagem direta (`Ctrl+V` de células copiadas do Excel/Google Sheets/LibreOffice, separadas por TAB/ponto-e-vírgula/vírgula).
    - Detecta automaticamente cabeçalhos e permite ao usuário mapear a coluna de `Nome` (e `Matrícula`, se houver) e as colunas de `Atividades` (para notas) ou `Datas` (`DD/MM/AAAA`, para frequência), com pré-visualização antes de aplicar.
-4. **Módulo de Preenchimento de Notas:**
+4. **Módulo de Preenchimento de Notas e Não Realização:**
    - Realiza correspondência **estritamente exata após normalização** (uppercase, remoção de diacríticos/acentos NFD, remoção de espaços duplicados/pontas). Qualquer nome sem correspondência exata é ignorado e listado no relatório de divergências.
+   - Diferencia explicitamente na planilha: `0` / `0,0` / `0.0` → nota zero real (`0.0` preenchida no campo); já célula vazia, `NF`, `Não Fez`, `FV`, `NR`, `N/R` ou `-` → **Não Realizada** (deixa ou limpa o campo de nota para que fique vazio e registra pendência).
    - Valida formato numérico (aceita vírgula ou ponto decimal, normalizando para o formato esperado pelo SIGEduc, ex.: `3.5`) e valida contra o valor máximo da atividade exibido no cabeçalho da coluna (`Valor: X.X`); notas acima do máximo ou inválidas são bloqueadas e reportadas.
    - Ignora campos `disabled` (unidades fechadas pelo calendário escolar), informando claramente no relatório.
    - Se o aluno possuir nota em `Rec. da Unidade` preenchida e o usuário tentar alterar atividade regular, alerta sobre a regra do SIGEduc (é necessário limpar a recuperação primeiro).
-   - Dispara preenchimento em **fila sequencial** (`focus` → define valor → `input`/`change` → `blur` → aguarda conclusão da requisição RichFaces `A4J.AJAX.Submit` ou atualização de `nu__<unidade>` antes do próximo campo), exibindo barra de progresso e botão **Cancelar/Pausar**.
-   - **Modo Assistido (padrão):** preenche os campos e exibe relatório final (preenchidos, ignorados/desabilitados, não encontrados na página, não presentes na planilha), deixando o professor revisar, digitar a senha no modal `confirmacaoSenhaDialog` e clicar em Gravar.
+   - Dispara preenchimento em **fila sequencial** (`define valor` → `input`/`change` → `blur` → aguarda conclusão da requisição RichFaces `A4J.AJAX.Submit` ou atualização de `nu__<unidade>` antes do próximo campo), exibindo barra de progresso e botão **Cancelar/Pausar**.
+   - **Registro de Não Realização (`form_estudantes_realizacoes_avaliacoes_unidade.jsf`):** ao concluir o preenchimento com itens de Não Realização, salva a fila pendente (aluno + atividade, sem senha) em `sessionStorage` (`preenche_sigeduc_pending_nr`) e arma um observador no `#formulario:confirmationDialog`. Quando esse modal aparecer (tanto no Modo Assistido após o professor digitar a senha e gravar quanto no Modo Auto-gravação), aciona automaticamente o botão **Sim** e, ao carregar a tela de checkboxes, marca automaticamente todas as pendências de Não Realização (além de suportar importação direta de planilha nessa tela).
+   - **Persistência da seção de Mapeamento:** a seção de mapeamento de colunas na aba `Notas` (e `Frequência`) permanece aberta durante re-renderizações e trocas de coluna, fechando apenas por clique explícito do usuário.
+   - **Modo Assistido (padrão):** preenche os campos e exibe relatório final (preenchidos, não realizadas, ignorados/desabilitados, não encontrados na página, não presentes na planilha), deixando o professor revisar, digitar a senha no modal `confirmacaoSenhaDialog` e clicar em Gravar.
    - **Modo Auto-gravação na sessão (opcional, desligado por padrão):** mediante opt-in explícito e senha informada em campo temporário em memória na sessão atual, abre o modal de confirmação, preenche `formulario:senha` e submete `formulario:confirmarGravacaoNotas` somente após confirmação explícita do resumo prévio.
 5. **Módulo de Preenchimento de Frequência:**
    - Interpreta valores de presença/falta na planilha de forma configurável e intuitiva:
@@ -81,8 +85,11 @@ Comportamento e regras:
 - Respeito ao DOM do SIGEduc: suportar tanto turmas Anuais (3 unidades) quanto Semestrais (2 unidades), e tanto dias com `1° horário` quanto dias com múltiplos horários (`1° horário`, `2° horário`, etc.).
 
 Qualidade e acabamento:
-- Botão flutuante discreto e arrastável/ancorável no canto da tela do SIGEduc (com badge indicando a tela detectada: Notas, Frequência, Turmas, Avaliações).
-- Gaveta lateral (desktop) / bottom-sheet ou tela cheia deslizante (mobile `<= 640px`), tipografia legível, alto contraste, feedback visual de status por cor e ícone (sucesso, aviso, erro, bloqueado).
+- Botão flutuante discreto e arrastável/ancorável no canto da tela do SIGEduc (com badge indicando a tela detectada: Notas, Não Realiz., Frequência, Turmas, Avaliações).
+- Gaveta lateral (desktop) / tela cheia deslizante (mobile `<= 640px`), tipografia legível, alto contraste, feedback visual de status por cor e ícone (sucesso, aviso, erro, bloqueado).
+- Controles de acessibilidade e conforto visual diretamente no cabeçalho do painel (`min-width: 44px; min-height: 44px`):
+  - **Tamanho do texto (P2.1):** alternância entre `100%` (Normal), `112%` (Grande) e `125%` (Extra Grande) via CSS variables isoladas no Shadow DOM, persistida em `localStorage` (`preenche_sigeduc_font_scale`).
+  - **Visual Noturno / Dark Mode (P2.2):** alternância entre tema claro e escuro via tokens CSS no Shadow DOM (respeitando `prefers-color-scheme` como fallback inicial e garantindo contraste WCAG AA `>= 4.5:1`), persistida em `localStorage` (`preenche_sigeduc_theme`).
 - Popup da extensão (`action.default_popup`) minimalista com status da aba ativa, botão "Abrir/Fechar Painel no SIGEduc" e link rápido para o portal.
 
 Robustez e casos de borda:

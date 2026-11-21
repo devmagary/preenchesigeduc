@@ -1,37 +1,37 @@
 {
-  "startedAt": "2026-11-21T21:04:41.726Z",
-  "finishedAt": "2026-11-21T21:05:10.219Z",
+  "startedAt": "2026-11-21T22:26:36.669Z",
+  "finishedAt": "2026-11-21T22:27:06.323Z",
   "overallStatus": "PASSED",
   "steps": [
     {
       "name": "typecheck",
       "status": "passed",
-      "elapsedMs": 2627.1
+      "elapsedMs": 2884.8
     },
     {
       "name": "build",
       "status": "passed",
-      "elapsedMs": 2256.6
+      "elapsedMs": 2452.1
     },
     {
       "name": "package",
       "status": "passed",
-      "elapsedMs": 1220.6
+      "elapsedMs": 1313.3
     },
     {
       "name": "unit_tests",
       "status": "passed",
-      "elapsedMs": 2809.6
+      "elapsedMs": 3015.5
     },
     {
       "name": "benchmark",
       "status": "passed",
-      "elapsedMs": 8830.4
+      "elapsedMs": 8511.7
     },
     {
       "name": "e2e_tests",
       "status": "passed",
-      "elapsedMs": 10728.6
+      "elapsedMs": 11456.3
     }
   ],
   "slaChecks": {
@@ -41,5 +41,5 @@
     "matching_exact_45_and_0_fp": true,
     "bundles_lt_1536KB": true
   },
-  "evidenceCount": 16
+  "evidenceCount": 18
 }

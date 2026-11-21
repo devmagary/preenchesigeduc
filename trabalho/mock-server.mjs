@@ -82,6 +82,12 @@ export function startMockServer({ ajaxDelayMs = 25 } = {}) {
       return;
     }
 
+    if (pathname.includes('form_estudantes_realizacoes_avaliacoes')) {
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+      res.end(fs.readFileSync(path.join(fixturesDir, 'avaliacoes_nao_realizadas.html'), 'utf8'));
+      return;
+    }
+
     if (pathname.includes('lancar_notas')) {
       const tipo = urlObj.searchParams.get('tipo');
       const file = tipo === 'semestral' ? 'lancar_notas_semestral.html' : 'lancar_notas_anual.html';

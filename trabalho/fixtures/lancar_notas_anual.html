@@ -13,6 +13,8 @@
     .ui-tabs-nav li.ui-tabs-selected { background: #fff; font-weight: bold; }
     .ui-tabs-hide { display: none; }
     #confirmacaoSenhaDialogWrap { display: none; border: 2px solid #404E82; background: #fff; padding: 14px; margin-top: 12px; }
+    .ui-dialog { position: relative; border: 2px solid #404E82; background: #fff; padding: 14px; margin-top: 12px; }
+    .ui-dialog-buttonpane { display: flex; gap: 8px; margin-top: 10px; }
   </style>
 </head>
 <body>
@@ -4763,12 +4765,42 @@
       <div id="formulario:confirmacaoSenhaDialog">
         <label for="formulario:senha">Senha:</label>
         <input id="formulario:senha" type="password" name="formulario:senha" value="" />
-        <input id="formulario:confirmarGravacaoNotas" type="submit" value="Confirmar" onclick="window.__notasSaved = true; return false;" />
+        <input id="formulario:confirmarGravacaoNotas" type="submit" value="Confirmar" onclick="return window.__handleConfirmNotas();" />
+      </div>
+    </div>
+    <div id="confirmationDialogWrap" class="ui-dialog ui-widget ui-widget-content ui-corner-all" style="display: none;">
+      <div id="formulario:confirmationDialog" class="ui-dialog-content ui-widget-content">
+        <p><strong>Confirmar</strong></p>
+        <p>Verificar e registrar atividades não realizadas após o lançamento de notas</p>
+        <div class="ui-dialog-buttonpane">
+          <button type="button" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only ui-button-danger" onclick="document.getElementById('confirmationDialogWrap').style.display='none';">
+            <span class="ui-button-text">Não</span>
+          </button>
+          <button type="button" class="acao-confirmacao-senha ui-button-success ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only" onclick="window.__nrDialogAccepted = true; window.location.href='/sigeduc/diario_classe/lancar_notas/form_estudantes_realizacoes_avaliacoes_unidade.jsf';">
+            <span class="ui-button-text">Sim</span>
+          </button>
+        </div>
       </div>
     </div>
   </form>
 
   <script>
+    window.__handleConfirmNotas = function() {
+      window.__notasSaved = true;
+      var activePanel = document.querySelector('#formulario\\:tabViewId .ui-tabs-panel:not(.ui-tabs-hide)');
+      var emptyCount = 0;
+      if (activePanel) {
+        activePanel.querySelectorAll('input.avaliacao:not([disabled])').forEach(function(inp) {
+          if (String(inp.value || '').trim() === '') emptyCount++;
+        });
+      }
+      if (emptyCount > 0) {
+        var wrap = document.getElementById('confirmationDialogWrap');
+        if (wrap) wrap.style.display = 'block';
+      }
+      return false;
+    };
+
     window.A4J = {
       AJAX: {
         Submit: function(formId, ev, opts) {

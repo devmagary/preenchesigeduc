@@ -3,6 +3,7 @@ export type SigeducScreenType =
   | 'menu_principal'
   | 'portal_docente'
   | 'lancar_notas'
+  | 'avaliacoes_nao_realizadas'
   | 'lancar_frequencia'
   | 'gerenciar_avaliacoes'
   | 'conteudo_ministrado'
@@ -29,6 +30,24 @@ export function detectSigeducScreen(doc: Document, urlStr: string): ScreenDetect
       label: 'Tela de Login (sessão não iniciada)',
       badge: 'Login',
       sessionExpired: true,
+      url,
+    };
+  }
+
+  // Avaliações Não Realizadas (deve vir antes de lancar_notas pois também usa form#formulario e tabViewId)
+  const naoRealizadasForm = doc.querySelector(
+    'form#formulario[action*="form_estudantes_realizacoes_avaliacoes"]'
+  );
+  if (
+    naoRealizadasForm ||
+    Boolean(doc.getElementById('formulario:btnAbrirConfirmacaoSenhaFv')) ||
+    Boolean(doc.getElementById('formulario:confirmarGravacaoFvTurmaRegular'))
+  ) {
+    return {
+      screen: 'avaliacoes_nao_realizadas',
+      label: 'Verificar Avaliações Não Realizadas',
+      badge: 'Não Realiz.',
+      sessionExpired: false,
       url,
     };
   }

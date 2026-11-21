@@ -256,6 +256,8 @@ function buildNotasHtml({ semestral = false } = {}) {
     .ui-tabs-nav li.ui-tabs-selected { background: #fff; font-weight: bold; }
     .ui-tabs-hide { display: none; }
     #confirmacaoSenhaDialogWrap { display: none; border: 2px solid #404E82; background: #fff; padding: 14px; margin-top: 12px; }
+    .ui-dialog { position: relative; border: 2px solid #404E82; background: #fff; padding: 14px; margin-top: 12px; }
+    .ui-dialog-buttonpane { display: flex; gap: 8px; margin-top: 10px; }
   </style>
 </head>
 <body>
@@ -284,12 +286,42 @@ function buildNotasHtml({ semestral = false } = {}) {
       <div id="formulario:confirmacaoSenhaDialog">
         <label for="formulario:senha">Senha:</label>
         <input id="formulario:senha" type="password" name="formulario:senha" value="" />
-        <input id="formulario:confirmarGravacaoNotas" type="submit" value="Confirmar" onclick="window.__notasSaved = true; return false;" />
+        <input id="formulario:confirmarGravacaoNotas" type="submit" value="Confirmar" onclick="return window.__handleConfirmNotas();" />
+      </div>
+    </div>
+    <div id="confirmationDialogWrap" class="ui-dialog ui-widget ui-widget-content ui-corner-all" style="display: none;">
+      <div id="formulario:confirmationDialog" class="ui-dialog-content ui-widget-content">
+        <p><strong>Confirmar</strong></p>
+        <p>Verificar e registrar atividades não realizadas após o lançamento de notas</p>
+        <div class="ui-dialog-buttonpane">
+          <button type="button" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only ui-button-danger" onclick="document.getElementById('confirmationDialogWrap').style.display='none';">
+            <span class="ui-button-text">Não</span>
+          </button>
+          <button type="button" class="acao-confirmacao-senha ui-button-success ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only" onclick="window.__nrDialogAccepted = true; window.location.href='/sigeduc/diario_classe/lancar_notas/form_estudantes_realizacoes_avaliacoes_unidade.jsf';">
+            <span class="ui-button-text">Sim</span>
+          </button>
+        </div>
       </div>
     </div>
   </form>
 
   <script>
+    window.__handleConfirmNotas = function() {
+      window.__notasSaved = true;
+      var activePanel = document.querySelector('#formulario\\\\:tabViewId .ui-tabs-panel:not(.ui-tabs-hide)');
+      var emptyCount = 0;
+      if (activePanel) {
+        activePanel.querySelectorAll('input.avaliacao:not([disabled])').forEach(function(inp) {
+          if (String(inp.value || '').trim() === '') emptyCount++;
+        });
+      }
+      if (emptyCount > 0) {
+        var wrap = document.getElementById('confirmationDialogWrap');
+        if (wrap) wrap.style.display = 'block';
+      }
+      return false;
+    };
+
     window.A4J = {
       AJAX: {
         Submit: function(formId, ev, opts) {
@@ -530,9 +562,99 @@ const avaliacoesHtml = `<!DOCTYPE html>
 </body>
 </html>`;
 
+function buildNaoRealizadasHtml() {
+  const atividadesU3 = [
+    { id: '8001', nome: 'Participação', valor: 2.0 },
+    { id: '8002', nome: 'Atividade Prática', valor: 3.0 },
+    { id: '8003', nome: 'Seminário', valor: 2.0 },
+    { id: '8004', nome: 'Avaliação Escrita', valor: 3.0 },
+  ];
+
+  const rowsHtml = FICTIONAL_STUDENTS.map((st, idx) => {
+    const pcdIcon = st.pcd ? ' <span aria-hidden="true">\uF193</span>' : '';
+    const cbCells = atividadesU3
+      .map(
+        (av) => `
+          <td>
+            <input id="formulario:resultj_id_2:${idx}:av__${av.id}"
+                   name="formulario:resultj_id_2:${idx}:av__${av.id}"
+                   type="checkbox" class="avaliacao" />
+          </td>`
+      )
+      .join('');
+    return `
+      <tr>
+        <td>${st.nome}${pcdIcon}</td>
+        ${cbCells}
+      </tr>
+    `;
+  }).join('');
+
+  return `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>SIGEduc - Verificar Avaliações Não Realizadas (Fixture)</title>
+  <style>
+    body { font-family: Verdana, sans-serif; font-size: 12px; margin: 16px; background: #f8fafc; }
+    table { border-collapse: collapse; width: 100%; background: #fff; margin-bottom: 12px; }
+    th, td { border: 1px solid #cbd5e1; padding: 5px 6px; text-align: left; }
+    th { background: #e2e8f0; }
+    .ui-tabs-nav { list-style: none; display: flex; gap: 6px; padding: 0; margin: 12px 0 0; }
+    .ui-tabs-nav li { border: 1px solid #94a3b8; padding: 6px 12px; background: #e2e8f0; }
+    .ui-tabs-nav li.ui-tabs-selected { background: #fff; font-weight: bold; }
+    .ui-tabs-hide { display: none; }
+    #confirmacaoSenhaFvWrap { display: none; border: 2px solid #404E82; background: #fff; padding: 14px; margin-top: 12px; }
+  </style>
+</head>
+<body>
+  <h2>Diário de Classe Digital &gt; Verificar Avaliações Não Realizadas</h2>
+  <table>
+    <caption>Verificar Avaliações não realizadas</caption>
+    <tr><td>Escola:</td><td>ESCOLA MODELO ESTADUAL</td></tr>
+    <tr><td>Turma:</td><td>TÉCNICO EM INFORMÁTICA-ENSINO MÉDIO INTEGRADO - 1ª SÉRIE - TURMA-ANUAL-1A / VESPERTINO</td></tr>
+    <tr><td>Componente:</td><td>EDUCAÇÃO DIGITAL E MIDIÁTICA</td></tr>
+  </table>
+
+  <form id="formulario" method="post" action="/sigeduc/diario_classe/lancar_notas/form_estudantes_realizacoes_avaliacoes_unidade.jsf">
+    <input type="hidden" name="DOUBLE_CHECK_TOKEN" value="mock-token-nr" />
+    <input type="hidden" name="javax.faces.ViewState" value="j_id_nr_1" />
+    <div id="formulario:tabViewId" class="ui-tabs">
+      <ul class="ui-tabs-nav">
+        <li class="ui-state-default ui-corner-top"><a href="#formulario:tab1"><em>1ª Unidade</em></a></li>
+        <li class="ui-state-default ui-corner-top"><a href="#formulario:tab1j_id_1"><em>2ª Unidade</em></a></li>
+        <li class="ui-state-default ui-corner-top ui-tabs-selected ui-state-active"><a href="#formulario:tab1j_id_2"><em>3ª Unidade</em></a></li>
+      </ul>
+      <div id="formulario:tab1" class="ui-tabs-panel ui-widget-content ui-tabs-hide"></div>
+      <div id="formulario:tab1j_id_1" class="ui-tabs-panel ui-widget-content ui-tabs-hide"></div>
+      <div id="formulario:tab1j_id_2" class="ui-tabs-panel ui-widget-content">
+        <table id="formulario:resultj_id_2">
+          <thead>
+            <tr>
+              <th>Estudante</th>
+              ${atividadesU3.map((a) => `<th><span class="nome-avaliacao">${a.nome}</span> <span class="valor-avaliacao">Valor: ${a.valor.toFixed(1)}</span></th>`).join('')}
+            </tr>
+          </thead>
+          <tbody>${rowsHtml}</tbody>
+        </table>
+      </div>
+    </div>
+
+    <input id="formulario:btnAbrirConfirmacaoSenhaFv" type="submit" value="Gravar" onclick="document.getElementById('confirmacaoSenhaFvWrap').style.display='block'; return false;" />
+    <div id="confirmacaoSenhaFvWrap">
+      <label for="formulario:senha">Senha:</label>
+      <input id="formulario:senha" type="password" name="formulario:senha" value="" />
+      <input id="formulario:confirmarGravacaoFvTurmaRegular" type="submit" value="Confirmar" onclick="window.__nrSaved = true; return false;" />
+    </div>
+  </form>
+</body>
+</html>`;
+}
+
 fs.writeFileSync(path.join(fixturesDir, 'docente.html'), docenteHtml, 'utf8');
 fs.writeFileSync(path.join(fixturesDir, 'lancar_notas_anual.html'), buildNotasHtml({ semestral: false }), 'utf8');
 fs.writeFileSync(path.join(fixturesDir, 'lancar_notas_semestral.html'), buildNotasHtml({ semestral: true }), 'utf8');
+fs.writeFileSync(path.join(fixturesDir, 'avaliacoes_nao_realizadas.html'), buildNaoRealizadasHtml(), 'utf8');
 fs.writeFileSync(path.join(fixturesDir, 'lancar_frequencia.html'), buildFrequenciaHtml(), 'utf8');
 fs.writeFileSync(path.join(fixturesDir, 'gerenciar_avaliacoes.html'), avaliacoesHtml, 'utf8');
 

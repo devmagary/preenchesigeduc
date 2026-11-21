@@ -134,11 +134,14 @@ async function run() {
 
     const previewCounts = await page.evaluate(() => {
       const sr = document.getElementById('preenche-sigeduc-host').shadowRoot;
-      const statsEls = Array.from(sr.querySelectorAll('.ps-stat strong')).map((e) => Number(e.textContent));
-      return statsEls;
+      const getStat = (key) => Number(sr.querySelector(`.ps-stat[data-stat="${key}"] strong`)?.textContent ?? 0);
+      return {
+        matched: getStat('matched'),
+        issues: getStat('issues'),
+      };
     });
-    exactMatched = previewCounts[0] ?? 0;
-    const unmatchedCount = previewCounts[2] ?? 0;
+    exactMatched = previewCounts.matched;
+    const unmatchedCount = previewCounts.issues;
     falsePositives = exactMatched === 45 && unmatchedCount === 2 ? 0 : 1;
 
     await fetch(`${srv.baseUrl}/__reset`);

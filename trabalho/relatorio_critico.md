@@ -30,3 +30,12 @@ Auditoria realizada por subagentes independentes (`research`) sem acesso ao cód
   2. Coluna `Resumo` de `RELATÓRIO POR DATA` contabiliza os alunos da planilha (com nota explicativa logo abaixo para os 42 ausentes).
   3. Painel lateral direito em `1280x720` encobre parcialmente a direita da tabela subjacente enquanto aberto.
   4. Normalização de rótulos entre página e exportações (`PROF.` removido em `docente` no JSON e `Série/Módulo` no CSV/XLSX).
+
+### Rodada 4 — Roadmap P1.1, P1.2, P2.1 e P2.2 (`ff29b74c`)
+- **Veredito:** **APROVADO — `0` defeitos `grave`, `0` `médio`, `0` `menor`.**
+- **Escopo inspecionado:** `manifest.json` (18 artefatos, hash SHA-256), `relatorio_metricas.md` / `.json`, JSONs de execução e todas as 10 capturas PNG (`scraping_turmas_desktop.png`, `notas_previa_desktop.png`, `notas_relatorio_desktop.png`, `nao_realizadas_desktop.png`, `notas_previa_mobile.png`, `notas_dark_mode_mobile.png`, `frequencia_dia_unico_desktop.png`, `frequencia_multiplas_datas_desktop.png`, `frequencia_mobile.png`, `scraping_notas_mobile.png`).
+- **Critérios verificados:**
+  1. **P1.1 (Avaliações Não Realizadas):** Em `nao_realizadas_desktop.png`, o handoff abriu `Verificar Avaliações Não Realizadas` exibindo `3 marcado(s) automaticamente agora • 0 já marcado(s)`; os alunos com nota `0,0` e `1,5` permaneceram desmarcados e os 3 alunos com `NF`, `Não Fez` e célula vazia foram marcados na coluna `Participação`.
+  2. **P1.2 (Mapeamento Persistente):** Em `notas_previa_desktop.png`, a seção `2. Mapeamento (4/4 atividades • 47 linhas)` permaneceu aberta com todos os seletores legíveis e bem alinhados.
+  3. **P2.1 & P2.2 (Escala `125%` e Dark Mode no cabeçalho Mobile `390x844`):** Em `notas_dark_mode_mobile.png`, `[A 125%]` e `[☀️]` estão alinhados no cabeçalho sem sobreposição; alto contraste no tema escuro, zero texto cortado e zero barra de rolagem horizontal externa.
+  4. **SLAs e Pacotes:** `.xlsx` p99 `33.12 ms` / `.csv` p99 `0.46 ms` (< `250 ms`), abertura do painel `14.01 ms` (< `100 ms`), `180/180` confirmações AJAX (`0%` perda), `45/45` exatos com `0` falsos positivos, `dist/chrome/` `511.6 KB` e `dist/firefox/` `511.8 KB` (< `1536 KB`).

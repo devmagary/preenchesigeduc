@@ -100,9 +100,28 @@ export interface ScrapedPortalScreen {
   turmas: ScrapedTurma[];
 }
 
+export interface ScrapedAlunoNaoRealizada {
+  index: number;
+  nome: string;
+  checkboxIds: Record<string, string>; // idAvaliacao -> DOM checkbox id
+  checkedMap: Record<string, boolean>;
+}
+
+export interface ScrapedNaoRealizadasScreen {
+  kind: 'avaliacoes_nao_realizadas';
+  escola: string;
+  turma: string;
+  componente: string;
+  unidadeAtiva: string;
+  unidadesDisponiveis: string[];
+  atividades: ScrapedAtividadeNota[];
+  alunos: ScrapedAlunoNaoRealizada[];
+}
+
 export type ScrapedScreenData =
   | ScrapedPortalScreen
   | ScrapedNotasScreen
+  | ScrapedNaoRealizadasScreen
   | ScrapedFrequenciaScreen
   | ScrapedAvaliacoesScreen;
 
@@ -291,6 +310,90 @@ export function scrapeLancarNotas(doc: Document): ScrapedNotasScreen {
     turma: meta['Turma'] ?? '',
     componente: meta['Componente'] ?? '',
     totalAulas: meta['Total Aulas'] ?? '',
+    unidadeAtiva: activeLabel,
+    unidadesDisponiveis: allLabels,
+    atividades,
+    alunos,
+  };
+}
+
+export function scrapeAvaliacoesNaoRealizadas(doc: Document): ScrapedNaoRealizadasScreen {
+  const metaTable = findTableByCaption(doc, 'Verificar Avaliações não realizadas');
+  const meta = parseTableKeyValues(metaTable);
+  const { activeLabel, allLabels, panel } = getActiveTabPanel(doc);
+
+  const atividades: ScrapedAtividadeNota[] = [];
+  const alunos: ScrapedAlunoNaoRealizada[] = [];
+
+  if (panel) {
+    const table = panel.querySelector('table');
+    if (table) {
+      const ths = Array.from(table.querySelectorAll('thead th, thead tr:first-child th'));
+      const activityHeaders = ths.filter((th) => !/^Estudante$/i.test(textOf(th)));
+
+      // Descobrir os IDs únicos de avaliação presentes nas colunas de checkbox
+      const dataRows = Array.from(table.querySelectorAll('tbody tr'));
+      const colIds = new Map<number, string>();
+
+      for (const row of dataRows) {
+        const tds = Array.from(row.querySelectorAll('td'));
+        tds.slice(1).forEach((td, idx) => {
+          if (colIds.has(idx)) return;
+          const cb = td.querySelector('input[type="checkbox"][id*=":av__"]') as HTMLInputElement | null;
+          const m = cb?.id.match(/:av__(\d+)/);
+          if (m?.[1]) colIds.set(idx, m[1]);
+        });
+      }
+
+      activityHeaders.forEach((th, idx) => {
+        const thText = textOf(th);
+        if (/^Avalia[cç][oõ]es$/i.test(thText)) return;
+        const valMatch = thText.match(/Valor:\s*([0-9]+[.,]?[0-9]*)/i);
+        const valorMax = valMatch ? Number(valMatch[1].replace(',', '.')) : 10;
+        const nomeEl = th.querySelector('.nome-avaliacao');
+        const nomeLimpo = nomeEl
+          ? textOf(nomeEl)
+          : thText.replace(/Valor:\s*[0-9]+[.,]?[0-9]*/i, '').trim();
+        atividades.push({
+          idAvaliacao: colIds.get(idx) ?? `av_${idx}`,
+          nome: nomeLimpo || `Atividade ${idx + 1}`,
+          valorMax,
+          disabled: false,
+          colIndex: idx,
+        });
+      });
+
+      dataRows.forEach((row, idx) => {
+        const tds = Array.from(row.querySelectorAll('td'));
+        if (tds.length === 0) return;
+        const nome = textOf(tds[0]);
+        if (!nome) return;
+
+        const checkboxIds: Record<string, string> = {};
+        const checkedMap: Record<string, boolean> = {};
+        const cbs = Array.from(row.querySelectorAll('input[type="checkbox"][id*=":av__"]')) as HTMLInputElement[];
+        for (const cb of cbs) {
+          const m = cb.id.match(/:av__(\d+)/);
+          if (!m?.[1]) continue;
+          checkboxIds[m[1]] = cb.id;
+          checkedMap[m[1]] = cb.checked;
+        }
+
+        alunos.push({
+          index: idx,
+          nome,
+          checkboxIds,
+          checkedMap,
+        });
+      });
+    }
+  }
+
+  return {
+    kind: 'avaliacoes_nao_realizadas',
+    escola: meta['Escola'] ?? '',
+    turma: meta['Turma'] ?? '',
+    componente: meta['Componente'] ?? '',
     unidadeAtiva: activeLabel,
     unidadesDisponiveis: allLabels,
     atividades,
@@ -503,6 +606,23 @@ export function buildExportBundle(data: ScrapedScreenData): {
           ]),
         },
       ],
+    };
+  }
+
+  if (data.kind === 'avaliacoes_nao_realizadas') {
+    const headers = ['Nome', ...data.atividades.map((a) => a.nome)];
+    const rows = data.alunos.map((st) => [
+      st.nome,
+      ...data.atividades.map((a) => {
+        if (!st.checkboxIds[a.idAvaliacao]) return 'Com nota';
+        return st.checkedMap[a.idAvaliacao] ? 'NF' : '';
+      }),
+    ]);
+    return {
+      baseFileName: `nao_realizadas_${data.unidadeAtiva.replace(/\s+/g, '_')}`.toLowerCase(),
+      headers,
+      rows,
+      sheets: [{ name: 'Não Realizadas', headers, rows }],
     };
   }
 

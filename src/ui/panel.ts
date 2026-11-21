@@ -15,25 +15,38 @@ import {
   type AttendanceFillReport,
 } from '../sigeduc/filler-frequencia';
 import {
+  armConfirmationDialogAutoAccept,
   buildGradeFillPreview,
+  clearPendingNotRealizedQueue,
   executeGradeFill,
+  executeNotRealizedFill,
+  extractNotRealizedFromSheet,
+  loadPendingNotRealizedQueue,
   type ColumnGradeMapping,
   type GradeFillPreview,
   type GradeFillReport,
+  type NotRealizedApplyReport,
 } from '../sigeduc/filler-notas';
 import {
   buildExportBundle,
+  scrapeAvaliacoesNaoRealizadas,
   scrapeGerenciarAvaliacoes,
   scrapeLancarFrequencia,
   scrapeLancarNotas,
   scrapePortalDocente,
   type ScrapedFrequenciaScreen,
+  type ScrapedNaoRealizadasScreen,
   type ScrapedNotasScreen,
   type ScrapedScreenData,
 } from '../sigeduc/scraper';
 import { SHADOW_STYLES } from './styles';
 
 type TabKey = 'notas' | 'frequencia' | 'extrair';
+type FontScale = '100' | '112' | '125';
+type ThemeMode = 'light' | 'dark';
+
+const THEME_STORAGE_KEY = 'preenche_sigeduc_theme';
+const FONT_SCALE_STORAGE_KEY = 'preenche_sigeduc_font_scale';
 
 function escapeHtml(str: string): string {
   return String(str ?? '')
@@ -81,6 +94,9 @@ export class PreenchePanelController {
   private prevHtmlOverflow = '';
   private prevBodyOverflow = '';
 
+  private theme: ThemeMode = 'light';
+  private fontScale: FontScale = '100';
+
   private detection: ScreenDetection;
   private scraped: ScrapedScreenData | null = null;
 
@@ -89,15 +105,20 @@ export class PreenchePanelController {
   private notasNameCol = '';
   private notasMatCol = '';
   private notasActivityMap: Record<string, string> = {}; // atividadeId -> sheetColumn
+  private notasImportOpen = false;
+  private notasMappingOpen = true;
   private notasAutoSave = false;
   private notasRamPassword = '';
   private notasAbort: AbortController | null = null;
   private lastNotasReport: GradeFillReport | null = null;
+  private lastNrReport: NotRealizedApplyReport | null = null;
 
   private freqSheet: ParsedSpreadsheet | null = null;
   private freqNameCol = '';
   private freqMatCol = '';
   private freqObsCol = '';
+  private freqImportOpen = false;
+  private freqMappingOpen = true;
   private freqSelectedDates: Set<string> = new Set();
   private freqEmptyMeansPresent = true;
   private freqAutoSave = false;
@@ -119,10 +140,44 @@ export class PreenchePanelController {
       });
     }
 
+    this.loadDisplayPreferences();
     this.detection = detectSigeducScreen(this.doc, window.location.href);
     this.syncDefaultTab();
+    this.checkPendingNotRealizedOnLoad();
     this.render();
     (this.doc.body ?? this.doc.documentElement).appendChild(this.host);
+  }
+
+  private loadDisplayPreferences(): void {
+    try {
+      const savedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
+      if (savedTheme === 'dark' || savedTheme === 'light') {
+        this.theme = savedTheme;
+      } else if (window.matchMedia?.('(prefers-color-scheme: dark)').matches) {
+        this.theme = 'dark';
+      }
+      const savedScale = window.localStorage.getItem(FONT_SCALE_STORAGE_KEY);
+      if (savedScale === '100' || savedScale === '112' || savedScale === '125') {
+        this.fontScale = savedScale;
+      }
+    } catch {
+      // localStorage indisponível
+    }
+  }
+
+  private checkPendingNotRealizedOnLoad(): void {
+    const pending = loadPendingNotRealizedQueue();
+    if (!pending) return;
+
+    if (this.detection.screen === 'avaliacoes_nao_realizadas') {
+      this.scraped = scrapeAvaliacoesNaoRealizadas(this.doc);
+      this.lastNrReport = executeNotRealizedFill(this.doc, pending.items, null);
+      clearPendingNotRealizedQueue();
+      this.activeTab = 'notas';
+      this.isOpen = true;
+    } else if (this.detection.screen === 'lancar_notas') {
+      armConfirmationDialogAutoAccept(this.doc);
+    }
   }
 
   public getDetection(): ScreenDetection {
@@ -161,9 +216,13 @@ export class PreenchePanelController {
   }
 
   private syncDefaultTab(): void {
-    if (this.detection.screen === 'lancar_notas') this.activeTab = 'notas';
-    else if (this.detection.screen === 'lancar_frequencia') this.activeTab = 'frequencia';
-    else this.activeTab = 'extrair';
+    if (this.detection.screen === 'lancar_notas' || this.detection.screen === 'avaliacoes_nao_realizadas') {
+      this.activeTab = 'notas';
+    } else if (this.detection.screen === 'lancar_frequencia') {
+      this.activeTab = 'frequencia';
+    } else {
+      this.activeTab = 'extrair';
+    }
   }
 
   public refreshContext(): void {
@@ -172,6 +231,9 @@ export class PreenchePanelController {
       this.scraped = scrapePortalDocente(this.doc);
     } else if (this.detection.screen === 'lancar_notas') {
       this.scraped = scrapeLancarNotas(this.doc);
+      if (this.notasSheet) this.autoMapNotasColumns();
+    } else if (this.detection.screen === 'avaliacoes_nao_realizadas') {
+      this.scraped = scrapeAvaliacoesNaoRealizadas(this.doc);
       if (this.notasSheet) this.autoMapNotasColumns();
     } else if (this.detection.screen === 'lancar_frequencia') {
       this.scraped = scrapeLancarFrequencia(this.doc);
@@ -192,7 +254,7 @@ export class PreenchePanelController {
     if (!this.notasMatCol || !headers.includes(this.notasMatCol)) {
       this.notasMatCol = guessMatriculaColumn(headers) ?? '';
     }
-    if (this.scraped?.kind === 'lancar_notas') {
+    if (this.scraped?.kind === 'lancar_notas' || this.scraped?.kind === 'avaliacoes_nao_realizadas') {
       const nextMap: Record<string, string> = {};
       for (const av of this.scraped.atividades) {
         if (this.notasActivityMap[av.idAvaliacao] && headers.includes(this.notasActivityMap[av.idAvaliacao])) {
@@ -255,6 +317,8 @@ export class PreenchePanelController {
   private render(): void {
     const det = this.detection;
     const openCls = this.isOpen ? 'open' : '';
+    const themeCls = this.theme === 'dark' ? 'ps-dark' : '';
+    const scaleCls = `ps-scale-${this.fontScale}`;
 
     this.shadow.innerHTML = `
       <style>${SHADOW_STYLES}</style>
@@ -263,13 +327,17 @@ export class PreenchePanelController {
         <span class="ps-fab-badge">${escapeHtml(det.badge)}</span>
       </button>
       <div class="ps-backdrop ${openCls}" id="ps-backdrop"></div>
-      <aside class="ps-drawer ${openCls}" id="ps-drawer" role="dialog" aria-label="Painel Preenche SIGEduc">
+      <aside class="ps-drawer ${openCls} ${themeCls} ${scaleCls}" id="ps-drawer" role="dialog" aria-label="Painel Preenche SIGEduc">
         <header class="ps-header">
           <div class="ps-header-title">
             <strong>Preenche SIGEduc</strong>
             <span class="ps-header-sub">${escapeHtml(det.label)}</span>
           </div>
-          <button class="ps-icon-btn" id="ps-close-btn" type="button" aria-label="Fechar painel">&times;</button>
+          <div class="ps-header-actions">
+            <button class="ps-icon-btn" id="ps-font-btn" type="button" title="Alterar tamanho do texto" aria-label="Alterar tamanho do texto">A ${this.fontScale}%</button>
+            <button class="ps-icon-btn" id="ps-theme-btn" type="button" title="Alternar tema claro/escuro" aria-label="Alternar tema claro/escuro">${this.theme === 'dark' ? '☀️' : '🌙'}</button>
+            <button class="ps-icon-btn close-glyph" id="ps-close-btn" type="button" aria-label="Fechar painel">&times;</button>
+          </div>
         </header>
         <nav class="ps-tabs" role="tablist">
           <button class="ps-tab ${this.activeTab === 'notas' ? 'active' : ''}" data-tab="notas" role="tab" type="button">Notas</button>
@@ -300,10 +368,14 @@ export class PreenchePanelController {
   }
 
   private renderNotasTab(): string {
+    if (this.scraped?.kind === 'avaliacoes_nao_realizadas') {
+      return this.renderNaoRealizadasSubView(this.scraped);
+    }
+
     if (this.scraped?.kind !== 'lancar_notas') {
       return `
         <div class="ps-banner warn">
-          Abra a tela <strong>Lançar Resultados</strong> de uma turma no SIGEduc para preencher notas.
+          Abra a tela <strong>Lançar Resultados</strong> (ou <strong>Verificar Avaliações não realizadas</strong>) de uma turma no SIGEduc para preencher notas.
           Você pode usar a aba <strong>Extrair</strong> no Portal Docente para listar suas turmas.
         </div>
       `;
@@ -324,7 +396,6 @@ export class PreenchePanelController {
           .join('');
 
       const mappedCount = Object.values(this.notasActivityMap).filter(Boolean).length;
-      const shouldOpenMap = mappedCount === 0;
 
       const activitySelectors = scr.atividades
         .map((av) => {
@@ -343,7 +414,7 @@ export class PreenchePanelController {
         .join('');
 
       mappingHtml = `
-        <details class="ps-card ps-compact-details" ${shouldOpenMap ? 'open' : ''}>
+        <details class="ps-card ps-compact-details" id="ps-notas-map-details" ${this.notasMappingOpen ? 'open' : ''}>
           <summary>2. Mapeamento (${mappedCount}/${scr.atividades.length} atividades • ${this.notasSheet.rows.length} linhas)</summary>
           <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">
             <div class="ps-grid-2">
@@ -380,18 +451,27 @@ export class PreenchePanelController {
       if (recConflicts.length) {
         issueDetails.push(`<li><strong>Conflito com Rec. (${recConflicts.length}):</strong> ${escapeHtml(recConflicts.map((i) => i.studentName).join(', '))}</li>`);
       }
+      if (preview.notRealizedCount > 0) {
+        const nrPreviewNames = preview.items
+          .filter((i) => i.status === 'not_realized')
+          .slice(0, 6)
+          .map((i) => `${i.studentName} (${i.atividadeNome})`);
+        issueDetails.push(`<li><strong>Não Realizadas agendadas (${preview.notRealizedCount}):</strong> ${escapeHtml(nrPreviewNames.join(', '))}${preview.notRealizedCount > 6 ? '...' : ''}</li>`);
+      }
       if (m.notInSheet.length) {
         issueDetails.push(`<li><strong>Na turma, ausentes na planilha (${m.notInSheet.length}):</strong> ${escapeHtml(m.notInSheet.map((x) => x.pageStudent.rawName).slice(0, 6).join(', '))}${m.notInSheet.length > 6 ? '...' : ''}</li>`);
       }
+
+      const canRun = preview.readyCount > 0 || preview.notRealizedCount > 0;
 
       previewHtml = `
         <section class="ps-card">
           <h3 class="ps-card-title">3. Prévia & Conferência</h3>
           <div class="ps-stats">
-            <div class="ps-stat ok"><strong>${m.matched.length}</strong><span>Alunos casados exatos</span></div>
-            <div class="ps-stat ok"><strong>${preview.readyCount}</strong><span>Notas prontas</span></div>
-            <div class="ps-stat ${m.notFoundInPage.length + m.duplicates.length > 0 ? 'bad' : ''}"><strong>${m.notFoundInPage.length + m.duplicates.length}</strong><span>Não casados / Homônimos</span></div>
-            <div class="ps-stat ${preview.invalidCount + preview.disabledCount + preview.recConflictCount > 0 ? 'warn' : ''}"><strong>${preview.invalidCount + preview.disabledCount + preview.recConflictCount}</strong><span>Inválidas / Bloq. / Rec.</span></div>
+            <div class="ps-stat ok" data-stat="matched"><strong>${m.matched.length}</strong><span>Alunos casados exatos</span></div>
+            <div class="ps-stat ok" data-stat="ready"><strong>${preview.readyCount}</strong><span>Notas prontas (0 = zero)</span></div>
+            <div class="ps-stat ${preview.notRealizedCount > 0 ? 'warn' : ''}" data-stat="not-realized"><strong>${preview.notRealizedCount}</strong><span>Não Realizadas (NF/vazio)</span></div>
+            <div class="ps-stat ${m.notFoundInPage.length + m.duplicates.length + preview.invalidCount + preview.disabledCount + preview.recConflictCount > 0 ? 'bad' : ''}" data-stat="issues"><strong>${m.notFoundInPage.length + m.duplicates.length + preview.invalidCount + preview.disabledCount + preview.recConflictCount}</strong><span>Diverg. / Invál. / Bloq.</span></div>
           </div>
           ${
             issueDetails.length
@@ -414,8 +494,8 @@ export class PreenchePanelController {
           <div class="ps-muted ps-hidden" id="ps-notas-prog-text"></div>
 
           <div class="ps-row">
-            <button class="ps-btn ps-btn-primary ps-btn-block" id="ps-notas-run" type="button" ${preview.readyCount === 0 ? 'disabled' : ''}>
-              Preencher ${preview.readyCount} Nota(s) em Fila AJAX
+            <button class="ps-btn ps-btn-primary ps-btn-block" id="ps-notas-run" type="button" ${canRun ? '' : 'disabled'}>
+              Preencher ${preview.readyCount} Nota(s)${preview.notRealizedCount > 0 ? ` + ${preview.notRealizedCount} NF` : ''}
             </button>
             <button class="ps-btn ps-btn-danger ps-btn-block ps-hidden" id="ps-notas-cancel" type="button">
               Cancelar Preenchimento
@@ -435,6 +515,9 @@ export class PreenchePanelController {
       if (r.invalidDetails.length) {
         reportNotes.push(`<li><strong>Notas inválidas (${r.invalidDetails.length}):</strong> ${escapeHtml(r.invalidDetails.map((d) => `${d.studentName} (${d.atividadeNome}: "${d.rawValue}" — ${d.reason})`).join('; '))}</li>`);
       }
+      if (r.notRealizedCount > 0) {
+        reportNotes.push(`<li><strong>Não Realizadas em fila (${r.notRealizedCount}):</strong> Ao confirmar a senha, o modal do SIGEduc será aceito automaticamente em "Sim" para marcar os checkboxes na tela seguinte.</li>`);
+      }
       if (r.duplicates.length) {
         reportNotes.push(`<li><strong>Homônimos bloqueados (${r.duplicates.length}):</strong> ${escapeHtml(r.duplicates.join(', '))}</li>`);
       }
@@ -443,7 +526,8 @@ export class PreenchePanelController {
           <h3 class="ps-card-title">Relatório da Execução</h3>
           <div class="ps-banner ${r.errors.length || r.sessionExpired || r.invalidCount > 0 || r.notFoundInPage.length > 0 ? 'warn' : 'success'}">
             <strong>${r.filledCount}/${r.totalAttempted}</strong> campos preenchidos •
-            <strong>${r.ajaxCompletedCount}</strong> confirmações AJAX<br/>
+            <strong>${r.ajaxCompletedCount}</strong> confirmações AJAX
+            ${r.notRealizedCount > 0 ? ` • <strong>${r.notRealizedCount}</strong> Não Realizada(s)` : ''}<br/>
             ${r.autoSaved ? '<strong>Gravado automaticamente</strong>' : '<strong>Modo Assistido:</strong> confira na tabela, digite sua senha e clique em Gravar.'}
           </div>
           ${reportNotes.length ? `<ul class="ps-list">${reportNotes.join('')}</ul>` : ''}
@@ -462,14 +546,14 @@ export class PreenchePanelController {
       </div>
       <div class="ps-field">
         <label class="ps-label" for="ps-notas-paste">Ou cole células do Excel / Google Sheets (Ctrl+V)</label>
-        <textarea class="ps-textarea" id="ps-notas-paste" placeholder="Cole aqui as linhas com Nome e Notas..."></textarea>
+        <textarea class="ps-textarea" id="ps-notas-paste" placeholder="Cole aqui as linhas com Nome e Notas (0 = zero; NF/vazio = Não Fez)..."></textarea>
       </div>
       <button class="ps-btn ps-btn-secondary" id="ps-notas-parse-paste" type="button">Ler Texto Colado</button>
       <div class="ps-banner error ps-hidden" id="ps-notas-error"></div>
     `;
 
     const importHtml = this.notasSheet
-      ? `<details class="ps-card ps-compact-details">
+      ? `<details class="ps-card ps-compact-details" id="ps-notas-import-details" ${this.notasImportOpen ? 'open' : ''}>
            <summary>1. Planilha: ${escapeHtml(this.notasSheet.sourceName)} (${this.notasSheet.rows.length} linhas)</summary>
            <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">${importInner}</div>
          </details>`
@@ -487,6 +571,125 @@ export class PreenchePanelController {
       ${importHtml}
       ${mappingHtml}
       ${previewHtml}
+    `;
+  }
+
+  private renderNaoRealizadasSubView(scr: ScrapedNaoRealizadasScreen): string {
+    let reportHtml = '';
+    if (this.lastNrReport) {
+      const r = this.lastNrReport;
+      reportHtml = `
+        <section class="ps-card" id="ps-nr-report">
+          <h3 class="ps-card-title">Checkboxes de Não Realização</h3>
+          <div class="ps-banner ${r.errors.length || r.unavailableCount > 0 ? 'warn' : 'success'}">
+            <strong>${r.appliedCount}</strong> marcado(s) automaticamente agora •
+            <strong>${r.alreadyMarkedCount}</strong> já marcado(s)
+            ${r.unavailableCount > 0 ? ` • <strong>${r.unavailableCount}</strong> já possuía(m) nota` : ''}<br/>
+            ${r.autoSaved ? '<strong>Gravado automaticamente</strong>' : '<strong>Revise os checkboxes</strong> na tabela e clique em Gravar no SIGEduc.'}
+          </div>
+        </section>
+      `;
+    }
+
+    let mappingHtml = '';
+    let applyBtnHtml = '';
+    if (this.notasSheet) {
+      const cols = this.notasSheet.headers;
+      const colOpts = (selected: string, allowEmpty = false) =>
+        (allowEmpty ? `<option value="">-- Não usar --</option>` : '') +
+        cols
+          .map((c) => `<option value="${escapeHtml(c)}" ${c === selected ? 'selected' : ''}>${escapeHtml(c)}</option>`)
+          .join('');
+      const mappedCount = Object.values(this.notasActivityMap).filter(Boolean).length;
+
+      mappingHtml = `
+        <details class="ps-card ps-compact-details" id="ps-notas-map-details" ${this.notasMappingOpen ? 'open' : ''}>
+          <summary>2. Mapeamento (${mappedCount}/${scr.atividades.length} atividades)</summary>
+          <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">
+            <div class="ps-grid-2">
+              <div class="ps-field">
+                <label class="ps-label" for="ps-notas-name-col">Coluna Nome</label>
+                <select class="ps-select" id="ps-notas-name-col">${colOpts(this.notasNameCol)}</select>
+              </div>
+              <div class="ps-field">
+                <label class="ps-label" for="ps-notas-mat-col">Matrícula (opcional)</label>
+                <select class="ps-select" id="ps-notas-mat-col">${colOpts(this.notasMatCol, true)}</select>
+              </div>
+            </div>
+            ${scr.atividades
+              .map(
+                (av) => `
+              <div class="ps-field">
+                <label class="ps-label">${escapeHtml(av.nome)}</label>
+                <select class="ps-select ps-notas-av-map" data-av-id="${escapeHtml(av.idAvaliacao)}">
+                  ${colOpts(this.notasActivityMap[av.idAvaliacao] ?? '', true)}
+                </select>
+              </div>`
+              )
+              .join('')}
+          </div>
+        </details>
+      `;
+
+      const mappings: ColumnGradeMapping[] = Object.entries(this.notasActivityMap)
+        .filter(([, col]) => Boolean(col))
+        .map(([atividadeId, sheetColumn]) => ({ atividadeId, sheetColumn }));
+      const pendingFromSheet = extractNotRealizedFromSheet(
+        this.notasSheet.rows,
+        this.notasNameCol,
+        this.notasMatCol || null,
+        mappings,
+        scr
+      );
+
+      applyBtnHtml = `
+        <section class="ps-card">
+          <h3 class="ps-card-title">3. Aplicar Checkboxes</h3>
+          <div class="ps-banner info">
+            <strong>${pendingFromSheet.length}</strong> marcação(ões) de Não Realizada detectada(s) (célula vazia, NF, Não Fez ou FV).
+          </div>
+          <button class="ps-btn ps-btn-primary ps-btn-block" id="ps-nr-apply" type="button" ${pendingFromSheet.length === 0 ? 'disabled' : ''}>
+            Marcar ${pendingFromSheet.length} Não Realizada(s)
+          </button>
+        </section>
+      `;
+    }
+
+    const importInner = `
+      <div class="ps-field">
+        <label class="ps-file-btn" for="ps-notas-file">
+          <span>Selecionar planilha (.xlsx, .xls, .csv)</span>
+          <span class="ps-pill ok">${this.notasSheet ? escapeHtml(this.notasSheet.sourceName) : 'Arquivo'}</span>
+        </label>
+        <input class="ps-file-input-hidden" id="ps-notas-file" type="file" accept=".xlsx,.xls,.csv" />
+      </div>
+      <div class="ps-field">
+        <label class="ps-label" for="ps-notas-paste">Ou cole células (NF / Não Fez / vazio)</label>
+        <textarea class="ps-textarea" id="ps-notas-paste" placeholder="Cole aqui Nome e colunas de atividades..."></textarea>
+      </div>
+      <button class="ps-btn ps-btn-secondary" id="ps-notas-parse-paste" type="button">Ler Texto Colado</button>
+      <div class="ps-banner error ps-hidden" id="ps-notas-error"></div>
+    `;
+
+    const importHtml = this.notasSheet
+      ? `<details class="ps-card ps-compact-details" id="ps-notas-import-details" ${this.notasImportOpen ? 'open' : ''}>
+           <summary>1. Planilha: ${escapeHtml(this.notasSheet.sourceName)} (${this.notasSheet.rows.length} linhas)</summary>
+           <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">${importInner}</div>
+         </details>`
+      : `<section class="ps-card">
+           <h3 class="ps-card-title">1. Importar Planilha (Opcional)</h3>
+           ${importInner}
+         </section>`;
+
+    return `
+      <div class="ps-banner info">
+        <strong>${escapeHtml(scr.turma || 'Avaliações Não Realizadas')}</strong><br/>
+        ${escapeHtml(scr.componente)} • <strong>${escapeHtml(scr.unidadeAtiva)}</strong> (${scr.alunos.length} estudantes)
+      </div>
+      ${reportHtml}
+      ${importHtml}
+      ${mappingHtml}
+      ${applyBtnHtml}
     `;
   }
 
@@ -535,7 +738,7 @@ export class PreenchePanelController {
         .join('');
 
       mappingHtml = `
-        <details class="ps-card ps-compact-details" ${dateHeaders.length === 0 ? 'open' : ''}>
+        <details class="ps-card ps-compact-details" id="ps-freq-map-details" ${this.freqMappingOpen ? 'open' : ''}>
           <summary>2. Colunas e Datas (${dateHeaders.length} datas • ${this.freqSheet.rows.length} alunos)</summary>
           <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">
             <div class="ps-grid-2">
@@ -691,7 +894,7 @@ export class PreenchePanelController {
     `;
 
     const freqImportHtml = this.freqSheet
-      ? `<details class="ps-card ps-compact-details">
+      ? `<details class="ps-card ps-compact-details" id="ps-freq-import-details" ${this.freqImportOpen ? 'open' : ''}>
            <summary>1. Planilha: ${escapeHtml(this.freqSheet.sourceName)} (${this.freqSheet.rows.length} linhas)</summary>
            <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">${freqImportInner}</div>
          </details>`
@@ -766,6 +969,41 @@ export class PreenchePanelController {
     q<HTMLButtonElement>('ps-close-btn')?.addEventListener('click', () => this.close());
     q<HTMLDivElement>('ps-backdrop')?.addEventListener('click', () => this.close());
 
+    q<HTMLButtonElement>('ps-font-btn')?.addEventListener('click', () => {
+      const order: FontScale[] = ['100', '112', '125'];
+      const next = order[(order.indexOf(this.fontScale) + 1) % order.length];
+      this.fontScale = next;
+      try {
+        window.localStorage.setItem(FONT_SCALE_STORAGE_KEY, next);
+      } catch {
+        // noop
+      }
+      this.render();
+    });
+
+    q<HTMLButtonElement>('ps-theme-btn')?.addEventListener('click', () => {
+      this.theme = this.theme === 'dark' ? 'light' : 'dark';
+      try {
+        window.localStorage.setItem(THEME_STORAGE_KEY, this.theme);
+      } catch {
+        // noop
+      }
+      this.render();
+    });
+
+    q<HTMLDetailsElement>('ps-notas-import-details')?.addEventListener('toggle', (ev) => {
+      this.notasImportOpen = (ev.target as HTMLDetailsElement).open;
+    });
+    q<HTMLDetailsElement>('ps-notas-map-details')?.addEventListener('toggle', (ev) => {
+      this.notasMappingOpen = (ev.target as HTMLDetailsElement).open;
+    });
+    q<HTMLDetailsElement>('ps-freq-import-details')?.addEventListener('toggle', (ev) => {
+      this.freqImportOpen = (ev.target as HTMLDetailsElement).open;
+    });
+    q<HTMLDetailsElement>('ps-freq-map-details')?.addEventListener('toggle', (ev) => {
+      this.freqMappingOpen = (ev.target as HTMLDetailsElement).open;
+    });
+
     for (const tabBtn of Array.from(this.shadow.querySelectorAll('.ps-tab'))) {
       tabBtn.addEventListener('click', () => {
         const key = (tabBtn as HTMLElement).dataset.tab as TabKey;
@@ -792,7 +1030,10 @@ export class PreenchePanelController {
         this.notasNameCol = '';
         this.notasMatCol = '';
         this.notasActivityMap = {};
+        this.notasImportOpen = false;
+        this.notasMappingOpen = true;
         this.lastNotasReport = null;
+        this.lastNrReport = null;
         this.autoMapNotasColumns();
         this.render();
       } catch (err) {
@@ -807,7 +1048,10 @@ export class PreenchePanelController {
         this.notasNameCol = '';
         this.notasMatCol = '';
         this.notasActivityMap = {};
+        this.notasImportOpen = false;
+        this.notasMappingOpen = true;
         this.lastNotasReport = null;
+        this.lastNrReport = null;
         this.autoMapNotasColumns();
         this.render();
       } catch (err) {
@@ -847,7 +1091,7 @@ export class PreenchePanelController {
 
     q<HTMLButtonElement>('ps-notas-run')?.addEventListener('click', async () => {
       const preview = this.buildNotasPreview();
-      if (!preview || preview.readyCount === 0) return;
+      if (!preview || (preview.readyCount === 0 && preview.notRealizedCount === 0)) return;
 
       const pwd = this.notasAutoSave ? this.notasRamPassword : null;
       if (this.notasAutoSave && !pwd) {
@@ -898,6 +1142,23 @@ export class PreenchePanelController {
       );
     });
 
+    q<HTMLButtonElement>('ps-nr-apply')?.addEventListener('click', () => {
+      if (!this.notasSheet || this.scraped?.kind !== 'avaliacoes_nao_realizadas') return;
+      const mappings: ColumnGradeMapping[] = Object.entries(this.notasActivityMap)
+        .filter(([, col]) => Boolean(col))
+        .map(([atividadeId, sheetColumn]) => ({ atividadeId, sheetColumn }));
+      const items = extractNotRealizedFromSheet(
+        this.notasSheet.rows,
+        this.notasNameCol,
+        this.notasMatCol || null,
+        mappings,
+        this.scraped
+      );
+      this.lastNrReport = executeNotRealizedFill(this.doc, items, null);
+      this.refreshContext();
+      this.render();
+    });
+
     // --- FREQUÊNCIA EVENTS ---
     const freqErr = q<HTMLDivElement>('ps-freq-error');
     const showFreqErr = (msg: string) => {
@@ -915,6 +1176,8 @@ export class PreenchePanelController {
         this.freqNameCol = '';
         this.freqMatCol = '';
         this.freqObsCol = '';
+        this.freqImportOpen = false;
+        this.freqMappingOpen = true;
         this.freqSelectedDates.clear();
         this.lastFreqReport = null;
         this.autoMapFreqColumns();
@@ -931,6 +1194,8 @@ export class PreenchePanelController {
         this.freqNameCol = '';
         this.freqMatCol = '';
         this.freqObsCol = '';
+        this.freqImportOpen = false;
+        this.freqMappingOpen = true;
         this.freqSelectedDates.clear();
         this.lastFreqReport = null;
         this.autoMapFreqColumns();

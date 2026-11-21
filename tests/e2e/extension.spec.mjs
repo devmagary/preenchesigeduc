@@ -132,6 +132,27 @@ async function runTests() {
 
     await page.locator('#preenche-sigeduc-host >> #ps-notas-file').setInputFiles(mixedXlsxPath);
     await page.waitForFunction(() => Boolean(document.getElementById('preenche-sigeduc-host').shadowRoot.getElementById('ps-notas-run')));
+
+    // P1.2: Validar que <details> Mapeamento permanece aberto ao alterar seletores
+    const mapWasOpen = await page.evaluate(() =>
+      Boolean(document.getElementById('preenche-sigeduc-host').shadowRoot.getElementById('ps-notas-map-details')?.hasAttribute('open'))
+    );
+    assert.equal(mapWasOpen, true, 'Detalhes de mapeamento deve iniciar aberto');
+    await page.evaluate(() => {
+      const sr = document.getElementById('preenche-sigeduc-host').shadowRoot;
+      const sel = sr.querySelector('.ps-notas-av-map');
+      const prev = sel.value;
+      sel.value = '';
+      sel.dispatchEvent(new Event('change', { bubbles: true }));
+      const selAfter = sr.querySelector('.ps-notas-av-map');
+      selAfter.value = prev;
+      selAfter.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+    const mapStayedOpen = await page.evaluate(() =>
+      Boolean(document.getElementById('preenche-sigeduc-host').shadowRoot.getElementById('ps-notas-map-details')?.hasAttribute('open'))
+    );
+    assert.equal(mapStayedOpen, true, 'P1.2: Mapeamento deve permanecer aberto apos re-render');
+
     await page.screenshot({ path: path.join(evidenciasDir, 'notas_previa_desktop.png') });
 
     await fetch(`${srv.baseUrl}/__reset`);
@@ -184,6 +205,76 @@ async function runTests() {
     // 0 prontas, 2 bloqueadas (disabled)
     assert.equal(u2Stats[1], 0);
     assert.equal(u2Stats[3], 2);
+
+    // 2B. P1.1: Handoff de Avaliações Não Realizadas (0,0 vs vazio / NF / Não Fez + auto-aceite #confirmationDialog no Modo Assistido)
+    console.log('[E2E] 2B. Testando Avaliações Não Realizadas (0,0 vs NF / Não Fez / vazio + handoff)...');
+    await page.goto(`${srv.baseUrl}/sigeduc/diario_classe/lancar_notas/form_estudantes_notas_avaliacoes_unidade.jsf`);
+    await openPanel(page);
+    const nrRows = [
+      ['Nome', 'Participação', 'Atividade Prática', 'Seminário', 'Avaliação Escrita'],
+      [FICTIONAL_STUDENTS[0].nome, '0,0', '2,5', '1,8', '3,0'], // 0,0 é nota real, NAO NR!
+      [FICTIONAL_STUDENTS[1].nome, '1,5', '2,0', '1,5', '2,5'],
+      [FICTIONAL_STUDENTS[2].nome, 'NF', '2,5', '1,5', '2,0'], // NF -> NR
+      [FICTIONAL_STUDENTS[3].nome, 'Não Fez', '2,5', '1,5', '2,0'], // Não Fez -> NR
+      [FICTIONAL_STUDENTS[4].nome, '', '2,5', '1,5', '2,0'], // vazio -> NR
+    ];
+    const nrWb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(nrWb, XLSX.utils.aoa_to_sheet(nrRows), 'NR');
+    const nrXlsxPath = path.join(userDataDir, 'notas_nao_realizadas.xlsx');
+    XLSX.writeFile(nrWb, nrXlsxPath);
+
+    await page.locator('#preenche-sigeduc-host >> #ps-notas-file').setInputFiles(nrXlsxPath);
+    await page.waitForFunction(() => Boolean(document.getElementById('preenche-sigeduc-host').shadowRoot.getElementById('ps-notas-run')));
+
+    await page.evaluate(() => {
+      document.getElementById('preenche-sigeduc-host').shadowRoot.getElementById('ps-notas-run').click();
+    });
+    await page.waitForFunction(() => Boolean(document.getElementById('preenche-sigeduc-host').shadowRoot.getElementById('ps-notas-report')), null, { timeout: 30000 });
+
+    const preConfirmCheck = await page.evaluate(() => ({
+      st0Val: document.getElementById('formulario:resultj_id_2:0:av__8001').value,
+      st2Val: document.getElementById('formulario:resultj_id_2:2:av__8001').value,
+      st3Val: document.getElementById('formulario:resultj_id_2:3:av__8001').value,
+      st4Val: document.getElementById('formulario:resultj_id_2:4:av__8001').value,
+      hasPendingQueue: Boolean(window.sessionStorage.getItem('preenche_sigeduc_pending_nr')),
+    }));
+    assert.equal(preConfirmCheck.st0Val, '0.0', 'Nota 0,0 deve ser digitada como 0.0');
+    assert.equal(preConfirmCheck.st2Val, '');
+    assert.equal(preConfirmCheck.st3Val, '');
+    assert.equal(preConfirmCheck.st4Val, '');
+    assert.equal(preConfirmCheck.hasPendingQueue, true, 'Fila NR deve estar salva no sessionStorage');
+
+    // Simular professor clicando Gravar + digitando senha no Modo Assistido
+    await Promise.all([
+      page.waitForURL('**/form_estudantes_realizacoes_avaliacoes_unidade.jsf', { timeout: 15000 }),
+      page.evaluate(() => {
+        document.getElementById('formulario:btnAbrirConfirmacaoSenha').click();
+        const pwd = document.getElementById('formulario:senha');
+        pwd.value = 'SenhaDocente123';
+        document.getElementById('formulario:confirmarGravacaoNotas').click();
+      }),
+    ]);
+
+    // Aguardar painel abrir automaticamente e marcar os checkboxes na tela de Não Realizadas
+    await page.waitForFunction(() => Boolean(document.getElementById('preenche-sigeduc-host')?.shadowRoot?.getElementById('ps-nr-report')), null, { timeout: 15000 });
+    const nrState = await page.evaluate(() => ({
+      drawerOpen: document.getElementById('preenche-sigeduc-host').shadowRoot.getElementById('ps-drawer').classList.contains('open'),
+      reportText: document.getElementById('preenche-sigeduc-host').shadowRoot.getElementById('ps-nr-report').textContent,
+      cb0: document.getElementById('formulario:resultj_id_2:0:av__8001').checked,
+      cb1: document.getElementById('formulario:resultj_id_2:1:av__8001').checked,
+      cb2: document.getElementById('formulario:resultj_id_2:2:av__8001').checked,
+      cb3: document.getElementById('formulario:resultj_id_2:3:av__8001').checked,
+      cb4: document.getElementById('formulario:resultj_id_2:4:av__8001').checked,
+      queueCleared: !window.sessionStorage.getItem('preenche_sigeduc_pending_nr'),
+    }));
+    assert.equal(nrState.drawerOpen, true);
+    assert.equal(nrState.cb0, false, '0,0 NAO pode ser marcado como Nao Realizada');
+    assert.equal(nrState.cb1, false);
+    assert.equal(nrState.cb2, true, 'NF deve marcar checkbox Nao Realizada');
+    assert.equal(nrState.cb3, true, 'Nao Fez deve marcar checkbox Nao Realizada');
+    assert.equal(nrState.cb4, true, 'Celula vazia deve marcar checkbox Nao Realizada');
+    assert.equal(nrState.queueCleared, true);
+    await page.screenshot({ path: path.join(evidenciasDir, 'nao_realizadas_desktop.png') });
 
     // 3. Frequência: colagem Ctrl+V liberada no Shadow DOM + data única + lote de 3 datas seguidas + auto-gravação com memória zerada
     console.log('[E2E] 3. Testando Frequência (Ctrl+V isolado, lote 3 datas, lógica invertida, RAM password)...');
@@ -339,6 +430,55 @@ async function runTests() {
     }, pastedTsv);
     await page.waitForFunction(() => Boolean(document.getElementById('preenche-sigeduc-host').shadowRoot.getElementById('ps-freq-run')));
     await page.screenshot({ path: path.join(evidenciasDir, 'frequencia_mobile.png') });
+
+    // 5. P2.1 & P2.2: Escala de Fonte (100% -> 112% -> 125%) + Dark Mode persistentes no header (mobile 390x844)
+    console.log('[E2E] 5. Testando Escala de Fonte (125%) e Modo Escuro no header (mobile 390x844)...');
+    await page.goto(`${srv.baseUrl}/sigeduc/diario_classe/lancar_notas/form_estudantes_notas_avaliacoes_unidade.jsf`);
+    await openPanel(page);
+    await page.evaluate(() => {
+      const sr = document.getElementById('preenche-sigeduc-host').shadowRoot;
+      sr.getElementById('ps-font-btn').click(); // 100 -> 112
+      sr.getElementById('ps-font-btn').click(); // 112 -> 125
+      sr.getElementById('ps-theme-btn').click(); // light -> dark
+    });
+    const prefsApplied = await page.evaluate(() => {
+      const sr = document.getElementById('preenche-sigeduc-host').shadowRoot;
+      const drawer = sr.getElementById('ps-drawer');
+      return {
+        isDark: drawer.classList.contains('ps-dark'),
+        is125: drawer.classList.contains('ps-scale-125'),
+        lsTheme: window.localStorage.getItem('preenche_sigeduc_theme'),
+        lsScale: window.localStorage.getItem('preenche_sigeduc_font_scale'),
+      };
+    });
+    assert.equal(prefsApplied.isDark, true);
+    assert.equal(prefsApplied.is125, true);
+    assert.equal(prefsApplied.lsTheme, 'dark');
+    assert.equal(prefsApplied.lsScale, '125');
+
+    // Recarregar para confirmar persistência + carregar planilha com tema escuro + 125% sem overflow
+    await page.reload();
+    await openPanel(page);
+    await page.locator('#preenche-sigeduc-host >> #ps-notas-file').setInputFiles(mixedXlsxPath);
+    await page.waitForFunction(() => Boolean(document.getElementById('preenche-sigeduc-host').shadowRoot.getElementById('ps-notas-run')));
+    const darkMobileLayout = await page.evaluate(() => {
+      const sr = document.getElementById('preenche-sigeduc-host').shadowRoot;
+      const drawer = sr.getElementById('ps-drawer');
+      const body = sr.getElementById('ps-body');
+      return {
+        isDark: drawer.classList.contains('ps-dark'),
+        is125: drawer.classList.contains('ps-scale-125'),
+        bodyOverflowX: body.scrollWidth > body.clientWidth + 1,
+        hasOuterVScroll: window.innerWidth - document.documentElement.clientWidth > 0,
+        hasOuterHScroll: window.innerHeight - document.documentElement.clientHeight > 0,
+      };
+    });
+    assert.equal(darkMobileLayout.isDark, true);
+    assert.equal(darkMobileLayout.is125, true);
+    assert.equal(darkMobileLayout.bodyOverflowX, false);
+    assert.equal(darkMobileLayout.hasOuterVScroll, false);
+    assert.equal(darkMobileLayout.hasOuterHScroll, false);
+    await page.screenshot({ path: path.join(evidenciasDir, 'notas_dark_mode_mobile.png') });
 
     console.log('[E2E] Todos os cenários E2E passaram com sucesso!');
   } finally {

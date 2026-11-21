@@ -6,9 +6,10 @@ Compatível com Chrome/Chromium Desktop e navegadores Android com suporte a exte
 
 ## Funcionalidades
 
-- **Lançamento de Notas:** Importação de planilhas (`.xlsx`, `.xls`, `.csv`) ou colagem tabular (`Ctrl+V`), mapeamento de colunas por avaliação, prévia de correspondência exata de estudantes e preenchimento sequencial via fila AJAX (`A4J.AJAX.Submit`).
+- **Lançamento de Notas:** Importação de planilhas (`.xlsx`, `.xls`, `.csv`) ou colagem tabular (`Ctrl+V`), mapeamento persistente de colunas por avaliação, prévia de correspondência exata de estudantes, preenchimento sequencial via fila AJAX (`A4J.AJAX.Submit`) e automação pós-lançamento de **Avaliações Não Realizadas** (`NF`/`Não Fez`/`FV`/em branco vs nota real `0,0`).
 - **Lançamento de Frequência:** Suporte a dia único ou lote de múltiplas datas, com conversão automática de presença/falta (`P`/`F`/`1`/`0`) respeitando a lógica invertida do SIGEduc (checkbox marcado = falta) e sanitização de observações.
 - **Extração / Exportação:** Exportação contextual de dados das telas do SIGEduc para `.xlsx`, `.csv` e `.json`.
+- **Acessibilidade e Tema:** Escala de fonte (`100%`, `112%`, `125%`) e Modo Escuro (Dark Mode) isolados no Shadow DOM, salvos localmente em `localStorage`.
 - **Privacidade e Segurança:** Processamento 100% local no navegador, sem telemetria ou chamadas externas. Caso o modo opcional de auto-gravação seja utilizado, a senha permanece apenas em memória RAM durante a execução.
 
 ## Estrutura do Projeto

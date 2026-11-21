@@ -20,9 +20,9 @@ Instruções de arquitetura, invariantes e verificação para agentes trabalhand
   - `grades.ts`: parse, validação contra nota máxima da atividade e formatação (`toFixed(1)`).
   - `attendance.ts`: parser de `P`/`F`/`1`/`0`/múltiplos horários, inversão booleana para o SIGEduc, parse de datas (`DD/MM/AAAA`, ISO, serial Excel -> mês `0-indexed`) e sanitização de observações (sem `\n`, máx. 500 chars).
 - `src/sigeduc/`: Adaptadores DOM específicos das telas do SIGEduc-BA:
-  - `detector.ts`: detecta `portal_docente`, `lancar_notas`, `lancar_frequencia`, `gerenciar_avaliacoes`, `conteudo_ministrado` e sessão expirada (`login`).
-  - `scraper.ts`: extração contextual das 4 telas e montagem de modelos exportáveis.
-  - `filler-notas.ts`: prévia e fila sequencial AJAX aguardando `xhr-start`/`xhr-end` por campo.
+  - `detector.ts`: detecta `portal_docente`, `lancar_notas`, `avaliacoes_nao_realizadas`, `lancar_frequencia`, `gerenciar_avaliacoes`, `conteudo_ministrado` e sessão expirada (`login`).
+  - `scraper.ts`: extração contextual das telas e montagem de modelos exportáveis.
+  - `filler-notas.ts`: prévia, fila sequencial AJAX aguardando `xhr-start`/`xhr-end` por campo, persistência da fila de Não Realização em `sessionStorage` (`preenche_sigeduc_pending_nr`), observador automático do modal `#formulario:confirmationDialog` e marcação de checkboxes na tela `avaliacoes_nao_realizadas`.
   - `filler-frequencia.ts`: preenchimento de dia único ou lote de múltiplas datas clicando em `#formCalendarios` e aguardando atualização de `Lista de Frequência - DD/MM/AAAA`.
 - `src/ui/`: `styles.ts` e `panel.ts` (Shadow DOM responsivo desktop `>640px` e mobile `<=640px`).
 - `src/popup/`: popup minimalista da barra do navegador.
