@@ -1,0 +1,36 @@
+{
+  "generatedAt": "2026-11-21T21:04:59.417Z",
+  "parse500x10_20runs": {
+    "xlsx_ms": {
+      "avg": 16.02,
+      "p99": 34.22,
+      "max": 34.22
+    },
+    "csv_ms": {
+      "avg": 0.32,
+      "p99": 0.58,
+      "max": 0.58
+    },
+    "sla_limit_ms": 250,
+    "passed": true
+  },
+  "panelOpen_ms": 17.29,
+  "panelOpen_sla_ms": 100,
+  "sequentialFill_45x4": {
+    "expectedAjax": 180,
+    "receivedAjax": 180,
+    "ajaxLossRatePct": 0,
+    "duration_ms": 6104.06,
+    "exactMatched": 45,
+    "falsePositives": 0,
+    "passed": true
+  },
+  "bundleSizes_KB": {
+    "distChrome_KB": 492.8,
+    "distFirefox_KB": 493,
+    "chromeZip_KB": 163.6,
+    "firefoxZip_KB": 163.7,
+    "sla_uncompressed_limit_KB": 1536,
+    "passed": true
+  }
+}

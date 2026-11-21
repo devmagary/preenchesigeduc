@@ -1,0 +1,45 @@
+{
+  "startedAt": "2026-11-21T21:04:41.726Z",
+  "finishedAt": "2026-11-21T21:05:10.219Z",
+  "overallStatus": "PASSED",
+  "steps": [
+    {
+      "name": "typecheck",
+      "status": "passed",
+      "elapsedMs": 2627.1
+    },
+    {
+      "name": "build",
+      "status": "passed",
+      "elapsedMs": 2256.6
+    },
+    {
+      "name": "package",
+      "status": "passed",
+      "elapsedMs": 1220.6
+    },
+    {
+      "name": "unit_tests",
+      "status": "passed",
+      "elapsedMs": 2809.6
+    },
+    {
+      "name": "benchmark",
+      "status": "passed",
+      "elapsedMs": 8830.4
+    },
+    {
+      "name": "e2e_tests",
+      "status": "passed",
+      "elapsedMs": 10728.6
+    }
+  ],
+  "slaChecks": {
+    "parse500x10_p99_lt_250ms": true,
+    "panelOpen_lt_100ms": true,
+    "ajaxLossRate_0pct": true,
+    "matching_exact_45_and_0_fp": true,
+    "bundles_lt_1536KB": true
+  },
+  "evidenceCount": 16
+}

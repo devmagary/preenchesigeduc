@@ -1,0 +1,29 @@
+{
+  "name": "preenche-sigeduc",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Extensão MV3 para Chrome Desktop e navegadores Android compatíveis para importação de notas, frequências e scraping contextual no SIGEduc-BA.",
+  "scripts": {
+    "dev": "node scripts/build.mjs --watch",
+    "build": "node scripts/build.mjs",
+    "package": "node scripts/package.mjs",
+    "test:unit": "vitest run",
+    "benchmark": "node trabalho/benchmark.mjs",
+    "test:e2e": "node tests/e2e/extension.spec.mjs",
+    "test": "npm run build && npm run test:unit && npm run benchmark && npm run test:e2e",
+    "harness": "node trabalho/harness.mjs"
+  },
+  "dependencies": {
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "archiver": "^7.0.1",
+    "jsdom": "^26.0.0",
+    "playwright-core": "^1.50.0",
+    "typescript": "^5.7.3",
+    "vite": "^6.1.0",
+    "vitest": "^3.0.5"
+  }
+}

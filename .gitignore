@@ -1,0 +1,45 @@
+# Dependências
+node_modules/
+
+# Builds e artefatos empacotados
+dist/
+*.zip
+*.crx
+*.xpi
+
+# Artefatos temporários e evidências de teste/harness
+trabalho/dist-e2e/
+trabalho/evidencias/
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+coverage/
+.vitest/
+
+# Variáveis de ambiente e credenciais locais
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Logs e caches
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.tsbuildinfo
+*.tmp
+*.temp
+
+# Sistema operacional e IDEs
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+*.swp
+*.swo
+*~

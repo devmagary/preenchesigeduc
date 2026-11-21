@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>SIGEduc - Portal Docente (Fixture)</title>
+  <style>
+    body { font-family: Verdana, sans-serif; font-size: 12px; margin: 16px; background: #f3f5f8; }
+    table { border-collapse: collapse; width: 100%; background: #fff; }
+    th, td { border: 1px solid #cbd5e1; padding: 6px 8px; text-align: left; }
+    th { background: #e2e8f0; }
+  </style>
+</head>
+<body>
+  <div id="perfil-docente">
+    <p class="info-docente">PROF. DOCENTE MODELO</p>
+  </div>
+  <div id="turmas-portal">
+    <h4>Minhas Turmas:</h4>
+    <form id="formTurmas" method="post" action="/sigeduc/portais/docente/docente.jsf">
+      <input type="hidden" name="DOUBLE_CHECK_TOKEN" value="mock-token-portal" />
+      <input type="hidden" name="javax.faces.ViewState" value="j_id1" />
+      <table id="formTurmas:turmasProfessorTable">
+        <caption><strong>Turmas Regulares</strong></caption>
+        <thead>
+          <tr>
+            <th>Turma</th><th>Ano</th><th>Escola</th><th>Oferta de Ensino</th>
+            <th>Ano/Série</th><th>Periodicidade</th><th>Componente</th><th>Qtd. de Estudantes</th>
+            <th></th><th></th><th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="linhaPar">
+            <td>TURMA-ANUAL-1A</td><td>2026</td><td>ESCOLA MODELO ESTADUAL</td>
+            <td>TÉCNICO EM INFORMÁTICA-ENSINO MÉDIO INTEGRADO</td><td>1ª SÉRIE</td><td>Anual</td>
+            <td>EDUCAÇÃO DIGITAL E MIDIÁTICA</td><td>45</td>
+            <td><a href="/sigeduc/diario_classe/lancar_notas/form_estudantes_notas_avaliacoes_unidade.jsf" onclick="/* 'idTurmaComponente':'900001' */ return true;">Lançar Resultados</a></td>
+            <td><a href="/sigeduc/diario_classe/frequencia_aluno/form.jsf" onclick="/* 'idTurmaComponente':'900001' */ return true;">Lançar Frequência</a></td>
+            <td><a href="/sigeduc/ensino/grupo_avaliacao_unidade/lista.jsf" onclick="/* 'idTurmaComponente':'900001' */ return true;">Avaliações</a></td>
+          </tr>
+          <tr class="linhaImpar">
+            <td>TURMA-SEM-M1</td><td>2026</td><td>ESCOLA MODELO ESTADUAL</td>
+            <td>TÉCNICO EM ADMINISTRAÇÃO-SUBSEQUENTE</td><td>MÓDULO I</td><td>2º Semestre</td>
+            <td>INFORMÁTICA APLICADA</td><td>45</td>
+            <td><a href="/sigeduc/diario_classe/lancar_notas/form_estudantes_notas_avaliacoes_unidade.jsf?tipo=semestral" onclick="/* 'idTurmaComponente':'900002' */ return true;">Lançar Resultados</a></td>
+            <td><a href="/sigeduc/diario_classe/frequencia_aluno/form.jsf" onclick="/* 'idTurmaComponente':'900002' */ return true;">Lançar Frequência</a></td>
+            <td><a href="/sigeduc/ensino/grupo_avaliacao_unidade/lista.jsf" onclick="/* 'idTurmaComponente':'900002' */ return true;">Avaliações</a></td>
+          </tr>
+        </tbody>
+      </table>
+    </form>
+  </div>
+</body>
+</html>

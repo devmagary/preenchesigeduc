@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>SIGEduc - Informar Frequência (Fixture)</title>
+  <style>
+    body { font-family: Verdana, sans-serif; font-size: 12px; margin: 16px; background: #f8fafc; }
+    .layout { display: grid; grid-template-columns: 280px 1fr; gap: 16px; }
+    table { border-collapse: collapse; width: 100%; background: #fff; margin-bottom: 10px; }
+    th, td { border: 1px solid #cbd5e1; padding: 5px 6px; text-align: left; }
+    th { background: #e2e8f0; }
+    @media (max-width: 640px) { .layout { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <h2>Diário de Classe Digital &gt; Informar Frequência da Turma</h2>
+  <p>Todos os estudantes por padrão possuem 100% de presença. Marcar significa que o estudante FALTOU.</p>
+  <table id="dadosTurma">
+    <caption>Dados da Turma</caption>
+    <tr><td>Escola:</td><td>ESCOLA MODELO ESTADUAL</td></tr>
+    <tr><td>Turma:</td><td>TÉCNICO EM INFORMÁTICA - 1ª SÉRIE - TURMA-ANUAL-1A / VESPERTINO</td></tr>
+    <tr><td>Componente:</td><td>EDUCAÇÃO DIGITAL E MIDIÁTICA</td></tr>
+    <tr><td>Horário(s):</td><td>45T1</td></tr>
+  </table>
+
+  <div class="layout">
+    <form id="formCalendarios" method="post" action="/sigeduc/diario_classe/frequencia_aluno/form.jsf">
+      <input type="hidden" name="DOUBLE_CHECK_TOKEN" value="mock-token-cal" />
+      <table>
+        <caption>Agosto</caption>
+        <thead><tr><th>D</th><th>S</th><th>T</th><th>Q</th><th>Q</th><th>S</th><th>S</th></tr></thead>
+        <tbody>
+          <tr>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td>1</td>
+          </tr>
+          <tr>
+            <td>2</td><td>3</td><td>4</td>
+            <td><a href="#" id="cal-05-08" onclick="A4J.AJAX.Submit('formCalendarios', event, {'mes':7,'diaSemana':4,'ano':2026,'dia':5}); return false;">5</a></td>
+            <td>6</td><td>7</td><td>8</td>
+          </tr>
+          <tr>
+            <td>9</td><td>10</td><td>11</td>
+            <td><a href="#" id="cal-12-08" onclick="A4J.AJAX.Submit('formCalendarios', event, {'mes':7,'diaSemana':4,'ano':2026,'dia':12}); return false;">12</a></td>
+            <td>13</td><td>14</td><td>15</td>
+          </tr>
+          <tr>
+            <td>16</td><td>17</td><td>18</td>
+            <td><a href="#" id="cal-19-08" onclick="A4J.AJAX.Submit('formCalendarios', event, {'mes':7,'diaSemana':4,'ano':2026,'dia':19}); return false;">19</a></td>
+            <td>20</td><td>21</td><td>22</td>
+          </tr>
+        </tbody>
+      </table>
+    </form>
+
+    <form id="formFrequencia" method="post" action="/sigeduc/diario_classe/frequencia_aluno/form.jsf">
+      <input type="hidden" name="DOUBLE_CHECK_TOKEN" value="mock-token-freq" />
+      <table id="tabelaFrequencia">
+        <caption id="freqCaption">Lista de Frequência - 05/08/2026</caption>
+        <thead id="freqThead">
+          <tr><th>#</th><th>Matrícula</th><th>Nome</th><th>Observação</th><th>1° horário</th></tr>
+        </thead>
+        <tbody id="freqTbody">
+      <tr class="linhaPar">
+        <td>1</td>
+        <td>202690010001</td>
+        <td><div>ANA CLARA FERREIRA</div></td>
+        <td><textarea id="formFrequencia:rows:0:observacaoInput" name="formFrequencia:rows:0:observacaoInput" cols="25" rows="2"></textarea></td>
+        <td><input id="formFrequencia:rows:0:slot0" type="checkbox" /></td>
+      </tr>
+    
+      <tr class="linhaImpar">
+        <td>2</td>
+        <td>202690010002</td>
+        <td><div>BRUNO HENRIQUE SOUZA</div></td>
+        <td><textarea id="formFrequencia:rows:1:observacaoInput" name="formFrequencia:rows:1:observacaoInput" cols="25" rows="2"></textarea></td>
+        <td><input id="formFrequencia:rows:1:slot0" type="checkbox" /></td>
+      </tr>
+    
+      <tr class="linhaPar">
+        <td>3</td>
+        <td>202690010003</td>
+        <td><div>CARLA MENDES OLIVEIRA</div></td>
+        <td><textarea id="formFrequencia:rows:2:observacaoInput" name="formFrequencia:rows:2:observacaoInput" cols="25" rows="2"></textarea></td>
+        <td><input id="formFrequencia:rows:2:slot0" type="checkbox" /></td>
+      </tr>
+    
+      <tr class="linhaImpar">
+        <td>4</td>
+        <td>202690010004</td>
+        <td><div>DANIEL COSTA ALMEIDA</div></td>
+        <td><textarea id="formFrequencia:rows:3:observacaoInput" name="formFrequencia:rows:3:observacaoInput" cols="25" rows="2"></textarea></td>
+        <td><input id="formFrequencia:rows:3:slot0" type="checkbox" /></td>
+      </tr>
+    
+      <tr class="linhaPar">
+        <td>5</td>
+        <td>202690010005</td>
+        <td><div>EDUARDA RIBEIRO SANTOS</div></td>
+        <td><textarea id="formFrequencia:rows:4:observacaoInput" name="formFrequencia:rows:4:observacaoInput" cols="25" rows="2"></textarea></td>
+        <td><input id="formFrequencia:rows:4:slot0" type="checkbox" /></td>
+      </tr>
+    
+      <tr class="linhaImpar">
+        <td>6</td>
+        <td>202690010006</td>
+        <td><div>FELIPE BARBOSA LIMA</div></td>
+        <td><textarea id="formFrequencia:rows:5:observacaoInput" name="formFrequencia:rows:5:observacaoInput" cols="25" rows="2"></textarea></td>
+        <td><input id="formFrequencia:rows:5:slot0" type="checkbox" /></td>
+      </tr>
+    
+      <tr class="linhaPar">
+        <td>7</td>
+        <td>202690010007</td>
+        <td><div>GABRIELA NASCIMENTO ROCHA <span aria-hidden="true"></span></div></td>
+        <td><textarea id="formFrequencia:rows:6:observacaoInput" name="formFrequencia:rows:6:observacaoInput" cols="25" rows="2"></textarea></td>
+        <td><input id="formFrequencia:rows:6:slot0" type="checkbox" /></td>
+      </tr>
+    
+      <tr class="linhaImpar">
+        <td>8</td>
+        <td>202690010008</td>
+        <td><div>HEITOR CARVALHO DIAS</div></td>
+        <td><textarea id="formFrequencia:rows:7:observacaoInput" name="formFrequencia:rows:7:observacaoInput" cols="25" rows="2"></textarea></td>
+        <td><input id="formFrequencia:rows:7:slot0" type="checkbox" /></td>
+      </tr>
+    
+      <tr class="linhaPar">
+        <td>9</td>
+        <td>202690010009</td>
+        <td><div>ISABELA MARTINS PEREIRA</div></td>
+        <td><textarea id="formFrequencia:rows:8:observacaoInput" name="formFrequencia:rows:8:observacaoInput" cols="25" rows="2"></textarea></td>
+        <td><input id="formFrequencia:rows:8:slot0" type="checkbox" /></td>
+      </tr>
+    
+      <tr class="linhaImpar">
+        <td>10</td>
+        <td>202690010010</td>
+        <td><div>JOÃO PEDRO GOMES</div></td>
+        <td><textarea id="formFrequencia:rows:9:observacaoInput" name="formFrequencia:rows:9:observacaoInput" cols="25" rows="2"></textarea></td>
+        <td><input id="formFrequencia:rows:9:slot0" type="checkbox" /></td>
+      </tr>
+    
+      <tr class="linhaPar">
+        <td>11</td>
+        <td>202690010011</td>
+        <td><div>KAMILA TEIXEIRA CARDOSO</div></td>
+        <td><textarea id="formFrequencia:rows:10:observacaoInput" name="formFrequencia:rows:10:observacaoInput" cols="25" rows="2"></textarea></td>
+        <td><input id="formFrequencia:rows:10:slot0" type="checkbox" /></td>
+      </tr>
+    
+      <tr class="linhaImpar">
+        <td>12</td>
+        <td>202690010012</td>
+        <td><div>LUCAS ARAÚJO VIEIRA</div></td>
+        <td><textarea id="formFrequencia:rows:11:observacaoInput" name="formFrequencia:rows:11:observacaoInput" cols="25" rows="2"></textarea></td>
+        <td><input id="formFrequencia:rows:11:slot0" type="checkbox" /></td>
+      </tr>
+    
+      <tr class="linhaPar">
+        <td>13</td>
+        <td>202690010013</td>
+        <td><div>MARIANA CORREIA FERNANDES</div></td>
+        <td><textarea id="formFrequencia:rows:12:observacaoInput" name="formFrequencia:rows:12:observacaoInput" cols="25" rows="2"></textarea></td>
+        <td><input id="formFrequencia:rows:12:slot0" type="checkbox" /></td>
+      </tr>
+    
+      <tr class="linhaImpar">
+        <td>14</td>
+        <td>202690010014</td>
+        <td><div>NATHÁLIA MOREIRA CASTRO</div></td>
+        <td><textarea id="formFrequencia:rows:13:observacaoInput" name="formFrequencia:rows:13:observacaoInput" cols="25" rows="2"></textarea></td>
+        <td><input id="formFrequencia:rows:13:slot0" type="checkbox" /></td>
+      </tr>
+    
+      <tr class="linhaPar">
+        <td>15</td>
+        <td>202690010015</td>
+        <td><div>OTÁVIO NOGUEIRA PINTO</div></td>
+        <td><textarea id="formFrequencia:rows:14:observacaoInput" name="formFrequencia:rows:14:observacaoInput" cols="25" rows="2"></textarea></td>
+        <td><input id="formFrequencia:rows:14:slot0" type="checkbox" /></td>
+      </tr>
+    
+      <tr class="linhaImpar">
+        <td>16</td>
+        <td>202690010016</td>
+        <td><div>PAULA CRISTINA MONTEIRO</div></td>
+        <td><textarea id="formFrequencia:rows:15:observacaoInput" name="formFrequencia:rows:15:observacaoInput" cols="25" rows="2"></textarea></td>
+        <td><input id="formFrequencia:rows:15:slot0" type="checkbox" /></td>
+      </tr>
+    
+      <tr class="linhaPar">
+        <td>17</td>
+        <td>202690010017</td>
+        <td><div>RAFAEL BORGES CAMPOS</div></td>
+        <td><textarea id="formFrequencia:rows:16:observacaoInput" name="formFrequencia:rows:16:observacaoInput" cols="25" rows="2"></textarea></td>
+        <td><input id="formFrequencia:rows:16:slot0" type="checkbox" /></td>
+      </tr>
+    
+      <tr class="linhaImpar">
+        <td>18</td>
+        <td>202690010018</td>
+        <td><div>SOFIA CAVALCANTE RAMOS</div></td>
+        <td><textarea id="formFrequencia:rows:17:observacaoInput" name="formFrequencia:rows:17:observacaoInput" cols="25" rows="2"></textarea></td>
+        <td><input id="formFrequencia:rows:17:slot0" type="checkbox" /></td>
+      </tr>
+    
+      <tr class="linhaPar">
+        <td>19</td>
+        <td>202690010019</td>
+        <td><div>THIAGO FREITAS DUARTE</div></td>
+        <td><textarea id="formFrequencia:rows:18:observacaoInput" name="formFrequencia:rows:18:observacaoInput" cols="25" rows="2"></textarea></td>
+        <td><input id="formFrequencia:rows:18:slot0" type="checkbox" /></td>
+      </tr>
+    
+      <tr class="linhaImpar">
+        <td>20</td>
+        <td>202690010020</td>
+        <td><div>VITÓRIA MOURA REZENDE</div></td>
+        <td><textarea id="formFrequencia:rows:19:observacaoInput" name="formFrequencia:rows:19:observacaoInput" cols="25" rows="2"></textarea></td>
+        <td><input id="formFrequencia:rows:19:slot0" type="checkbox" /></td>
+      </tr>
+    
+      <tr class="linhaPar">
+        <td>21</td>
+        <td>202690010021</td>
+        <td><div>ALICE BATISTA MACHADO</div></td>
+        <td><textarea id="formFrequencia:rows:20:observacaoInput" name="formFrequencia:rows:20:observacaoInput" cols="25" rows="2"></textarea></td>
+        <td><input id="formFrequencia:rows:20:slot0" type="checkbox" /></td>
+      </tr>
+    
+      <tr class="linhaImpar">
+        <td>22</td>
+        <td>202690010022</td>
+        <td><div>BERNARDO XAVIER CUNHA</div></td>
+        <td><textarea id="formFrequencia:rows:21:observacaoInput" name="formFrequencia:rows:21:observacaoInput" cols="25" rows="2"></textarea></td>
+        <td><input id="formFrequencia:rows:21:slot0" type="checkbox" /></td>
+      </tr>
+    
+      <tr class="linhaPar">
+        <td>23</td>
+        <td>202690010023</td>
+        <td><div>CAMILA FARIAS BARRETO</div></td>
+        <td><textarea id="formFrequencia:rows:22:observacaoInput" name="formFrequencia:rows:22:observacaoInput" cols="25" rows="2"></textarea></td>
+        <td><input id="formFrequencia:rows:22:slot0" type="checkbox" /></td>
+      </tr>
+    
+      <tr class="linhaImpar">
+        <td>24</td>
+        <td>202690010024</td>
+        <td><div>DAVI LOPES MAGALHÃES</div></td>
+        <td><textarea id="formFrequencia:rows:23:observacaoInput" name="formFrequencia:rows:23:observacaoInput" cols="25" rows="2"></textarea></td>
+        <td><input id="formFrequencia:rows:23:slot0" type="checkbox" /></td>
+      </tr>
+    
+      <tr class="linhaPar">
+        <td>25</td>
+        <td>202690010025</td>
+        <td><div>ELENA PIRES TAVARES</div></td>
+        <td><textarea id="formFrequencia:rows:24:observacaoInput" name="formFrequencia:rows:24:observacaoInput" cols="25" rows="2"></textarea></td>
+        <td><input id="formFrequencia:rows:24:slot0" type="checkbox" /></td>
+      </tr>
+    
+      <tr class="linhaImpar">
+        <td>26</td>
+        <td>202690010026</td>
+        <td><div>FÁBIO SILVEIRA AGUIAR</div></td>
+        <td><textarea id="formFrequencia:rows:25:observacaoInput" name="formFrequencia:rows:25:observacaoInput" cols="25" rows="2"></textarea></td>
+        <td><input id="formFrequencia:rows:25:slot0" type="checkbox" /></td>
+      </tr>
+    
+      <tr class="linhaPar">
+        <td>27</td>
+        <td>202690010027</td>
+        <td><div>GIOVANNA MELO ANDRADE</div></td>
+        <td><textarea id="formFrequencia:rows:26:observacaoInput" name="formFrequencia:rows:26:observacaoInput" cols="25" rows="2"></textarea></td>
+        <td><input id="formFrequencia:rows:26:slot0" type="checkbox" /></td>
+      </tr>
+    
+      <tr class="linhaImpar">
+        <td>28</td>
+        <td>202690010028</td>
+        <td><div>HUGO FONTES QUEIROZ</div></td>
+        <td><textarea id="formFrequencia:rows:27:observacaoInput" name="formFrequencia:rows:27:observacaoInput" cols="25" rows="2"></textarea></td>
+        <td><input id="formFrequencia:rows:27:slot0" type="checkbox" /></td>
+      </tr>
+    
+      <tr class="linhaPar">
+        <td>29</td>
+        <td>202690010029</td>
+        <td><div>IGOR SAMPAIO LACERDA</div></td>
+        <td><textarea id="formFrequencia:rows:28:observacaoInput" name="formFrequencia:rows:28:observacaoInput" cols="25" rows="2"></textarea></td>
+        <td><input id="formFrequencia:rows:28:slot0" type="checkbox" /></td>
+      </tr>
+    
+      <tr class="linhaImpar">
+        <td>30</td>
+        <td>202690010030</td>
+        <td><div>JÚLIA BEZERRA NEVES</div></td>
+        <td><textarea id="formFrequencia:rows:29:observacaoInput" name="formFrequencia:rows:29:observacaoInput" cols="25" rows="2"></textarea></td>
+        <td><input id="formFrequencia:rows:29:slot0" type="checkbox" /></td>
+      </tr>
+    
+      <tr class="linhaPar">
+        <td>31</td>
+        <td>202690010031</td>
+        <td><div>KAUÃ MIRANDA SALES</div></td>
+        <td><textarea id="formFrequencia:rows:30:observacaoInput" name="formFrequencia:rows:30:observacaoInput" cols="25" rows="2"></textarea></td>
+        <td><input id="formFrequencia:rows:30:slot0" type="checkbox" /></td>
+      </tr>
+    
+      <tr class="linhaImpar">
+        <td>32</td>
+        <td>202690010032</td>
+        <td><div>LARISSA BRAGA TORRES</div></td>
+        <td><textarea id="formFrequencia:rows:31:observacaoInput" name="formFrequencia:rows:31:observacaoInput" cols="25" rows="2"></textarea></td>
+        <td><input id="formFrequencia:rows:31:slot0" type="checkbox" /></td>
+      </tr>
+    
+      <tr class="linhaPar">
+        <td>33</td>
+        <td>202690010033</td>
+        <td><div>MATEUS GUIMARÃES COUTO</div></td>
+        <td><textarea id="formFrequencia:rows:32:observacaoInput" name="formFrequencia:rows:32:observacaoInput" cols="25" rows="2"></textarea></td>
+        <td><input id="formFrequencia:rows:32:slot0" type="checkbox" /></td>
+      </tr>
+    
+      <tr class="linhaImpar">
+        <td>34</td>
+        <td>202690010034</td>
+        <td><div>NICOLE VALENTE PEIXOTO</div></td>
+        <td><textarea id="formFrequencia:rows:33:observacaoInput" name="formFrequencia:rows:33:observacaoInput" cols="25" rows="2"></textarea></td>
+        <td><input id="formFrequencia:rows:33:slot0" type="checkbox" /></td>
+      </tr>
+    
+      <tr class="linhaPar">
+        <td>35</td>
+        <td>202690010035</td>
+        <td><div>PEDRO HENRIQUE AMARAL</div></td>
+        <td><textarea id="formFrequencia:rows:34:observacaoInput" name="formFrequencia:rows:34:observacaoInput" cols="25" rows="2"></textarea></td>
+        <td><input id="formFrequencia:rows:34:slot0" type="checkbox" /></td>
+      </tr>
+    
+      <tr class="linhaImpar">
+        <td>36</td>
+        <td>202690010036</td>
+        <td><div>REBECA PORTO ASSIS</div></td>
+        <td><textarea id="formFrequencia:rows:35:observacaoInput" name="formFrequencia:rows:35:observacaoInput" cols="25" rows="2"></textarea></td>
+        <td><input id="formFrequencia:rows:35:slot0" type="checkbox" /></td>
+      </tr>
+    
+      <tr class="linhaPar">
+        <td>37</td>
+        <td>202690010037</td>
+        <td><div>SAMUEL VASCONCELOS DINIZ</div></td>
+        <td><textarea id="formFrequencia:rows:36:observacaoInput" name="formFrequencia:rows:36:observacaoInput" cols="25" rows="2"></textarea></td>
+        <td><input id="formFrequencia:rows:36:slot0" type="checkbox" /></td>
+      </tr>
+    
+      <tr class="linhaImpar">
+        <td>38</td>
+        <td>202690010038</td>
+        <td><div>TAINÁ CORDEIRO BASTOS</div></td>
+        <td><textarea id="formFrequencia:rows:37:observacaoInput" name="formFrequencia:rows:37:observacaoInput" cols="25" rows="2"></textarea></td>
+        <td><input id="formFrequencia:rows:37:slot0" type="checkbox" /></td>
+      </tr>
+    
+      <tr class="linhaPar">
+        <td>39</td>
+        <td>202690010039</td>
+        <td><div>VINÍCIUS CHAVES MEDEIROS</div></td>
+        <td><textarea id="formFrequencia:rows:38:observacaoInput" name="formFrequencia:rows:38:observacaoInput" cols="25" rows="2"></textarea></td>
+        <td><input id="formFrequencia:rows:38:slot0" type="checkbox" /></td>
+      </tr>
+    
+      <tr class="linhaImpar">
+        <td>40</td>
+        <td>202690010040</td>
+        <td><div>YASMIN NOBREGA FALCÃO</div></td>
+        <td><textarea id="formFrequencia:rows:39:observacaoInput" name="formFrequencia:rows:39:observacaoInput" cols="25" rows="2"></textarea></td>
+        <td><input id="formFrequencia:rows:39:slot0" type="checkbox" /></td>
+      </tr>
+    
+      <tr class="linhaPar">
+        <td>41</td>
+        <td>202690010041</td>
+        <td><div>ARTHUR SIQUEIRA PAIXÃO</div></td>
+        <td><textarea id="formFrequencia:rows:40:observacaoInput" name="formFrequencia:rows:40:observacaoInput" cols="25" rows="2"></textarea></td>
+        <td><input id="formFrequencia:rows:40:slot0" type="checkbox" /></td>
+      </tr>
+    
+      <tr class="linhaImpar">
+        <td>42</td>
+        <td>202690010042</td>
+        <td><div>BEATRIZ FONSECA COELHO</div></td>
+        <td><textarea id="formFrequencia:rows:41:observacaoInput" name="formFrequencia:rows:41:observacaoInput" cols="25" rows="2"></textarea></td>
+        <td><input id="formFrequencia:rows:41:slot0" type="checkbox" /></td>
+      </tr>
+    
+      <tr class="linhaPar">
+        <td>43</td>
+        <td>202690010043</td>
+        <td><div>CAIO REIS MARINHO</div></td>
+        <td><textarea id="formFrequencia:rows:42:observacaoInput" name="formFrequencia:rows:42:observacaoInput" cols="25" rows="2"></textarea></td>
+        <td><input id="formFrequencia:rows:42:slot0" type="checkbox" /></td>
+      </tr>
+    
+      <tr class="linhaImpar">
+        <td>44</td>
+        <td>202690010044</td>
+        <td><div>DÉBORA ANTUNES LEITE</div></td>
+        <td><textarea id="formFrequencia:rows:43:observacaoInput" name="formFrequencia:rows:43:observacaoInput" cols="25" rows="2"></textarea></td>
+        <td><input id="formFrequencia:rows:43:slot0" type="checkbox" /></td>
+      </tr>
+    
+      <tr class="linhaPar">
+        <td>45</td>
+        <td>202690010045</td>
+        <td><div>ENZO FIGUEIREDO SALLES</div></td>
+        <td><textarea id="formFrequencia:rows:44:observacaoInput" name="formFrequencia:rows:44:observacaoInput" cols="25" rows="2"></textarea></td>
+        <td><input id="formFrequencia:rows:44:slot0" type="checkbox" /></td>
+      </tr>
+    </tbody>
+      </table>
+      <div>
+        <label for="formFrequencia:senha">Senha:</label>
+        <input id="formFrequencia:senha" type="password" name="formFrequencia:senha" value="" />
+        <input id="formFrequencia:botaoGravarFreq" type="submit" value="Gravar Frequências" onclick="if (confirm('Deseja realmente gravar as frequências?')) { window.__freqSaved = (window.__freqSaved || 0) + 1; return false; } return false;" />
+      </div>
+    </form>
+  </div>
+
+  <script>
+    // Simula bloqueio real de Ctrl+V e paste do SIGEduc no document
+    window.__sigeducPasteBlockedCount = 0;
+    document.addEventListener('paste', function(ev) {
+      window.__sigeducPasteBlockedCount++;
+      ev.preventDefault();
+    });
+    document.addEventListener('keydown', function(ev) {
+      if (ev.ctrlKey && (ev.key === 'v' || ev.key === 'V')) {
+        window.__sigeducPasteBlockedCount++;
+        ev.preventDefault();
+      }
+    });
+
+    window.A4J = {
+      AJAX: {
+        Submit: function(formId, ev, params) {
+          var xhr = new XMLHttpRequest();
+          xhr.open('POST', '/sigeduc/diario_classe/frequencia_aluno/form.jsf', true);
+          xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+          xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+              var d = JSON.parse(xhr.responseText);
+              document.getElementById('freqCaption').textContent = 'Lista de Frequência - ' + d.dateDisplay;
+              var slots = d.slots || 1;
+              var theadHtml = '<tr><th>#</th><th>Matrícula</th><th>Nome</th><th>Observação</th>';
+              for (var s = 0; s < slots; s++) {
+                theadHtml += '<th>' + (s + 1) + '° horário</th>';
+              }
+              theadHtml += '</tr>';
+              document.getElementById('freqThead').innerHTML = theadHtml;
+              var rows = document.querySelectorAll('#freqTbody tr');
+              rows.forEach(function(tr, idx) {
+                while (tr.children.length > 4) tr.removeChild(tr.lastElementChild);
+                for (var s = 0; s < slots; s++) {
+                  var td = document.createElement('td');
+                  var cb = document.createElement('input');
+                  cb.type = 'checkbox';
+                  cb.id = 'formFrequencia:rows:' + idx + ':slot' + s;
+                  td.appendChild(cb);
+                  tr.appendChild(td);
+                }
+              });
+            }
+          };
+          xhr.send('dia=' + params.dia + '&mes=' + params.mes + '&ano=' + params.ano);
+        }
+      }
+    };
+  </script>
+</body>
+</html>
