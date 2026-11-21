@@ -39,7 +39,7 @@ Instruções de arquitetura, invariantes e verificação para agentes trabalhand
 4. **Privacidade absoluta de senha e dados:** Se o modo opcional de auto-gravação for usado, a senha deve permanecer **exclusivamente em memória RAM** da instância do painel e ser zerada ao terminar ou fechar. Proibido persistir senha em `chrome.storage`, `localStorage`, `sessionStorage`, cookies ou logs. Zero telemetria ou chamadas externas.
 5. **Segurança do ambiente real:** Nunca executar testes automatizados de escrita contra `https://sigeduc.educacao.ba.gov.br`. Todo teste E2E deve rodar contra `trabalho/mock-server.mjs` carregando `trabalho/dist-e2e/` (no Chrome M137+, usar `--enable-unsafe-extension-debugging` + CDP `Extensions.loadUnpacked`).
 6. **Empacotamento limpo:** Nunca incluir `trabalho/`, fixtures ou `http://127.0.0.1/*` nos builds de produção `dist/chrome/` e `dist/firefox/`. Manter tamanho descompactado `< 1.5 MB` (`1536 KB`).
-7. **Versionamento contínuo (Git):** Toda alteração e implementação concluída e verificada deve ser registrada com `git commit` (mensagem clara e descritiva) e enviada (`git push`) para o repositório remoto `https://github.com/devmagary/preenchesigeduc.git`.
+7. **Versionamento contínuo (Git):** Toda alteração e implementação concluída e verificada deve ser registrada com `git commit` (mensagem clara, descritiva e **em português PT-BR**) e enviada (`git push`) para o repositório remoto `https://github.com/devmagary/preenchesigeduc.git`.
 
 ## Verificação Obrigatória
 
