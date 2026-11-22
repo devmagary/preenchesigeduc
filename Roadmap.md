@@ -81,5 +81,25 @@ As sugestões são organizadas sob a ótica de engenharia sênior, equilibrando 
   - **Android:** Avaliar assinatura gratuita *self-distributed* (`.xpi`) para Firefox Android e guia ilustrado passo a passo para Mises/Lemur/Edge Canary; opcionalmente avaliar geração de build Userscript (`.user.js`) caso o CSP do SIGEduc permita.
 - **Impacto técnico / Riscos:** Envolve `scripts/package.mjs`, documentação no `README.md` e eventuais testes de compatibilidade em navegadores Android.
 
+### 4. Modelo de Planilha Consolidada (Padrão CETEP) na Exportação
+- **Prioridade:** P2 — Média
+- **Dificuldade:** Média
+- **Contexto:** Padronizar os modelos de planilha exportados pela extensão com base no painel consolidado de notas (resumo geral por turma + blocos detalhados por aluno).
+- **Comportamento esperado:**
+  - Gerar `.xlsx` único com **Painel Consolidado no topo** (Turma, Total de Alunos, Média Geral, Aprovados `>= 5,0`, Recuperação `< 5,0`, Sem Nota, `% Aprovação`, `TOTAL GERAL`) + **uma aba por turma** (com opção de aba única consolidada).
+  - Colunas por turma: `Nº`, `Nome do Aluno`, `Matrícula`, colunas das avaliações, `Nota Geral` (soma), `Situação` (`Aprovado` / `Recuperação` / `Sem Nota`), `Observações`, além da linha `MÉDIA DA TURMA`.
+  - Critério/média mínima configurável (padrão `5,0`) e formatação condicional/visual quando suportada.
+- **Impacto técnico / Riscos:** Evolução de `src/core/spreadsheet.ts`; atenção ao limite de tamanho do pacote (`< 1.5 MB`) caso seja usada biblioteca `.xlsx` com suporte a estilos.
+
+### 5. Extração em Lote de Todas as Turmas (Portal do Docente)
+- **Prioridade:** P2 — Média
+- **Dificuldade:** Alta
+- **Contexto:** No `portal_docente`, permitir extrair automaticamente todas as turmas listadas sem precisar abrir manualmente uma por uma.
+- **Comportamento esperado:**
+  - Botão para iniciar varredura turma por turma: entrar na turma → acessar *Lançar Notas* → coletar `Nome`, `Matrícula` e notas/avaliações → retornar ao portal e avançar para a próxima turma.
+  - Identificar e nomear cada turma com **Curso**, **Modalidade** (Ensino Médio ou Técnico) e **Turno**.
+  - Consolidar tudo automaticamente no modelo de planilha `.xlsx` descrito no item 4.
+- **Impacto técnico / Riscos:** Navegação JSF multi-página com `javax.faces.ViewState` exige máquina de estados persistida em `sessionStorage` para sobreviver aos recarregamentos de página, além de tratamento robusto de sessão expirada e fila sequencial.
+
 ## P3 — Baixa Prioridade / Futuro
 *(Nenhum item registrado ainda)*
