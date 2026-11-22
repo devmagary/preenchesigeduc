@@ -43,6 +43,15 @@ As sugestões são organizadas sob a ótica de engenharia sênior, equilibrando 
 - **Comportamento esperado:** Preservar o estado aberto da seção de mapeamento durante re-renderizações ou trocas de coluna, recolhendo apenas por ação explícita do usuário.
 - **Impacto técnico / Riscos:** Ajuste localizado no controle de estado da UI em `src/ui/panel.ts`. Baixo risco de regressão.
 
+### 3. Seleção de Aba e Suporte a Planilhas Consolidadas (Múltiplas Turmas)
+- **Prioridade:** P1 — Alta
+- **Dificuldade:** Média
+- **Contexto:** Planilhas escolares reais frequentemente trazem múltiplas abas (uma por turma) em um único `.xlsx`/`.xls`, ou trazem um painel resumo no topo seguido de vários blocos de turmas na mesma aba. Atualmente o parser lê apenas a primeira aba e assume cabeçalho único no topo.
+- **Comportamento esperado:**
+  - Quando o arquivo possuir mais de uma aba (`workbook.SheetNames.length > 1`), exibir seletor de aba na UI para o docente escolher qual aba carregar.
+  - Aprimorar a detecção de cabeçalho em `src/core/spreadsheet.ts` para pular linhas de resumo/título no topo e identificar corretamente a tabela de alunos (e, se houver múltiplos blocos `Nº / Nome do Aluno` na mesma aba, permitir selecionar o bloco/turma).
+- **Impacto técnico / Riscos:** Alterações em `src/core/spreadsheet.ts`, `src/ui/panel.ts` e novos testes unitários em `tests/unit/spreadsheet.test.ts`.
+
 ## P2 — Média Prioridade
 
 ### 1. Opção de Aumento do Tamanho do Texto (Acessibilidade) — `[Concluído]`
