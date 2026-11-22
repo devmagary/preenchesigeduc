@@ -24,7 +24,7 @@ Engenharia e runtime:
 - No modo opcional de auto-gravação na sessão, a senha digitada pelo professor deve existir exclusivamente em memória RAM da aba/sessão ativa — estritamente proibido persistir senha em `chrome.storage`, `localStorage`, `sessionStorage`, cookies ou logs. Ao encerrar o lote ou fechar o painel, a variável de senha em memória deve ser zerada.
 - Nunca abrir múltiplas abas paralelas contra a mesma sessão JSF do SIGEduc (evita corrupção de `javax.faces.ViewState`).
 
-Originalidade e referências: Usar apenas a estrutura DOM real do SIGEduc-BA mapeada via REA (incluindo `docente.jsf`, `form_estudantes_notas_avaliacoes_unidade.jsf`, `frequencia_aluno/form.jsf`, `grupo_avaliacao_unidade/lista.jsf` e `grupo_avaliacao_unidade/form.jsf`). Fixtures de teste devem ser versões HTML sanitizadas com nomes e matrículas 100% fictícios, mantidas exclusivamente em `trabalho/` e nunca incluídas no bundle `dist/`.
+Originalidade e referências: Usar apenas a estrutura DOM real do SIGEduc-BA mapeada via REA e inspeção somente leitura (incluindo `docente.jsf` com seus 5 menus `JSCookMenu` [`Ensino`, `Frequência`, `Diário`, `Notas`, `Relatórios`] e 17 submenus, `buscaPadrao/busca.jsf`, `form_estudantes_notas_avaliacoes_unidade.jsf`, `form_estudantes_realizacoes_avaliacoes_unidade.jsf`, `frequencia_aluno/form.jsf`, `grupo_avaliacao_unidade/lista.jsf` e `form.jsf`, `conteudo_ministrado/lista_topicos.jsf`, `plano_trabalho_professor/form.jsf`, `relatorio_parcial_professor/form.jsf`, `plano_educacional_individualizado/relatorio.jsf`, `diario_classe/gerenciar/view.jsf`, `buscaRelatorioTurmaConsolidada.jsf` e relatórios HTML/PDF `#toPdfForm`). Como muitas rotas do SIGEduc usam *forward* JSF no servidor (mantendo `window.location.href` em `docente.jsf` ou `busca.jsf`), a detecção deve sempre priorizar `form[action*="..."]` e marcadores DOM. Fixtures de teste devem ser versões HTML sanitizadas com nomes e matrículas 100% fictícios, mantidas exclusivamente em `trabalho/` e nunca incluídas no bundle `dist/`.
 
 ## ALVO
 
@@ -100,9 +100,9 @@ Robustez e casos de borda:
 - Data da planilha que não existe ou não é clicável no calendário do SIGEduc (feriado, fim de semana ou dia sem aula da turma): registrar no relatório como "Data indisponível no calendário" e seguir para a próxima data selecionada.
 - Alunos com ícone PCD ou texto extra na célula do nome no SIGEduc (ex.: caracteres de ícone de fonte): limpar caracteres não textuais/ícones antes da normalização do nome.
 
-Limites do escopo:
+Limites do escopo (v1 atual — futuras expansões mapeadas no `Roadmap.md`):
 - Não automatizar criação/remoção de atividades avaliativas no SIGEduc na v1 (apenas scraping delas para referência/modelo).
-- Não automatizar preenchimento de Conteúdo Ministrado na v1.
+- Não automatizar preenchimento de Conteúdo Ministrado (`lista_topicos.jsf`), Plano de Curso (`plano_trabalho_professor/form.jsf`), Atividades Não Presenciais (`relatorio_parcial_professor/form.jsf`), Estudante PCD (`plano_educacional_individualizado/relatorio.jsf`) ou download em lote de PDFs na v1 (telas já mapeadas para evolução no `Roadmap.md`).
 - Não integrar com Google Sheets/Drive via OAuth na v1.
 - Nunca executar testes automatizados de escrita contra o ambiente real de produção `sigeduc.educacao.ba.gov.br`.
 

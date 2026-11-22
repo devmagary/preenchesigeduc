@@ -53,6 +53,14 @@ As sugestões são organizadas sob a ótica de engenharia sênior, equilibrando 
   - Aprimorar a detecção de cabeçalho em `src/core/spreadsheet.ts` para pular linhas de resumo/título no topo e identificar corretamente a tabela de alunos (e, se houver múltiplos blocos `Nº / Nome do Aluno` na mesma aba, permitir selecionar o bloco/turma).
 - **Impacto técnico / Riscos:** Alterações em `src/core/spreadsheet.ts`, `src/ui/panel.ts` e novos testes unitários em `tests/unit/spreadsheet.test.ts`.
 
+### 4. Preenchimento em Lote de Conteúdo Ministrado (`Diário -> Informar Conteúdo Ministrado`)
+- **Prioridade:** P1 — Alta
+- **Dificuldade:** Média
+- **Contexto:** A tela `/sigeduc/diario_classe/conteudo_ministrado/lista_topicos.jsf` (`form#formLista`) exibe checkboxes por unidade (`topSelecionada_1`, `topSelecionada_2`, `topSelecionada_3`) e `<textarea id="formLista:conteudo*">` por aula/data (com `disabled` nas unidades fechadas), além dos botões `Gravar` (`#formLista:btnGravarr`), `Gravar e Replicar` (`#formLista:btnReplicar`) e `Gerar Relatório` (`#formLista:btnRelatorior`).
+- **Comportamento esperado:**
+  - Importar planilha/CSV ou colagem `(Data, Conteúdo)` no painel, casar por data da aula dentro da unidade aberta (ignorando linhas `disabled`), marcar os checkboxes correspondentes e preencher os `<textarea>` em prévia antes de o professor gravar/replicar.
+- **Impacto técnico / Riscos:** Requer extensão do detector (`form#formLista[action*="lista_topicos.jsf"]`), novo adaptador `src/sigeduc/filler-conteudo.ts` e fixture sanitizada para E2E.
+
 ## P2 — Média Prioridade
 
 ### 1. Opção de Aumento do Tamanho do Texto (Acessibilidade) — `[Concluído]`
@@ -91,5 +99,44 @@ As sugestões são organizadas sob a ótica de engenharia sênior, equilibrando 
   - Consolidar tudo automaticamente no modelo de planilha `.xlsx` descrito no item 4.
 - **Impacto técnico / Riscos:** Navegação JSF multi-página com `javax.faces.ViewState` exige máquina de estados persistida em `sessionStorage` para sobreviver aos recarregamentos de página, além de tratamento robusto de sessão expirada e fila sequencial.
 
+### 5. Scraping e Exportação de Grade de Horários e Calendário Escolar (`Ensino`)
+- **Prioridade:** P2 — Média
+- **Dificuldade:** Baixa
+- **Contexto:** Os submenus `Ensino -> Meus Horários` (`table#horario`, `table#matriculas`) e `Ensino -> Calendário Escolar` (`/sigeduc/diario_classe/gerenciar/view.jsf`, `table.subFormulario` com prazos de Unidades, Semestres, RPP, Conselho e Diário) contêm dados estruturados úteis para o planejamento do professor.
+- **Comportamento esperado:**
+  - Detectar ambas as telas no `detector.ts` e permitir exportar a grade semanal (`Meus Horários`) e a tabela de prazos/unidades (`Calendário Escolar`) em `.xlsx`, `.csv` e `.json` na aba `Extrair`, além de usar os horários da grade para pré-configurar quantidades de horários por dia na Frequência.
+- **Impacto técnico / Riscos:** Baixo risco (apenas leitura/scraping de DOM e exportação).
+
+### 6. Scraping de Lista de Estudantes com Assinatura e Disciplinas Ministradas (`Relatórios` / `Ensino`)
+- **Prioridade:** P2 — Média
+- **Dificuldade:** Baixa
+- **Contexto:** `Relatórios -> Relatório de Estudantes por Turma com Assinatura` (`table.tabelaRelatorio` com `N° | Matrícula | Nome | Situação | Assinatura`) e `Ensino -> Minhas Turmas` (`Listagem de Disciplinas Ministradas` com `Escola | Componente | Etapa | Ano/Série/Outros | Turma`) hoje só oferecem impressão/PDF via `form#toPdfForm` (`/sigeduc/pdf_templates/export.jsf`).
+- **Comportamento esperado:**
+  - Extrair essas tabelas diretamente para `.xlsx` / `.csv` / `.json`, preservando situação de matrícula (Ativo/Transferido/etc.) para conferência rápida e criação de listas de chamada personalizadas.
+- **Impacto técnico / Riscos:** Baixo risco (somente leitura/scraping).
+
+### 7. Assistente de Plano de Curso e Relatório de Atividades Não Presenciais (`Diário`)
+- **Prioridade:** P2 — Média
+- **Dificuldade:** Média
+- **Contexto:** `Diário -> Visualizar Plano de Curso` (`/sigeduc/ensino/plano_trabalho/plano_trabalho_professor/form.jsf`) possui acordeões por unidade com 5 `<textarea>` (`competenciasHabilidades`, `conhecimentoConteudo`, `transversalidadeDialogos`, `formaeCriterio`, `resultadoObservado`) e botão `Gravar e Replicar`. `Diário -> Gerenciar Atividades Não Presenciais` (`/sigeduc/ensino/plano_trabalho/relatorio_parcial_professor/form.jsf`) possui `#form:dataInicio`, `#form:dataFim` e 5 `<textarea>` (`objetosDeConhecimento`, `atividadesDesenvolvidas`, `estrategiasInteracaoNaoPresencial`, `sugestoesPossibilidadesMelhorias`, `compatibilizacaoCH`).
+- **Comportamento esperado:**
+  - Permitir importar/colar um plano estruturado (planilha/JSON/texto delimitado) e preencher os 5 campos da unidade selecionada ou do relatório parcial com prévia antes do envio.
+- **Impacto técnico / Riscos:** Atenção aos acordeões por unidade no `plano_trabalho_professor/form.jsf` e preservação de `ViewState`.
+
 ## P3 — Baixa Prioridade / Futuro
-*(Nenhum item registrado ainda)*
+
+### 1. Assistente de Relatório Final para Estudante PCD e Consulta de Turmas Consolidadas (`Relatórios`)
+- **Prioridade:** P3 — Baixa / Futuro
+- **Dificuldade:** Média
+- **Contexto:** `Relatórios -> Estudante PCD -> Relatório de resultado final` (`relatorio_atendimento_cuidador/lista.jsf` -> `plano_educacional_individualizado/relatorio.jsf`) possui subformulários semestrais (`<textarea>` com limite de 4000 caracteres). `Relatórios -> Turmas Consolidadas e Não Consolidadas` (`buscaRelatorioTurmaConsolidada.jsf`) lista o status de consolidação das turmas.
+- **Comportamento esperado:**
+  - No relatório PCD, oferecer importação/colagem com contador de 4000 caracteres e sanitização antes de preencher; na consulta de consolidadas, permitir exportar o painel de status em `.xlsx`/`.csv`.
+- **Impacto técnico / Riscos:** Fluxo multi-página com paginação na lista de estudantes PCD.
+
+### 2. Atalhos Rápidos e Download em Lote de PDFs via `Consulta de Turma` (`busca.jsf`)
+- **Prioridade:** P3 — Baixa / Futuro
+- **Dificuldade:** Alta
+- **Contexto:** `Frequência -> Visualizar Mapa de Frequência` (`Emitir Mapa de Frequência` / `Mapa Sintético`) e `Diário -> Emitir Diário de Classe` (`Imprimir Diário`) disparam downloads diretos de PDF (`application/pdf`) via `jsfcljs` POST em `/sigeduc/ensino/turma/buscaPadrao/busca.jsf`.
+- **Comportamento esperado:**
+  - Na tela `busca.jsf`, oferecer fila sequencial para baixar os PDFs de múltiplas turmas selecionadas sem corromper o `javax.faces.ViewState` ou `DOUBLE_CHECK_TOKEN`.
+- **Impacto técnico / Riscos:** Alto cuidado com downloads binários via POST JSF stateful e controle de fila para não invalidar o token da sessão.
