@@ -4,7 +4,11 @@ import {
   exportToCsv,
   exportToXlsxBuffer,
   parsePastedTable,
+  parsePastedWorkbook,
   parseSpreadsheetBuffer,
+  parseWorkbookBuffer,
+  selectBestWorkbookTarget,
+  toParsedSpreadsheet,
 } from '../../src/core/spreadsheet';
 
 describe('spreadsheet parser & exporter', () => {
@@ -57,5 +61,120 @@ describe('spreadsheet parser & exporter', () => {
   it('rejeita planilha vazia ou corrompida com erro claro', () => {
     expect(() => parseSpreadsheetBuffer(new ArrayBuffer(0), 'vazio.xlsx')).toThrow();
     expect(() => parsePastedTable('   \n  ')).toThrow();
+  });
+
+  it('lê arquivo multi-aba e seleciona automaticamente a aba com maior número de alunos exatos', () => {
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(
+      wb,
+      XLSX.utils.aoa_to_sheet([
+        ['Painel Resumo Escolar'],
+        ['Escola', 'Média Geral'],
+        ['Escola Modelo', '8,1'],
+      ]),
+      'Resumo'
+    );
+    XLSX.utils.book_append_sheet(
+      wb,
+      XLSX.utils.aoa_to_sheet([
+        ['Nº', 'Nome do Aluno', 'Participação', 'Prova'],
+        ['1', 'OUTRO ALUNO 1', '2,0', '3,0'],
+        ['2', 'OUTRO ALUNO 2', '1,5', '2,5'],
+      ]),
+      'TURMA-1A'
+    );
+    XLSX.utils.book_append_sheet(
+      wb,
+      XLSX.utils.aoa_to_sheet([
+        ['Nº', 'Nome do Aluno', 'Participação', 'Prova'],
+        ['1', 'ANA CLARA FERREIRA', '2,0', '3,0'],
+        ['2', 'BRUNO HENRIQUE SOUZA', '1,5', '2,5'],
+        ['3', 'CARLA MENDES OLIVEIRA', '1,8', '2,8'],
+      ]),
+      'TURMA-1B'
+    );
+
+    const out = XLSX.write(wb, { type: 'array', bookType: 'xlsx' }) as ArrayBuffer;
+    const parsedWb = parseWorkbookBuffer(out, 'multi_abas.xlsx');
+    expect(parsedWb.sheets).toHaveLength(3);
+    expect(parsedWb.sheets[0].name).toBe('Resumo');
+
+    const sel = selectBestWorkbookTarget(
+      parsedWb,
+      ['ANA CLARA FERREIRA', 'BRUNO HENRIQUE SOUZA', 'CARLA MENDES OLIVEIRA'],
+      'TURMA-1B'
+    );
+    expect(sel.autoSelected).toBe(true);
+    expect(sel.sheetIndex).toBe(2);
+    expect(sel.matchedCount).toBe(3);
+
+    const sheet = toParsedSpreadsheet(parsedWb, sel.sheetIndex, sel.blockId);
+    expect(sheet?.rows).toHaveLength(3);
+    expect(sheet?.rows[0]['Nome do Aluno']).toBe('ANA CLARA FERREIRA');
+  });
+
+  it('detecta planilha consolidada com resumo no topo e múltiplos blocos de turmas na mesma aba', () => {
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(
+      wb,
+      XLSX.utils.aoa_to_sheet([
+        ['CONSOLIDADO DE NOTAS — 2026'],
+        ['Nome da Escola', 'Média Geral'],
+        ['ESCOLA MODELO ESTADUAL', '7,8'],
+        [],
+        ['TURMA 1A MATUTINO'],
+        ['Nº', 'Nome do Aluno', 'Participação', 'Prova'],
+        ['1', 'ALUNO TURMA A1', '2,0', '3,0'],
+        ['2', 'ALUNO TURMA A2', '1,5', '2,0'],
+        [],
+        ['TURMA 1B VESPERTINO'],
+        ['Nº', 'Nome do Aluno', 'Participação', 'Prova'],
+        ['1', 'ANA CLARA FERREIRA', '2,0', '3,0'],
+        ['2', 'BRUNO HENRIQUE SOUZA', '1,5', '2,8'],
+      ]),
+      'Consolidado'
+    );
+
+    const out = XLSX.write(wb, { type: 'array', bookType: 'xlsx' }) as ArrayBuffer;
+    const parsedWb = parseWorkbookBuffer(out, 'consolidado.xlsx');
+    expect(parsedWb.sheets).toHaveLength(1);
+    const blocks = parsedWb.sheets[0].blocks;
+    expect(blocks).toHaveLength(2);
+    expect(blocks[0].titleHint).toContain('TURMA 1A');
+    expect(blocks[0].rows).toHaveLength(2);
+    expect(blocks[1].titleHint).toContain('TURMA 1B');
+    expect(blocks[1].rows).toHaveLength(2);
+    expect(parsedWb.sheets[0].combinedBlock?.id).toBe('__all__');
+    expect(parsedWb.sheets[0].combinedBlock?.rows).toHaveLength(4);
+
+    const sel = selectBestWorkbookTarget(parsedWb, ['ANA CLARA FERREIRA', 'BRUNO HENRIQUE SOUZA']);
+    expect(sel.autoSelected).toBe(true);
+    expect(sel.blockId).toBe(blocks[1].id);
+    expect(sel.matchedCount).toBe(2);
+
+    const combined = toParsedSpreadsheet(parsedWb, 0, '__all__');
+    expect(combined?.rows).toHaveLength(4);
+  });
+
+  it('detecta múltiplos blocos também em texto colado com cabeçalho de resumo no topo', () => {
+    const pasted = [
+      'PLANILHA CONSOLIDADA DO BIMESTRE',
+      '',
+      'TURMA A',
+      'Nome\t05/08/2026',
+      'JOSE SILVA\tP',
+      '',
+      'TURMA B',
+      'Nome\t05/08/2026',
+      'ANA CLARA FERREIRA\tF',
+      'BRUNO HENRIQUE SOUZA\tP',
+    ].join('\n');
+
+    const wb = parsePastedWorkbook(pasted);
+    expect(wb.sheets[0].blocks).toHaveLength(2);
+    expect(wb.sheets[0].blocks[0].titleHint).toBe('TURMA A');
+    expect(wb.sheets[0].blocks[1].titleHint).toBe('TURMA B');
+    const sel = selectBestWorkbookTarget(wb, ['ANA CLARA FERREIRA', 'BRUNO HENRIQUE SOUZA']);
+    expect(sel.blockId).toBe(wb.sheets[0].blocks[1].id);
   });
 });

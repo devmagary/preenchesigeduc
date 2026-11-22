@@ -58,6 +58,7 @@ Núcleo funcional:
    - Exporta os dados extraídos em `.xlsx` (já formatado como **planilha-modelo pronta para preencher** notas ou frequências), `.csv` e `.json`.
 3. **Módulo de Importação de Planilhas:**
    - Aceita upload de `.xlsx`, `.xls` e `.csv`, além de área de colagem direta (`Ctrl+V` de células copiadas do Excel/Google Sheets/LibreOffice, separadas por TAB/ponto-e-vírgula/vírgula).
+   - **Seleção de Aba e Planilhas Consolidadas (P1.3):** Suporta arquivos `.xlsx`/`.xls` com múltiplas abas e abas/colagens consolidadas com painel resumo no topo seguido de vários blocos de turmas (múltiplos cabeçalhos `Nº / Nome do Aluno`). Ao importar em Notas, Avaliações Não Realizadas ou Frequência, pré-seleciona automaticamente a aba/bloco com mais alunos exatos da turma aberta no SIGEduc (fallback: primeira tabela válida), exibindo seletores de Aba e Bloco (`bloco N` ou `"Todos os blocos combinados"`) no topo da seção `2. Mapeamento` apenas quando houver mais de 1 aba ou mais de 1 bloco.
    - Detecta automaticamente cabeçalhos e permite ao usuário mapear a coluna de `Nome` (e `Matrícula`, se houver) e as colunas de `Atividades` (para notas) ou `Datas` (`DD/MM/AAAA`, para frequência), com pré-visualização antes de aplicar.
 4. **Módulo de Preenchimento de Notas e Não Realização:**
    - Realiza correspondência **estritamente exata após normalização** (uppercase, remoção de diacríticos/acentos NFD, remoção de espaços duplicados/pontas). Qualquer nome sem correspondência exata é ignorado e listado no relatório de divergências.

@@ -3,9 +3,12 @@ import {
   exportToCsv,
   exportToJson,
   exportToXlsxBuffer,
-  parsePastedTable,
-  parseSpreadsheetBuffer,
+  parsePastedWorkbook,
+  parseWorkbookBuffer,
+  selectBestWorkbookTarget,
+  toParsedSpreadsheet,
   type ParsedSpreadsheet,
+  type ParsedWorkbook,
 } from '../core/spreadsheet';
 import { detectSigeducScreen, type ScreenDetection } from '../sigeduc/detector';
 import {
@@ -101,6 +104,10 @@ export class PreenchePanelController {
   private scraped: ScrapedScreenData | null = null;
 
   // Estado da planilha em RAM
+  private notasWorkbook: ParsedWorkbook | null = null;
+  private notasSheetIndex = 0;
+  private notasBlockId = '';
+  private notasAutoMatchHint = '';
   private notasSheet: ParsedSpreadsheet | null = null;
   private notasNameCol = '';
   private notasMatCol = '';
@@ -113,6 +120,10 @@ export class PreenchePanelController {
   private lastNotasReport: GradeFillReport | null = null;
   private lastNrReport: NotRealizedApplyReport | null = null;
 
+  private freqWorkbook: ParsedWorkbook | null = null;
+  private freqSheetIndex = 0;
+  private freqBlockId = '';
+  private freqAutoMatchHint = '';
   private freqSheet: ParsedSpreadsheet | null = null;
   private freqNameCol = '';
   private freqMatCol = '';
@@ -243,6 +254,163 @@ export class PreenchePanelController {
     } else {
       this.scraped = null;
     }
+  }
+
+  private getPageTargetContext(): { studentNames: string[]; turmaLabel: string } {
+    if (
+      this.scraped?.kind === 'lancar_notas' ||
+      this.scraped?.kind === 'avaliacoes_nao_realizadas' ||
+      this.scraped?.kind === 'lancar_frequencia'
+    ) {
+      return {
+        studentNames: this.scraped.alunos.map((a) => a.nome),
+        turmaLabel: this.scraped.turma,
+      };
+    }
+    return { studentNames: [], turmaLabel: '' };
+  }
+
+  private formatAutoMatchHint(
+    wb: ParsedWorkbook,
+    sheetIndex: number,
+    blockId: string,
+    matchedCount: number,
+    autoSelected: boolean
+  ): string {
+    const sheet = wb.sheets[sheetIndex];
+    const hasMulti = wb.sheets.length > 1 || (sheet?.blocks.length ?? 0) > 1;
+    if (!hasMulti || !autoSelected || !sheet) return '';
+    const blk = sheet.blocks.find((b) => b.id === blockId);
+    const partLabel =
+      sheet.blocks.length > 1 && blk
+        ? `${sheet.name} • ${blk.titleHint || blk.label}`
+        : sheet.name;
+    return `Seleção automática: "${partLabel}" (${matchedCount} aluno(s) casado(s) com a turma aberta).`;
+  }
+
+  private loadNotasWorkbook(wb: ParsedWorkbook): void {
+    const { studentNames, turmaLabel } = this.getPageTargetContext();
+    const sel = selectBestWorkbookTarget(wb, studentNames, turmaLabel);
+    this.notasWorkbook = wb;
+    this.notasImportOpen = false;
+    this.notasMappingOpen = true;
+    this.applyNotasSelection(sel.sheetIndex, sel.blockId, false);
+    this.notasAutoMatchHint = this.formatAutoMatchHint(wb, sel.sheetIndex, sel.blockId, sel.matchedCount, sel.autoSelected);
+  }
+
+  private applyNotasSelection(sheetIndex: number, blockId?: string, clearHint = true): void {
+    if (!this.notasWorkbook) return;
+    const sheet = this.notasWorkbook.sheets[sheetIndex];
+    let resolvedBlockId = blockId ?? '';
+    if (!resolvedBlockId && sheet && sheet.blocks.length > 0) {
+      const { studentNames, turmaLabel } = this.getPageTargetContext();
+      const withinSheet = selectBestWorkbookTarget(this.notasWorkbook, studentNames, turmaLabel, sheetIndex);
+      resolvedBlockId = withinSheet.blockId || sheet.blocks[0].id;
+    }
+
+    this.notasSheetIndex = sheetIndex;
+    this.notasBlockId = resolvedBlockId;
+    this.notasNameCol = '';
+    this.notasMatCol = '';
+    this.notasActivityMap = {};
+    this.notasMappingOpen = true;
+    this.lastNotasReport = null;
+    this.lastNrReport = null;
+    if (clearHint) this.notasAutoMatchHint = '';
+    this.notasSheet = toParsedSpreadsheet(this.notasWorkbook, this.notasSheetIndex, this.notasBlockId);
+    if (this.notasSheet) this.autoMapNotasColumns();
+  }
+
+  private loadFreqWorkbook(wb: ParsedWorkbook): void {
+    const { studentNames, turmaLabel } = this.getPageTargetContext();
+    const sel = selectBestWorkbookTarget(wb, studentNames, turmaLabel);
+    this.freqWorkbook = wb;
+    this.freqImportOpen = false;
+    this.freqMappingOpen = true;
+    this.applyFreqSelection(sel.sheetIndex, sel.blockId, false);
+    this.freqAutoMatchHint = this.formatAutoMatchHint(wb, sel.sheetIndex, sel.blockId, sel.matchedCount, sel.autoSelected);
+  }
+
+  private applyFreqSelection(sheetIndex: number, blockId?: string, clearHint = true): void {
+    if (!this.freqWorkbook) return;
+    const sheet = this.freqWorkbook.sheets[sheetIndex];
+    let resolvedBlockId = blockId ?? '';
+    if (!resolvedBlockId && sheet && sheet.blocks.length > 0) {
+      const { studentNames, turmaLabel } = this.getPageTargetContext();
+      const withinSheet = selectBestWorkbookTarget(this.freqWorkbook, studentNames, turmaLabel, sheetIndex);
+      resolvedBlockId = withinSheet.blockId || sheet.blocks[0].id;
+    }
+
+    this.freqSheetIndex = sheetIndex;
+    this.freqBlockId = resolvedBlockId;
+    this.freqNameCol = '';
+    this.freqMatCol = '';
+    this.freqObsCol = '';
+    this.freqSelectedDates.clear();
+    this.freqMappingOpen = true;
+    this.lastFreqReport = null;
+    if (clearHint) this.freqAutoMatchHint = '';
+    this.freqSheet = toParsedSpreadsheet(this.freqWorkbook, this.freqSheetIndex, this.freqBlockId);
+    if (this.freqSheet) this.autoMapFreqColumns();
+  }
+
+  private renderWorkbookSelectors(
+    scope: 'notas' | 'freq',
+    wb: ParsedWorkbook | null,
+    sheetIndex: number,
+    blockId: string,
+    autoHint: string
+  ): string {
+    if (!wb) return '';
+    const sheet = wb.sheets[sheetIndex];
+    const showSheets = wb.sheets.length > 1;
+    const showBlocks = Boolean(sheet && sheet.blocks.length > 1);
+    if (!showSheets && !showBlocks && sheet && sheet.blocks.length > 0) return '';
+
+    const sheetOptions = wb.sheets
+      .map((s, idx) => {
+        const suffix = s.blocks.length === 0 ? ' (vazia)' : '';
+        return `<option value="${idx}" ${idx === sheetIndex ? 'selected' : ''}>${escapeHtml(s.name + suffix)}</option>`;
+      })
+      .join('');
+
+    const blockOptions = sheet
+      ? [
+          ...sheet.blocks.map(
+            (b) => `<option value="${escapeHtml(b.id)}" ${b.id === blockId ? 'selected' : ''}>${escapeHtml(b.label)}</option>`
+          ),
+          ...(sheet.combinedBlock
+            ? [
+                `<option value="${escapeHtml(sheet.combinedBlock.id)}" ${sheet.combinedBlock.id === blockId ? 'selected' : ''}>${escapeHtml(sheet.combinedBlock.label)}</option>`,
+              ]
+            : []),
+        ].join('')
+      : '';
+
+    return `
+      ${autoHint ? `<div class="ps-banner info">${escapeHtml(autoHint)}</div>` : ''}
+      ${
+        showSheets
+          ? `<div class="ps-field">
+               <label class="ps-label" for="ps-${scope}-sheet-select">Aba da Planilha (${wb.sheets.length} disponíveis)</label>
+               <select class="ps-select" id="ps-${scope}-sheet-select">${sheetOptions}</select>
+             </div>`
+          : ''
+      }
+      ${
+        showBlocks
+          ? `<div class="ps-field">
+               <label class="ps-label" for="ps-${scope}-block-select">Bloco / Turma na Aba (${sheet?.blocks.length ?? 0} blocos)</label>
+               <select class="ps-select" id="ps-${scope}-block-select">${blockOptions}</select>
+             </div>`
+          : ''
+      }
+      ${
+        !sheet || sheet.blocks.length === 0
+          ? `<div class="ps-banner warn">Esta aba não possui tabela de alunos identificável. Selecione outra aba acima.</div>`
+          : ''
+      }
+    `;
   }
 
   private autoMapNotasColumns(): void {
@@ -387,6 +555,13 @@ export class PreenchePanelController {
     const closedCount = scr.atividades.length - openCount;
 
     let mappingHtml = '';
+    const notasSelectorsHtml = this.renderWorkbookSelectors(
+      'notas',
+      this.notasWorkbook,
+      this.notasSheetIndex,
+      this.notasBlockId,
+      this.notasAutoMatchHint
+    );
     if (this.notasSheet) {
       const cols = this.notasSheet.headers;
       const colOpts = (selected: string, allowEmpty = false) =>
@@ -417,6 +592,7 @@ export class PreenchePanelController {
         <details class="ps-card ps-compact-details" id="ps-notas-map-details" ${this.notasMappingOpen ? 'open' : ''}>
           <summary>2. Mapeamento (${mappedCount}/${scr.atividades.length} atividades • ${this.notasSheet.rows.length} linhas)</summary>
           <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">
+            ${notasSelectorsHtml}
             <div class="ps-grid-2">
               <div class="ps-field">
                 <label class="ps-label" for="ps-notas-name-col">Coluna Nome</label>
@@ -428,6 +604,15 @@ export class PreenchePanelController {
               </div>
             </div>
             ${activitySelectors || '<div class="ps-banner warn">Esta unidade não possui atividades avaliativas cadastradas.</div>'}
+          </div>
+        </details>
+      `;
+    } else if (this.notasWorkbook) {
+      mappingHtml = `
+        <details class="ps-card ps-compact-details" id="ps-notas-map-details" open>
+          <summary>2. Seleção de Aba (${escapeHtml(this.notasWorkbook.sheets[this.notasSheetIndex]?.name ?? 'Aba')})</summary>
+          <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">
+            ${notasSelectorsHtml}
           </div>
         </details>
       `;
@@ -552,9 +737,10 @@ export class PreenchePanelController {
       <div class="ps-banner error ps-hidden" id="ps-notas-error"></div>
     `;
 
-    const importHtml = this.notasSheet
+    const notasSourceLabel = this.notasSheet?.sourceName ?? this.notasWorkbook?.sourceName ?? '';
+    const importHtml = this.notasWorkbook || this.notasSheet
       ? `<details class="ps-card ps-compact-details" id="ps-notas-import-details" ${this.notasImportOpen ? 'open' : ''}>
-           <summary>1. Planilha: ${escapeHtml(this.notasSheet.sourceName)} (${this.notasSheet.rows.length} linhas)</summary>
+           <summary>1. Planilha: ${escapeHtml(notasSourceLabel)} (${this.notasSheet ? `${this.notasSheet.rows.length} linhas` : 'aba vazia'})</summary>
            <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">${importInner}</div>
          </details>`
       : `<section class="ps-card">
@@ -593,6 +779,13 @@ export class PreenchePanelController {
 
     let mappingHtml = '';
     let applyBtnHtml = '';
+    const nrSelectorsHtml = this.renderWorkbookSelectors(
+      'notas',
+      this.notasWorkbook,
+      this.notasSheetIndex,
+      this.notasBlockId,
+      this.notasAutoMatchHint
+    );
     if (this.notasSheet) {
       const cols = this.notasSheet.headers;
       const colOpts = (selected: string, allowEmpty = false) =>
@@ -606,6 +799,7 @@ export class PreenchePanelController {
         <details class="ps-card ps-compact-details" id="ps-notas-map-details" ${this.notasMappingOpen ? 'open' : ''}>
           <summary>2. Mapeamento (${mappedCount}/${scr.atividades.length} atividades)</summary>
           <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">
+            ${nrSelectorsHtml}
             <div class="ps-grid-2">
               <div class="ps-field">
                 <label class="ps-label" for="ps-notas-name-col">Coluna Nome</label>
@@ -653,13 +847,23 @@ export class PreenchePanelController {
           </button>
         </section>
       `;
+    } else if (this.notasWorkbook) {
+      mappingHtml = `
+        <details class="ps-card ps-compact-details" id="ps-notas-map-details" open>
+          <summary>2. Seleção de Aba (${escapeHtml(this.notasWorkbook.sheets[this.notasSheetIndex]?.name ?? 'Aba')})</summary>
+          <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">
+            ${nrSelectorsHtml}
+          </div>
+        </details>
+      `;
     }
 
+    const nrSourceLabel = this.notasSheet?.sourceName ?? this.notasWorkbook?.sourceName ?? '';
     const importInner = `
       <div class="ps-field">
         <label class="ps-file-btn" for="ps-notas-file">
           <span>Selecionar planilha (.xlsx, .xls, .csv)</span>
-          <span class="ps-pill ok">${this.notasSheet ? escapeHtml(this.notasSheet.sourceName) : 'Arquivo'}</span>
+          <span class="ps-pill ok">${nrSourceLabel ? escapeHtml(nrSourceLabel) : 'Arquivo'}</span>
         </label>
         <input class="ps-file-input-hidden" id="ps-notas-file" type="file" accept=".xlsx,.xls,.csv" />
       </div>
@@ -671,9 +875,9 @@ export class PreenchePanelController {
       <div class="ps-banner error ps-hidden" id="ps-notas-error"></div>
     `;
 
-    const importHtml = this.notasSheet
+    const importHtml = this.notasWorkbook || this.notasSheet
       ? `<details class="ps-card ps-compact-details" id="ps-notas-import-details" ${this.notasImportOpen ? 'open' : ''}>
-           <summary>1. Planilha: ${escapeHtml(this.notasSheet.sourceName)} (${this.notasSheet.rows.length} linhas)</summary>
+           <summary>1. Planilha: ${escapeHtml(nrSourceLabel)} (${this.notasSheet ? `${this.notasSheet.rows.length} linhas` : 'aba vazia'})</summary>
            <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">${importInner}</div>
          </details>`
       : `<section class="ps-card">
@@ -704,6 +908,13 @@ export class PreenchePanelController {
 
     const scr: ScrapedFrequenciaScreen = this.scraped;
     let mappingHtml = '';
+    const freqSelectorsHtml = this.renderWorkbookSelectors(
+      'freq',
+      this.freqWorkbook,
+      this.freqSheetIndex,
+      this.freqBlockId,
+      this.freqAutoMatchHint
+    );
 
     if (this.freqSheet) {
       const headers = this.freqSheet.headers;
@@ -741,6 +952,7 @@ export class PreenchePanelController {
         <details class="ps-card ps-compact-details" id="ps-freq-map-details" ${this.freqMappingOpen ? 'open' : ''}>
           <summary>2. Colunas e Datas (${dateHeaders.length} datas • ${this.freqSheet.rows.length} alunos)</summary>
           <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">
+            ${freqSelectorsHtml}
             <div class="ps-grid-2">
               <div class="ps-field">
                 <label class="ps-label" for="ps-freq-name-col">Coluna Nome</label>
@@ -825,6 +1037,15 @@ export class PreenchePanelController {
           </div>
         </section>
       `;
+    } else if (this.freqWorkbook) {
+      mappingHtml = `
+        <details class="ps-card ps-compact-details" id="ps-freq-map-details" open>
+          <summary>2. Seleção de Aba (${escapeHtml(this.freqWorkbook.sheets[this.freqSheetIndex]?.name ?? 'Aba')})</summary>
+          <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">
+            ${freqSelectorsHtml}
+          </div>
+        </details>
+      `;
     }
 
     let reportHtml = '';
@@ -893,9 +1114,10 @@ export class PreenchePanelController {
       <div class="ps-banner error ps-hidden" id="ps-freq-error"></div>
     `;
 
-    const freqImportHtml = this.freqSheet
+    const freqSourceLabel = this.freqSheet?.sourceName ?? this.freqWorkbook?.sourceName ?? '';
+    const freqImportHtml = this.freqWorkbook || this.freqSheet
       ? `<details class="ps-card ps-compact-details" id="ps-freq-import-details" ${this.freqImportOpen ? 'open' : ''}>
-           <summary>1. Planilha: ${escapeHtml(this.freqSheet.sourceName)} (${this.freqSheet.rows.length} linhas)</summary>
+           <summary>1. Planilha: ${escapeHtml(freqSourceLabel)} (${this.freqSheet ? `${this.freqSheet.rows.length} linhas` : 'aba vazia'})</summary>
            <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">${freqImportInner}</div>
          </details>`
       : `<section class="ps-card">
@@ -1026,15 +1248,7 @@ export class PreenchePanelController {
       if (!file) return;
       try {
         const buf = await file.arrayBuffer();
-        this.notasSheet = parseSpreadsheetBuffer(buf, file.name);
-        this.notasNameCol = '';
-        this.notasMatCol = '';
-        this.notasActivityMap = {};
-        this.notasImportOpen = false;
-        this.notasMappingOpen = true;
-        this.lastNotasReport = null;
-        this.lastNrReport = null;
-        this.autoMapNotasColumns();
+        this.loadNotasWorkbook(parseWorkbookBuffer(buf, file.name));
         this.render();
       } catch (err) {
         showNotasErr((err as Error).message);
@@ -1044,19 +1258,23 @@ export class PreenchePanelController {
     q<HTMLButtonElement>('ps-notas-parse-paste')?.addEventListener('click', () => {
       const txt = q<HTMLTextAreaElement>('ps-notas-paste')?.value ?? '';
       try {
-        this.notasSheet = parsePastedTable(txt);
-        this.notasNameCol = '';
-        this.notasMatCol = '';
-        this.notasActivityMap = {};
-        this.notasImportOpen = false;
-        this.notasMappingOpen = true;
-        this.lastNotasReport = null;
-        this.lastNrReport = null;
-        this.autoMapNotasColumns();
+        this.loadNotasWorkbook(parsePastedWorkbook(txt));
         this.render();
       } catch (err) {
         showNotasErr((err as Error).message);
       }
+    });
+
+    q<HTMLSelectElement>('ps-notas-sheet-select')?.addEventListener('change', (ev) => {
+      const idx = Number((ev.target as HTMLSelectElement).value);
+      this.applyNotasSelection(Number.isFinite(idx) ? idx : 0, undefined, true);
+      this.render();
+    });
+
+    q<HTMLSelectElement>('ps-notas-block-select')?.addEventListener('change', (ev) => {
+      const blockId = (ev.target as HTMLSelectElement).value;
+      this.applyNotasSelection(this.notasSheetIndex, blockId, true);
+      this.render();
     });
 
     q<HTMLSelectElement>('ps-notas-name-col')?.addEventListener('change', (ev) => {
@@ -1172,15 +1390,7 @@ export class PreenchePanelController {
       if (!file) return;
       try {
         const buf = await file.arrayBuffer();
-        this.freqSheet = parseSpreadsheetBuffer(buf, file.name);
-        this.freqNameCol = '';
-        this.freqMatCol = '';
-        this.freqObsCol = '';
-        this.freqImportOpen = false;
-        this.freqMappingOpen = true;
-        this.freqSelectedDates.clear();
-        this.lastFreqReport = null;
-        this.autoMapFreqColumns();
+        this.loadFreqWorkbook(parseWorkbookBuffer(buf, file.name));
         this.render();
       } catch (err) {
         showFreqErr((err as Error).message);
@@ -1190,19 +1400,23 @@ export class PreenchePanelController {
     q<HTMLButtonElement>('ps-freq-parse-paste')?.addEventListener('click', () => {
       const txt = q<HTMLTextAreaElement>('ps-freq-paste')?.value ?? '';
       try {
-        this.freqSheet = parsePastedTable(txt);
-        this.freqNameCol = '';
-        this.freqMatCol = '';
-        this.freqObsCol = '';
-        this.freqImportOpen = false;
-        this.freqMappingOpen = true;
-        this.freqSelectedDates.clear();
-        this.lastFreqReport = null;
-        this.autoMapFreqColumns();
+        this.loadFreqWorkbook(parsePastedWorkbook(txt));
         this.render();
       } catch (err) {
         showFreqErr((err as Error).message);
       }
+    });
+
+    q<HTMLSelectElement>('ps-freq-sheet-select')?.addEventListener('change', (ev) => {
+      const idx = Number((ev.target as HTMLSelectElement).value);
+      this.applyFreqSelection(Number.isFinite(idx) ? idx : 0, undefined, true);
+      this.render();
+    });
+
+    q<HTMLSelectElement>('ps-freq-block-select')?.addEventListener('change', (ev) => {
+      const blockId = (ev.target as HTMLSelectElement).value;
+      this.applyFreqSelection(this.freqSheetIndex, blockId, true);
+      this.render();
     });
 
     q<HTMLSelectElement>('ps-freq-name-col')?.addEventListener('change', (ev) => {

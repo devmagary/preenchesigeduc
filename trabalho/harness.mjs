@@ -20,6 +20,7 @@ const STEPS = [
 const EXPECTED_EVIDENCES = [
   'scraping_turmas_desktop.png',
   'notas_previa_desktop.png',
+  'notas_multi_aba_desktop.png',
   'notas_relatorio_desktop.png',
   'nao_realizadas_desktop.png',
   'notas_previa_mobile.png',

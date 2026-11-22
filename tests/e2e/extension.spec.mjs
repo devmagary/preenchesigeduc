@@ -276,6 +276,105 @@ async function runTests() {
     assert.equal(nrState.queueCleared, true);
     await page.screenshot({ path: path.join(evidenciasDir, 'nao_realizadas_desktop.png') });
 
+    // 2C. P1.3: Seleção automática de Aba + Bloco em Planilha Consolidada (múltiplas abas e múltiplas turmas na mesma aba)
+    console.log('[E2E] 2C. Testando Planilha Consolidada / Multi-aba (P1.3)...');
+    await page.goto(`${srv.baseUrl}/sigeduc/diario_classe/lancar_notas/form_estudantes_notas_avaliacoes_unidade.jsf`);
+    await openPanel(page);
+
+    const multiWb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(
+      multiWb,
+      XLSX.utils.aoa_to_sheet([
+        ['Painel Resumo Escolar'],
+        ['Escola', 'Média Geral'],
+        ['ESCOLA MODELO ESTADUAL', '7.9'],
+      ]),
+      'Resumo'
+    );
+    XLSX.utils.book_append_sheet(
+      multiWb,
+      XLSX.utils.aoa_to_sheet([
+        ['Nº', 'Nome do Aluno', 'Participação', 'Atividade Prática', 'Seminário', 'Avaliação Escrita'],
+        ['1', 'OUTRO ESTUDANTE A', '2,0', '2,5', '1,8', '3,0'],
+        ['2', 'OUTRO ESTUDANTE B', '1,5', '2,0', '1,5', '2,5'],
+      ]),
+      'Turma Outra'
+    );
+    XLSX.utils.book_append_sheet(
+      multiWb,
+      XLSX.utils.aoa_to_sheet([
+        ['RELATÓRIO CONSOLIDADO DE AVALIAÇÕES — 3ª UNIDADE'],
+        ['Nome da Escola', 'Total Turmas'],
+        ['ESCOLA MODELO ESTADUAL', '2'],
+        [],
+        ['TURMA OUTRA'],
+        ['Nº', 'Nome do Aluno', 'Participação', 'Atividade Prática', 'Seminário', 'Avaliação Escrita'],
+        ['1', 'FULANO OUTRA TURMA 1', '1,5', '2,0', '1,0', '2,0'],
+        ['2', 'BELTRANO OUTRA TURMA 2', '1,8', '2,2', '1,5', '2,5'],
+        [],
+        ['TURMA-ANUAL-1A'],
+        ['Nº', 'Nome do Aluno', 'Participação', 'Atividade Prática', 'Seminário', 'Avaliação Escrita'],
+        ...FICTIONAL_STUDENTS.slice(0, 5).map((st, idx) => [String(idx + 1), st.nome, '1,8', '2,5', '1,7', '2,8']),
+      ]),
+      'Consolidado'
+    );
+    const multiXlsxPath = path.join(userDataDir, 'notas_multi_aba_consolidado.xlsx');
+    XLSX.writeFile(multiWb, multiXlsxPath);
+
+    await page.locator('#preenche-sigeduc-host >> #ps-notas-file').setInputFiles(multiXlsxPath);
+    await page.waitForFunction(() => Boolean(document.getElementById('preenche-sigeduc-host').shadowRoot.getElementById('ps-notas-sheet-select')));
+
+    const multiAutoState = await page.evaluate(() => {
+      const sr = document.getElementById('preenche-sigeduc-host').shadowRoot;
+      const sheetSel = sr.getElementById('ps-notas-sheet-select');
+      const blockSel = sr.getElementById('ps-notas-block-select');
+      const matched = Number(sr.querySelector('.ps-stat[data-stat="matched"] strong')?.textContent ?? 0);
+      const mapOpen = Boolean(sr.getElementById('ps-notas-map-details')?.hasAttribute('open'));
+      return {
+        sheetValue: sheetSel?.value,
+        blockValue: blockSel?.value,
+        blockText: blockSel?.options[blockSel.selectedIndex]?.text ?? '',
+        matched,
+        mapOpen,
+      };
+    });
+    assert.equal(multiAutoState.sheetValue, '2', 'Deve selecionar automaticamente a aba Consolidado');
+    assert.equal(multiAutoState.blockValue, 'block_1', 'Deve selecionar automaticamente o bloco TURMA-ANUAL-1A');
+    assert.ok(multiAutoState.blockText.includes('TURMA-ANUAL-1A'));
+    assert.equal(multiAutoState.matched, 5);
+    assert.equal(multiAutoState.mapOpen, true);
+
+    await page.screenshot({ path: path.join(evidenciasDir, 'notas_multi_aba_desktop.png') });
+
+    // Alternar para "__all__" e voltar para o bloco da turma
+    await page.evaluate(() => {
+      const sr = document.getElementById('preenche-sigeduc-host').shadowRoot;
+      const blockSel = sr.getElementById('ps-notas-block-select');
+      blockSel.value = '__all__';
+      blockSel.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+    const combinedStats = await page.evaluate(() => {
+      const sr = document.getElementById('preenche-sigeduc-host').shadowRoot;
+      return {
+        matched: Number(sr.querySelector('.ps-stat[data-stat="matched"] strong')?.textContent ?? 0),
+        issues: Number(sr.querySelector('.ps-stat[data-stat="issues"] strong')?.textContent ?? 0),
+      };
+    });
+    assert.equal(combinedStats.matched, 5);
+    assert.equal(combinedStats.issues, 2, 'Bloco combinado inclui 2 alunos da TURMA OUTRA como não encontrados');
+
+    await page.evaluate(() => {
+      const sr = document.getElementById('preenche-sigeduc-host').shadowRoot;
+      const blockSel = sr.getElementById('ps-notas-block-select');
+      blockSel.value = 'block_1';
+      blockSel.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+    const backStats = await page.evaluate(() => {
+      const sr = document.getElementById('preenche-sigeduc-host').shadowRoot;
+      return Number(sr.querySelector('.ps-stat[data-stat="issues"] strong')?.textContent ?? 0);
+    });
+    assert.equal(backStats, 0);
+
     // 3. Frequência: colagem Ctrl+V liberada no Shadow DOM + data única + lote de 3 datas seguidas + auto-gravação com memória zerada
     console.log('[E2E] 3. Testando Frequência (Ctrl+V isolado, lote 3 datas, lógica invertida, RAM password)...');
     await page.goto(`${srv.baseUrl}/sigeduc/diario_classe/frequencia_aluno/form.jsf`);

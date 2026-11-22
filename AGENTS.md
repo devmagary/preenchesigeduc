@@ -16,7 +16,7 @@ Instruções de arquitetura, invariantes e verificação para agentes trabalhand
 
 - `src/core/`: Lógica pura testável em Node/Vitest (sem acesso ao DOM):
   - `normalize.ts`: limpeza de caracteres PUA/PCD, normalização NFD e `matchStudentsExact`.
-  - `spreadsheet.ts`: leitura de `.xlsx`/`.xls`/`.csv` (UTF-8 BOM, Windows-1252, separadores `;`, `,`, `\t`) e colagem tabular; exportação `.xlsx`, `.csv` e `.json`.
+  - `spreadsheet.ts`: leitura multi-aba e multi-bloco de `.xlsx`/`.xls`/`.csv` (UTF-8 BOM, Windows-1252, separadores `;`, `,`, `\t`), colagem tabular consolidada, auto-seleção de aba/bloco por correspondência exata com a turma aberta e exportação `.xlsx`, `.csv` e `.json`.
   - `grades.ts`: parse, validação contra nota máxima da atividade e formatação (`toFixed(1)`).
   - `attendance.ts`: parser de `P`/`F`/`1`/`0`/múltiplos horários, inversão booleana para o SIGEduc, parse de datas (`DD/MM/AAAA`, ISO, serial Excel -> mês `0-indexed`) e sanitização de observações (sem `\n`, máx. 500 chars).
 - `src/sigeduc/`: Adaptadores DOM específicos das telas do SIGEduc-BA:

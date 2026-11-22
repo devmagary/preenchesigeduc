@@ -39,3 +39,10 @@ Auditoria realizada por subagentes independentes (`research`) sem acesso ao cód
   2. **P1.2 (Mapeamento Persistente):** Em `notas_previa_desktop.png`, a seção `2. Mapeamento (4/4 atividades • 47 linhas)` permaneceu aberta com todos os seletores legíveis e bem alinhados.
   3. **P2.1 & P2.2 (Escala `125%` e Dark Mode no cabeçalho Mobile `390x844`):** Em `notas_dark_mode_mobile.png`, `[A 125%]` e `[☀️]` estão alinhados no cabeçalho sem sobreposição; alto contraste no tema escuro, zero texto cortado e zero barra de rolagem horizontal externa.
   4. **SLAs e Pacotes:** `.xlsx` p99 `33.12 ms` / `.csv` p99 `0.46 ms` (< `250 ms`), abertura do painel `14.01 ms` (< `100 ms`), `180/180` confirmações AJAX (`0%` perda), `45/45` exatos com `0` falsos positivos, `dist/chrome/` `511.6 KB` e `dist/firefox/` `511.8 KB` (< `1536 KB`).
+
+### Rodada 5 — Roadmap P1.3: Seleção de Aba e Planilhas Consolidadas (`db4f20a5`)
+- **Veredito:** **APROVADO — `0` defeitos `grave`, `0` `médio`, `0` `menor`.**
+- **Escopo inspecionado:** `manifest.json` (19 artefatos), `relatorio_metricas.md` / `.json`, JSONs de execução e todas as 11 capturas PNG (incluindo `notas_multi_aba_desktop.png`).
+- **Critérios verificados:**
+  1. **P1.3 (Multi-aba e Múltiplos Blocos Consolidadas):** Em `notas_multi_aba_desktop.png`, os seletores `Aba da Planilha (3 disponíveis)` (`Consolidado`) e `Bloco / Turma na Aba (2 blocos)` (`TURMA-ANUAL-1A (5 linhas)`) apareceram no topo da seção `2. Mapeamento (4/4 atividades • 5 linhas)` com banner automático indicando `5 aluno(s) casado(s) com a turma aberta`, ignorando corretamente o painel resumo superior e o bloco `TURMA OUTRA`.
+  2. **Regressão & SLAs:** Todos os fluxos de Notas (P1.1/P1.2), Frequência, Scraping, Escala `125%` + Dark Mode (`notas_dark_mode_mobile.png`) e SLAs aprovados (`19.4 ms` abertura, `29.98 ms` p99 `.xlsx`, `0%` perda AJAX em `180/180`, `45/45` exatos com `0` falsos positivos, `dist/chrome/` `521.8 KB`, `dist/firefox/` `522 KB`).
