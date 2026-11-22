@@ -43,9 +43,10 @@ As sugestões são organizadas sob a ótica de engenharia sênior, equilibrando 
 - **Comportamento esperado:** Preservar o estado aberto da seção de mapeamento durante re-renderizações ou trocas de coluna, recolhendo apenas por ação explícita do usuário.
 - **Impacto técnico / Riscos:** Ajuste localizado no controle de estado da UI em `src/ui/panel.ts`. Baixo risco de regressão.
 
-### 3. Seleção de Aba e Suporte a Planilhas Consolidadas (Múltiplas Turmas)
+### 3. Seleção de Aba e Suporte a Planilhas Consolidadas (Múltiplas Turmas) — `[Concluído]`
 - **Prioridade:** P1 — Alta
 - **Dificuldade:** Média
+- **Status:** Concluído (parser multi-aba e multi-bloco em `src/core/spreadsheet.ts` ignorando resumos no topo e detectando cabeçalhos internos, seleção automática por maior número de alunos exatos casados com a turma aberta, opção `"Todos os blocos combinados"` e seletores de Aba/Bloco no topo de `2. Mapeamento` em Notas, Não Realizadas e Frequência).
 - **Contexto:** Planilhas escolares reais frequentemente trazem múltiplas abas (uma por turma) em um único `.xlsx`/`.xls`, ou trazem um painel resumo no topo seguido de vários blocos de turmas na mesma aba. Atualmente o parser lê apenas a primeira aba e assume cabeçalho único no topo.
 - **Comportamento esperado:**
   - Quando o arquivo possuir mais de uma aba (`workbook.SheetNames.length > 1`), exibir seletor de aba na UI para o docente escolher qual aba carregar.
@@ -69,6 +70,16 @@ As sugestões são organizadas sob a ótica de engenharia sênior, equilibrando 
 - **Contexto:** Uso prolongado do painel à noite gera fadiga visual com tema claro.
 - **Comportamento esperado:** Alternância entre tema claro e escuro via tokens CSS no Shadow DOM (`src/ui/styles.ts`), respeitando `prefers-color-scheme` como padrão opcional e salvando a escolha do usuário localmente.
 - **Impacto técnico / Riscos:** Isolado no Shadow DOM (`#preenche-sigeduc-host`), sem interferir no CSS da página do SIGEduc.
+
+### 3. Distribuição e Instalador Fácil (Windows e Android sem Chrome Web Store)
+- **Prioridade:** P2 — Média
+- **Dificuldade:** Média
+- **Contexto:** Publicar na Chrome Web Store exige taxa de desenvolvedor do Google. O objetivo é facilitar ao máximo a instalação para docentes no PC (Windows) e no Android (Mises, Lemur, Edge Canary, Firefox Android).
+- **Comportamento esperado:**
+  - **GitHub Releases automatizado:** Publicar pacotes prontos (`preenche-sigeduc-chrome.zip` e `preenche-sigeduc-firefox.zip`) com link direto de download.
+  - **Windows:** Pacote pronto + guia visual simplificado (ou script auxiliar `.bat`/`.ps1` para extrair em pasta fixa e abrir `chrome://extensions` / `edge://extensions`).
+  - **Android:** Avaliar assinatura gratuita *self-distributed* (`.xpi`) para Firefox Android e guia ilustrado passo a passo para Mises/Lemur/Edge Canary; opcionalmente avaliar geração de build Userscript (`.user.js`) caso o CSP do SIGEduc permita.
+- **Impacto técnico / Riscos:** Envolve `scripts/package.mjs`, documentação no `README.md` e eventuais testes de compatibilidade em navegadores Android.
 
 ## P3 — Baixa Prioridade / Futuro
 *(Nenhum item registrado ainda)*
