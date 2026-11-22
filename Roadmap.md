@@ -71,17 +71,7 @@ As sugestões são organizadas sob a ótica de engenharia sênior, equilibrando 
 - **Comportamento esperado:** Alternância entre tema claro e escuro via tokens CSS no Shadow DOM (`src/ui/styles.ts`), respeitando `prefers-color-scheme` como padrão opcional e salvando a escolha do usuário localmente.
 - **Impacto técnico / Riscos:** Isolado no Shadow DOM (`#preenche-sigeduc-host`), sem interferir no CSS da página do SIGEduc.
 
-### 3. Distribuição e Instalador Fácil (Windows e Android sem Chrome Web Store)
-- **Prioridade:** P2 — Média
-- **Dificuldade:** Média
-- **Contexto:** Publicar na Chrome Web Store exige taxa de desenvolvedor do Google. O objetivo é facilitar ao máximo a instalação para docentes no PC (Windows) e no Android (Mises, Lemur, Edge Canary, Firefox Android).
-- **Comportamento esperado:**
-  - **GitHub Releases automatizado:** Publicar pacotes prontos (`preenche-sigeduc-chrome.zip` e `preenche-sigeduc-firefox.zip`) com link direto de download.
-  - **Windows:** Pacote pronto + guia visual simplificado (ou script auxiliar `.bat`/`.ps1` para extrair em pasta fixa e abrir `chrome://extensions` / `edge://extensions`).
-  - **Android:** Avaliar assinatura gratuita *self-distributed* (`.xpi`) para Firefox Android e guia ilustrado passo a passo para Mises/Lemur/Edge Canary; opcionalmente avaliar geração de build Userscript (`.user.js`) caso o CSP do SIGEduc permita.
-- **Impacto técnico / Riscos:** Envolve `scripts/package.mjs`, documentação no `README.md` e eventuais testes de compatibilidade em navegadores Android.
-
-### 4. Modelo de Planilha Consolidada (Padrão CETEP) na Exportação
+### 3. Modelo de Planilha Consolidada (Padrão CETEP) na Exportação
 - **Prioridade:** P2 — Média
 - **Dificuldade:** Média
 - **Contexto:** Padronizar os modelos de planilha exportados pela extensão com base no painel consolidado de notas (resumo geral por turma + blocos detalhados por aluno).
@@ -91,7 +81,7 @@ As sugestões são organizadas sob a ótica de engenharia sênior, equilibrando 
   - Critério/média mínima configurável (padrão `5,0`) e formatação condicional/visual quando suportada.
 - **Impacto técnico / Riscos:** Evolução de `src/core/spreadsheet.ts`; atenção ao limite de tamanho do pacote (`< 1.5 MB`) caso seja usada biblioteca `.xlsx` com suporte a estilos.
 
-### 5. Extração em Lote de Todas as Turmas (Portal do Docente)
+### 4. Extração em Lote de Todas as Turmas (Portal do Docente)
 - **Prioridade:** P2 — Média
 - **Dificuldade:** Alta
 - **Contexto:** No `portal_docente`, permitir extrair automaticamente todas as turmas listadas sem precisar abrir manualmente uma por uma.
