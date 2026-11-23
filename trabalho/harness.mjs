@@ -19,6 +19,7 @@ const STEPS = [
 
 const EXPECTED_EVIDENCES = [
   'scraping_turmas_desktop.png',
+  'cards_turmas_longos_desktop.png',
   'extracao_lote_cetep_desktop.png',
   'notas_previa_desktop.png',
   'notas_multi_aba_desktop.png',
@@ -35,6 +36,7 @@ const EXPECTED_EVIDENCES = [
   'export_turmas.json',
   'export_avaliacoes.json',
   'consolidado_cetep_lote.xlsx',
+  'consolidado_cetep_ativo_mat.xlsx',
   'modelo_notas_semestral.xlsx',
   'modelo_frequencia.xlsx',
   'relatorio_execucao_notas_completo.json',

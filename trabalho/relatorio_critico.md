@@ -65,3 +65,12 @@ Auditoria realizada por subagentes independentes (`research`) sem acesso ao cód
   - `extracao_lote_cetep_desktop.png` confirma `90 estudantes • 65 aprovados • 15 recuperação • 10 sem nota` e detalhamento `Ensino Médio: 1ª Unidade • Técnico: 2ª Unidade`.
   - `manifest.json`: `22/22` artefatos íntegros (`consolidado_cetep_lote.xlsx` com `73.710` B).
   - SLAs: `.xlsx` p99 `28.73 ms`, `.csv` p99 `0.62 ms` (`< 250 ms`), painel `15.46 ms` (`< 100 ms`), `180/180` AJAX (`0%` perda), `45/45` exatos com `0` falsos positivos, `dist/chrome/` `568.8 KB` e `dist/firefox/` `569.0 KB` (`< 1536 KB`).
+
+### Rodada 8/9 — Roadmap P0 #1 (Seletor de Unidade + Matrícula) & P1 #4 (Cards de Turma) (`678f0d5d`)
+- **Sub-rodada 8:** `0` `grave`, `1` `médio` (`cards_turmas_longos_desktop.png` estava rolada no topo sem mostrar `#ps-batch-turma-list`) e `1` `menor` (truncamento de `Layout CETEP` no mobile).
+- **Ajustes aplicados:** Scroll automático para `#ps-batch-turma-list` antes da captura de evidência, inclusão de `consolidado_cetep_ativo_mat.xlsx` no manifesto do harness e grade `minmax(0,1fr) 92px` para `Layout CETEP` + `Nota mínima`.
+- **Sub-rodada 9 — Parecer Final:** **APROVADO — `0` defeitos `grave`, `0` `médio`, `1` observação `menor` não bloqueante.**
+  - `consolidado_cetep_ativo_mat.xlsx`: comprova P0 #1 no modo `"Ativa / mais recente"` + `Incluir Matrícula` coletando **`3ª Unidade`** no Ensino Médio (`45/45` matrículas) e **`2ª Unidade`** no Técnico (`45/45` matrículas, 35 aprovados, 5 recuperação, 5 sem nota, média `7.5`), além de `consolidado_cetep_lote.xlsx` validado (`1ª Unidade` Médio + `2ª Unidade` Técnico, `45/45` matrículas em ambas).
+  - `cards_turmas_longos_desktop.png` & `scraping_notas_mobile.png`: cards `.ps-turma-card` com `flex-shrink: 0` e `height: auto` sem sobreposição ou estouro horizontal; `Layout CETEP` exibindo integralmente `"Multi-aba (Painel + turmas)"` no mobile.
+  - `manifest.json`: `24/24` evidências íntegras.
+  - SLAs: parse `.xlsx` p99 `30.58 ms` (`13.46 ms` média), `.csv` p99 `0.43 ms` (`0.27 ms` média) (`< 250 ms`), abertura do painel `17.08 ms` (`< 100 ms`), `180/180` AJAX (`0%` perda), `45/45` exatos com `0` falsos positivos, `dist/chrome/` `569.9 KB` e `dist/firefox/` `570.1 KB` (`< 1536 KB`).

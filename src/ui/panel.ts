@@ -1416,7 +1416,7 @@ export class PreenchePanelController {
 
   private renderCetepControlsHtml(): string {
     return `
-      <div style="display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:8px;align-items:end;">
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 92px;gap:8px;align-items:end;">
         <div class="ps-field">
           <label class="ps-label" for="ps-cetep-mode">Layout CETEP</label>
           <select class="ps-select" id="ps-cetep-mode">
@@ -1552,15 +1552,18 @@ export class PreenchePanelController {
         const overrideVal = this.batchTurmaUnitOverrides[key];
         const checked = this.batchSelectedTurmaKeys.has(key);
         return `
-          <div class="ps-check-row" style="align-items:flex-start;justify-content:space-between;">
-            <label style="display:flex;align-items:flex-start;gap:8px;flex:1;min-width:0;cursor:pointer;">
+          <div class="ps-check-row ps-turma-card">
+            <label class="ps-turma-label">
               <input type="checkbox" class="ps-batch-turma-cb" value="${escapeHtml(key)}" ${checked ? 'checked' : ''} style="margin-top:2px;" />
-              <div style="flex:1;min-width:0;">
-                <strong>${escapeHtml(t.turma)}</strong> <span class="ps-pill ok">${escapeHtml(idInfo.modalidade)} • ${escapeHtml(idInfo.turno)}</span><br/>
-                <span class="ps-muted">${escapeHtml(idInfo.curso)} • ${escapeHtml(t.componente)} (${t.qtdEstudantes} alunos)</span>
+              <div class="ps-turma-info">
+                <div class="ps-turma-head">
+                  <strong>${escapeHtml(t.turma)}</strong>
+                  <span class="ps-pill ok">${escapeHtml(idInfo.modalidade)} • ${escapeHtml(idInfo.turno)}</span>
+                </div>
+                <span class="ps-muted ps-turma-meta">${escapeHtml(idInfo.curso)} • ${escapeHtml(t.componente)} (${t.qtdEstudantes} alunos)</span>
               </div>
             </label>
-            <select class="ps-select ps-batch-turma-unit" data-turma-key="${escapeHtml(key)}" aria-label="Unidade de ${escapeHtml(t.turma)}" style="width:auto;min-width:98px;min-height:32px;padding:4px 6px;font-size:0.8em;">
+            <select class="ps-select ps-batch-turma-unit" data-turma-key="${escapeHtml(key)}" aria-label="Unidade de ${escapeHtml(t.turma)}">
               <option value="" ${!overrideVal ? 'selected' : ''}>Padrão (${unitLabelShort(defaultChoice)})</option>
               <option value="active" ${overrideVal === 'active' ? 'selected' : ''}>Ativa</option>
               <option value="1" ${overrideVal === '1' ? 'selected' : ''}>1ª Un.</option>
@@ -1606,7 +1609,7 @@ export class PreenchePanelController {
             ${selectedCount === portal.turmas.length ? 'Desmarcar todas' : 'Marcar todas'}
           </button>
         </div>
-        <div style="display:flex;flex-direction:column;gap:6px;max-height:240px;overflow-y:auto;">
+        <div class="ps-turma-list" id="ps-batch-turma-list">
           ${turmaChecks || '<div class="ps-banner warn">Nenhuma turma encontrada no Portal Docente.</div>'}
         </div>
         <button class="ps-btn ps-btn-primary ps-btn-block" id="ps-batch-start" type="button" ${selectedCount === 0 ? 'disabled' : ''}>
@@ -2034,7 +2037,9 @@ export class PreenchePanelController {
 
     q<HTMLButtonElement>('ps-cetep-dl-single')?.addEventListener('click', () => {
       if (this.scraped?.kind !== 'lancar_notas') return;
-      const turma = scrapedNotasToCetepTurma(this.scraped);
+      const freshNotas = scrapeLancarNotas(this.doc);
+      this.scraped = freshNotas;
+      const turma = scrapedNotasToCetepTurma(freshNotas);
       const slug = turma.identity.codigo.toLowerCase().replace(/[^a-z0-9_-]+/g, '_');
       this.triggerCetepDownload([turma], `cetep_${slug || 'turma'}.xlsx`);
     });

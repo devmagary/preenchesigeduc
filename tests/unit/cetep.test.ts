@@ -8,6 +8,7 @@ import {
 } from '../../src/core/cetep';
 import { parseWorkbookBuffer, selectBestWorkbookTarget } from '../../src/core/spreadsheet';
 import { resolveTurmaUnitChoice } from '../../src/sigeduc/batch-extract';
+import { pickUnitFromScrapedList, type ScrapedNotasScreen } from '../../src/sigeduc/scraper';
 
 function buildSampleTurmas(): CetepTurmaData[] {
   return [
@@ -211,5 +212,45 @@ describe('CETEP identity, stats and OOXML xlsx export', () => {
     expect(resolveTurmaUnitChoice(medioTurma, '900001', opts)).toBe('1');
     expect(resolveTurmaUnitChoice(tecTurma, '900002', opts)).toBe('2');
     expect(resolveTurmaUnitChoice(overrideTurma, '900099', opts)).toBe('3');
+  });
+
+  it('prioriza a unidade ativa/mais recente aberta corretamente em pickUnitFromScrapedList sem travar na 1ª Unidade', () => {
+    const makeUnit = (label: string, disabled: boolean, withGrades = true, empty = false): ScrapedNotasScreen => ({
+      kind: 'lancar_notas',
+      escola: 'CETEP',
+      turma: 'TURMA-X',
+      componente: 'INFORMÁTICA',
+      totalAulas: '40',
+      unidadeAtiva: label,
+      unidadesDisponiveis: ['1ª Unidade', '2ª Unidade', '3ª Unidade'],
+      atividades: empty ? [] : [{ idAvaliacao: label, nome: `Av ${label}`, valorMax: 10, disabled, colIndex: 0 }],
+      alunos: [
+        {
+          index: 0,
+          nome: 'ANA CLARA FERREIRA',
+          notasAtividades: empty ? {} : { [label]: withGrades ? '8.0' : '' },
+          inputIds: {},
+          disabledMap: {},
+          recUnidade: '',
+          recInputId: null,
+          recDisabled: true,
+          notaUnidade: withGrades && !empty ? '8.0' : '',
+        },
+      ],
+    });
+
+    // Caso Semestral real: 1ª Unidade vem selecionada no HTML e aberta, mas 2ª Unidade também está aberta
+    const semUnits = [makeUnit('1ª Unidade', false, true), makeUnit('2ª Unidade', false, true)];
+    expect(pickUnitFromScrapedList(semUnits, 'active', '1ª Unidade')?.unidadeAtiva).toBe('2ª Unidade');
+    expect(pickUnitFromScrapedList(semUnits, '1', '1ª Unidade')?.unidadeAtiva).toBe('1ª Unidade');
+    expect(pickUnitFromScrapedList(semUnits, '2', '1ª Unidade')?.unidadeAtiva).toBe('2ª Unidade');
+
+    // Caso Anual real: 1ª e 2ª fechadas, 3ª aberta
+    const anualUnits = [makeUnit('1ª Unidade', true, true), makeUnit('2ª Unidade', true, true), makeUnit('3ª Unidade', false, false)];
+    expect(pickUnitFromScrapedList(anualUnits, 'active', '1ª Unidade')?.unidadeAtiva).toBe('3ª Unidade');
+
+    // Caso todas fechadas: pega a última unidade que possui atividades/notas (2ª, pois 3ª está vazia)
+    const closedUnits = [makeUnit('1ª Unidade', true, true), makeUnit('2ª Unidade', true, true), makeUnit('3ª Unidade', true, false, true)];
+    expect(pickUnitFromScrapedList(closedUnits, 'active', '1ª Unidade')?.unidadeAtiva).toBe('2ª Unidade');
   });
 });

@@ -20,9 +20,10 @@ As sugestões são organizadas sob a ótica de engenharia sênior, equilibrando 
 
 ## P0 — Crítico
 
-### 1. Respeitar Seletor de Unidade ao Puxar Matrículas
+### 1. Respeitar Seletor de Unidade ao Puxar Matrículas — `[Concluído]`
 - **Prioridade:** P0 — Crítico
 - **Dificuldade:** Média
+- **Status:** Concluído (`pickUnitFromScrapedList` em `src/sigeduc/scraper.ts` atualizado para que o modo `"Ativa / mais recente"` priorize a última unidade com atividades abertas — ou, se todas fechadas, a última com atividades/notas — sem travar na `1ª Unidade` selecionada por padrão no HTML inicial do SIGEduc, mantendo coleta de matrículas via Frequência e leitura atualizada da aba ativa no download individual; validado em testes unitários e E2E).
 - **Contexto:** Ao marcar a opção para puxar matrículas, o sistema está coletando apenas os dados da 1ª unidade, ignorando o seletor de unidade escolhido pelo usuário.
 - **Comportamento esperado:** Garantir que a extração/coleta de matrículas e notas obedeça exatamente a unidade selecionada no seletor da UI (ex.: 1ª, 2ª ou 3ª unidade) antes de ler a tabela.
 - **Impacto técnico / Riscos:** Ajuste na máquina de estados/coleta em `src/sigeduc/batch-extract.ts` e `src/sigeduc/scraper.ts`, com cobertura de teste E2E.
@@ -59,9 +60,10 @@ As sugestões são organizadas sob a ótica de engenharia sênior, equilibrando 
   - Aprimorar a detecção de cabeçalho em `src/core/spreadsheet.ts` para pular linhas de resumo/título no topo e identificar corretamente a tabela de alunos (e, se houver múltiplos blocos `Nº / Nome do Aluno` na mesma aba, permitir selecionar o bloco/turma).
 - **Impacto técnico / Riscos:** Alterações em `src/core/spreadsheet.ts`, `src/ui/panel.ts` e novos testes unitários em `tests/unit/spreadsheet.test.ts`.
 
-### 4. Corrigir Quebra/Estouro de Texto nos Cards de Turma
+### 4. Corrigir Quebra/Estouro de Texto nos Cards de Turma — `[Concluído]`
 - **Prioridade:** P1 — Alta
 - **Dificuldade:** Baixa
+- **Status:** Concluído (`src/ui/styles.ts` e `src/ui/panel.ts` atualizados com `.ps-check-row` / `.ps-turma-card` com `flex-shrink: 0` e `height: auto`, `.ps-turma-list` com `max-height: 280px` rolável, `.ps-turma-head` com `flex-wrap: wrap` e `.ps-turma-meta` com `overflow-wrap: anywhere`; validado em E2E com 8 turmas de nomes longos sem sobreposição ou vazamento).
 - **Contexto:** Na lista de turmas do painel, os nomes longos (ex.: curso, disciplina e quantidade de alunos) estão vazando para fora da borda inferior do card e sobrepondo o item seguinte.
 - **Comportamento esperado:** Os cards devem se ajustar dinamicamente ao conteúdo (`height: auto`, espaçamento/padding adequado e quebra de linha limpa), sem cortar ou sobrepor textos.
 - **Impacto técnico / Riscos:** Ajuste localizado de CSS em `src/ui/styles.ts`. Baixo risco de regressão.

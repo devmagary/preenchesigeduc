@@ -1,35 +1,35 @@
 {
-  "generatedAt": "2026-11-23T15:37:58.043Z",
+  "generatedAt": "2026-11-23T20:20:13.530Z",
   "parse500x10_20runs": {
     "xlsx_ms": {
-      "avg": 13.7,
-      "p99": 28.73,
-      "max": 28.73
+      "avg": 13.46,
+      "p99": 30.58,
+      "max": 30.58
     },
     "csv_ms": {
-      "avg": 0.31,
-      "p99": 0.62,
-      "max": 0.62
+      "avg": 0.27,
+      "p99": 0.43,
+      "max": 0.43
     },
     "sla_limit_ms": 250,
     "passed": true
   },
-  "panelOpen_ms": 15.46,
+  "panelOpen_ms": 17.08,
   "panelOpen_sla_ms": 100,
   "sequentialFill_45x4": {
     "expectedAjax": 180,
     "receivedAjax": 180,
     "ajaxLossRatePct": 0,
-    "duration_ms": 6650.28,
+    "duration_ms": 6595.86,
     "exactMatched": 45,
     "falsePositives": 0,
     "passed": true
   },
   "bundleSizes_KB": {
-    "distChrome_KB": 568.8,
-    "distFirefox_KB": 569,
-    "chromeZip_KB": 183.1,
-    "firefoxZip_KB": 183.2,
+    "distChrome_KB": 569.9,
+    "distFirefox_KB": 570.1,
+    "chromeZip_KB": 183.3,
+    "firefoxZip_KB": 183.4,
     "sla_uncompressed_limit_KB": 1536,
     "passed": true
   }

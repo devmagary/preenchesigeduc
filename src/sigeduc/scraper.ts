@@ -354,13 +354,32 @@ export function pickUnitFromScrapedList(
 
   const activeUnit = units.find((u) => u.unidadeAtiva === activeLabel) ?? units[0];
   if (preferred === 'active') {
-    if (activeUnit.atividades.length > 0) return activeUnit;
-    const withActivities = units.filter((u) => u.atividades.length > 0);
-    return withActivities.length > 0 ? withActivities[withActivities.length - 1] : activeUnit;
+    // No SIGEduc, a aba da 1ª Unidade costuma vir selecionada no HTML inicial mesmo quando
+    // a 2ª ou 3ª Unidade já está aberta; priorizar a última unidade com atividades abertas.
+    const withOpenActivities = units.filter((u) => u.atividades.some((a) => !a.disabled));
+    if (withOpenActivities.length > 0) {
+      return withOpenActivities[withOpenActivities.length - 1];
+    }
+
+    const withContent = units.filter(
+      (u) =>
+        u.atividades.length > 0 ||
+        u.alunos.some(
+          (s) =>
+            s.notaUnidade.trim() !== '' ||
+            s.recUnidade.trim() !== '' ||
+            Object.values(s.notasAtividades).some((v) => v.trim() !== '')
+        )
+    );
+    if (withContent.length > 0) {
+      return withContent[withContent.length - 1];
+    }
+
+    return activeUnit;
   }
 
-  const byPrefix = units.find((u) => new RegExp(`^${preferred}[ªa]?\\b`, 'i').test(u.unidadeAtiva));
-  if (byPrefix) return byPrefix;
+  const byNumber = units.find((u) => new RegExp(`(?:^|\\b)${preferred}(?:[ªaºo]|\\b)`, 'i').test(u.unidadeAtiva));
+  if (byNumber) return byNumber;
   const idx = Number(preferred) - 1;
   if (idx >= 0 && idx < units.length) return units[idx];
   return activeUnit;

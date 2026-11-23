@@ -574,13 +574,77 @@ export const SHADOW_STYLES = `
   align-items: center;
   gap: 10px;
   min-height: 44px;
-  padding: 6px 8px;
+  height: auto;
+  flex-shrink: 0;
+  padding: 8px 10px;
   border: 1px solid var(--ps-soft-border);
   border-radius: 8px;
   background: var(--ps-stat-bg);
   color: var(--ps-text);
   font-size: calc(13px * var(--ps-scale));
+  line-height: 1.35;
   cursor: pointer;
+}
+
+.ps-turma-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 280px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.ps-turma-card {
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 9px 10px;
+  height: auto;
+  flex-shrink: 0;
+  cursor: default;
+}
+
+.ps-turma-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  flex: 1 1 auto;
+  min-width: 0;
+  cursor: pointer;
+}
+
+.ps-turma-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.ps-turma-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 6px;
+}
+
+.ps-turma-meta {
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.ps-batch-turma-unit {
+  width: auto;
+  min-width: 98px;
+  max-width: 124px;
+  min-height: 32px;
+  padding: 4px 6px;
+  font-size: 0.8em;
+  flex-shrink: 0;
 }
 
 .ps-check-row input[type="checkbox"],

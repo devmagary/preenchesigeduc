@@ -617,10 +617,123 @@ async function runTests() {
     const singleLoteWb = XLSX.read(fs.readFileSync(singleCetepPath));
     assert.deepEqual(singleLoteWb.SheetNames, ['Consolidado CETEP']);
 
-    // Limpar estado batch da sessionStorage antes do teste Mobile
+    // Limpar estado batch da sessionStorage antes do teste P0 #1 (Ativa / mais recente + Matrícula)
     await page.evaluate(() => {
       document.getElementById('preenche-sigeduc-host').shadowRoot.getElementById('ps-batch-reset').click();
     });
+
+    // 3C. P0 #1: Extração em Lote mantendo "Ativa / mais recente" + Incluir Matrícula
+    console.log('[E2E] 3C. Testando P0 #1 (Ativa / mais recente + Incluir Matrícula)...');
+    await page.goto(`${srv.baseUrl}/sigeduc/portais/docente/docente.jsf`);
+    await openPanel(page);
+    await page.evaluate(() => {
+      const sr = document.getElementById('preenche-sigeduc-host').shadowRoot;
+      const medioSel = sr.getElementById('ps-batch-unit-medio');
+      const tecSel = sr.getElementById('ps-batch-unit-tecnico');
+      const matCb = sr.getElementById('ps-batch-include-mat');
+      // Garantir que ambos estejam em 'active' (padrão) e marcar puxar matrículas
+      medioSel.value = 'active';
+      medioSel.dispatchEvent(new Event('change', { bubbles: true }));
+      tecSel.value = 'active';
+      tecSel.dispatchEvent(new Event('change', { bubbles: true }));
+      matCb.checked = true;
+      matCb.dispatchEvent(new Event('change', { bubbles: true }));
+      sr.getElementById('ps-batch-start').click();
+    });
+
+    await page.waitForFunction(() => {
+      const sr = document.getElementById('preenche-sigeduc-host')?.shadowRoot;
+      const raw = window.sessionStorage.getItem('preenche_sigeduc_batch_extract_v1');
+      if (!sr || !raw) return false;
+      try {
+        const st = JSON.parse(raw);
+        return Boolean(sr.getElementById('ps-batch-summary')) && st.phase === 'completed' && st.autoDownloaded === true;
+      } catch {
+        return false;
+      }
+    }, null, { timeout: 45000 });
+
+    const activeMatPath = path.join(evidenciasDir, 'consolidado_cetep_ativo_mat.xlsx');
+    await captureDownload(
+      page,
+      () => page.evaluate(() => document.getElementById('preenche-sigeduc-host').shadowRoot.getElementById('ps-batch-dl-cetep').click()),
+      activeMatPath
+    );
+    const activeMatWb = XLSX.read(fs.readFileSync(activeMatPath));
+    const activePanel = XLSX.utils.sheet_to_json(activeMatWb.Sheets['Painel Consolidado'], { header: 1 });
+    const activeSubMedio = activePanel.find((r) => r[0] === 'SUBTOTAL — ENSINO MÉDIO');
+    const activeSubTec = activePanel.find((r) => r[0] === 'SUBTOTAL — TÉCNICO');
+    assert.ok(activeSubMedio && activeSubTec);
+    assert.equal(activeSubMedio[2], '3ª Unidade', 'Modo Ativa/mais recente com matrícula deve escolher 3ª Unidade aberta no Médio');
+    assert.equal(activeSubTec[2], '2ª Unidade', 'Modo Ativa/mais recente com matrícula deve escolher 2ª Unidade aberta no Técnico (não travar na 1ª aba)');
+    const activeTecRows = XLSX.utils.sheet_to_json(activeMatWb.Sheets[activeMatWb.SheetNames[2]], { header: 1 });
+    assert.equal(activeTecRows[4][2], '202690010001', 'Matrícula deve acompanhar a unidade correta');
+
+    // Limpar estado batch da sessionStorage e testar P1 #4 (Cards de turma com nomes longos sem estouro/sobreposição)
+    await page.evaluate(() => {
+      document.getElementById('preenche-sigeduc-host').shadowRoot.getElementById('ps-batch-reset').click();
+    });
+
+    console.log('[E2E] 3D. Testando P1 #4 (Cards de turma com muitos itens e nomes longos sem sobreposição)...');
+    await page.goto(`${srv.baseUrl}/sigeduc/portais/docente/docente.jsf`);
+    await page.evaluate(() => {
+      const tbody = document.querySelector('#formTurmas\\:turmasProfessorTable tbody');
+      const baseRow = tbody.querySelector('tr.linhaPar');
+      for (let i = 0; i < 6; i++) {
+        const clone = baseRow.cloneNode(true);
+        const tds = clone.querySelectorAll('td');
+        tds[0].textContent = `TURMA-LONGA-${i + 1}-NOTURNO`;
+        tds[3].textContent = 'TÉCNICO EM DESENVOLVIMENTO DE SISTEMAS INTEGRADO AO ENSINO MÉDIO PROFISSIONALIZANTE ESTENDIDO';
+        tds[6].textContent = `GOVERNANÇA DE TECNOLOGIA DA INFORMAÇÃO, SEGURANÇA CIBERNÉTICA E ARQUITETURA DE SISTEMAS DISTRIBUÍDOS ${i + 1}`;
+        tds[7].textContent = String(32 + i);
+        const link = clone.querySelector('a[onclick]');
+        if (link) link.setAttribute('onclick', `/* 'idTurmaComponente':'99000${i + 1}' */ return true;`);
+        tbody.appendChild(clone);
+      }
+    });
+    await openPanel(page);
+    const turmaCardsCheck = await page.evaluate(() => {
+      const sr = document.getElementById('preenche-sigeduc-host').shadowRoot;
+      const list = sr.getElementById('ps-batch-turma-list');
+      const cards = Array.from(sr.querySelectorAll('.ps-turma-card'));
+      const cardMetrics = cards.map((card) => {
+        const r = card.getBoundingClientRect();
+        const info = card.querySelector('.ps-turma-info')?.getBoundingClientRect();
+        const sel = card.querySelector('.ps-batch-turma-unit')?.getBoundingClientRect();
+        return {
+          top: r.top,
+          bottom: r.bottom,
+          height: r.height,
+          infoBottomOverflow: info ? info.bottom - r.bottom : 0,
+          selRightOverflow: sel ? sel.right - r.right : 0,
+        };
+      });
+      let maxPairOverlap = 0;
+      for (let i = 0; i + 1 < cardMetrics.length; i++) {
+        const overlap = cardMetrics[i].bottom - cardMetrics[i + 1].top;
+        if (overlap > maxPairOverlap) maxPairOverlap = overlap;
+      }
+      return {
+        count: cards.length,
+        listScrollable: list.scrollHeight > list.clientHeight,
+        listOverflowX: list.scrollWidth > list.clientWidth + 2,
+        maxInfoBottomOverflow: Math.max(...cardMetrics.map((m) => m.infoBottomOverflow)),
+        maxSelRightOverflow: Math.max(...cardMetrics.map((m) => m.selRightOverflow)),
+        maxPairOverlap,
+      };
+    });
+    assert.equal(turmaCardsCheck.count, 8);
+    assert.equal(turmaCardsCheck.listScrollable, true, 'Lista com 8 turmas longas deve ter rolagem interna');
+    assert.equal(turmaCardsCheck.listOverflowX, false, 'Cards de turma não devem vazar horizontalmente');
+    assert.ok(turmaCardsCheck.maxInfoBottomOverflow <= 1.5, `Texto do card não pode vazar da borda inferior (overflow=${turmaCardsCheck.maxInfoBottomOverflow})`);
+    assert.ok(turmaCardsCheck.maxSelRightOverflow <= 1.5, `Seletor de unidade deve caber dentro do card (overflow=${turmaCardsCheck.maxSelRightOverflow})`);
+    assert.ok(turmaCardsCheck.maxPairOverlap <= 1, `Cards adjacentes não podem se sobrepor (overlap=${turmaCardsCheck.maxPairOverlap})`);
+    await page.evaluate(() => {
+      const sr = document.getElementById('preenche-sigeduc-host')?.shadowRoot;
+      const list = sr?.getElementById('ps-batch-turma-list');
+      list?.scrollIntoView({ block: 'center', behavior: 'instant' });
+    });
+    await page.screenshot({ path: path.join(evidenciasDir, 'cards_turmas_longos_desktop.png') });
 
     // 4. Mobile Android viewport (390x844) verificando responsividade e ausência de overflow horizontal
     console.log('[E2E] 4. Testando Viewport Mobile Android (390x844)...');
