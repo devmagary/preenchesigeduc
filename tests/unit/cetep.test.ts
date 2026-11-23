@@ -1,0 +1,164 @@
+import { describe, expect, it } from 'vitest';
+import * as XLSX from 'xlsx';
+import {
+  computeCetepTurmaStats,
+  exportCetepXlsxBuffer,
+  parseTurmaIdentity,
+  type CetepTurmaData,
+} from '../../src/core/cetep';
+import { parseWorkbookBuffer, selectBestWorkbookTarget } from '../../src/core/spreadsheet';
+
+function buildSampleTurmas(): CetepTurmaData[] {
+  return [
+    {
+      idTurmaComponente: '900001',
+      escola: 'CETEP RECÔNCAVO II',
+      docente: 'PROFESSOR TESTE',
+      ano: '2026',
+      unidade: '1ª Unidade',
+      identity: parseTurmaIdentity({
+        turma: 'TURMA-ANUAL-1A',
+        ofertaEnsino: 'TÉCNICO EM INFORMÁTICA-ENSINO MÉDIO INTEGRADO',
+        serie: '1ª SÉRIE',
+        componente: 'EDUCAÇÃO DIGITAL E MIDIÁTICA',
+        fullTurmaHeader: 'TÉCNICO EM INFORMÁTICA-ENSINO MÉDIO INTEGRADO - 1ª SÉRIE - TURMA-ANUAL-1A / VESPERTINO',
+      }),
+      atividades: [
+        { idAvaliacao: '1', nome: 'Atividades em sala', valorMax: 3.0 },
+        { idAvaliacao: '2', nome: 'Teste', valorMax: 3.0 },
+        { idAvaliacao: '3', nome: 'Simulado', valorMax: 4.0 },
+      ],
+      alunos: [
+        { numero: 1, nome: 'ANA CLARA FERREIRA', matricula: '202690010001', notas: { '1': 2.5, '2': 2.5, '3': 3.0 } },
+        { numero: 2, nome: 'BRUNO HENRIQUE SOUZA', matricula: '202690010002', notas: { '1': 1.5, '2': 1.0, '3': 1.5 } },
+        { numero: 3, nome: 'CARLA MENDES OLIVEIRA', matricula: '202690010003', notas: { '1': 0.0, '2': 0.0, '3': 0.0 } },
+        { numero: 4, nome: 'DANIEL COSTA ALMEIDA', matricula: '202690010004', notas: { '1': null, '2': null, '3': null } },
+      ],
+    },
+    {
+      idTurmaComponente: '900002',
+      escola: 'CETEP RECÔNCAVO II',
+      docente: 'PROFESSOR TESTE',
+      ano: '2026',
+      unidade: '1ª Unidade',
+      identity: parseTurmaIdentity({
+        turma: 'ANACNOTM1A2',
+        ofertaEnsino: 'TÉCNICO EM ANÁLISES CLÍNICAS-SUBSEQUENTE',
+        serie: 'MÓDULO I',
+        componente: 'INFORMATICA APLICADA',
+      }),
+      atividades: [
+        { idAvaliacao: '91', nome: 'Prova Escrita', valorMax: 4.0 },
+        { idAvaliacao: '92', nome: 'Atividade Prática', valorMax: 6.0 },
+      ],
+      alunos: [
+        { numero: 1, nome: 'EDUARDA RIBEIRO SANTOS', matricula: '202690020001', notas: { '91': 3.5, '92': 4.5 } },
+        { numero: 2, nome: 'FELIPE BARBOSA LIMA', matricula: '202690020002', notas: { '91': 2.0, '92': 3.0 } },
+      ],
+    },
+  ];
+}
+
+describe('CETEP identity, stats and OOXML xlsx export', () => {
+  it('identifica curso, modalidade (Ensino Médio ou Técnico) e turno corretamente', () => {
+    const em = parseTurmaIdentity({
+      turma: 'ADMVES1SA',
+      ofertaEnsino: 'TÉCNICO EM ADMINISTRAÇÃO-ENSINO MÉDIO INTEGRADO',
+      serie: '1ª SÉRIE',
+      componente: 'EDUCAÇÃO DIGITAL E MIDIÁTICA',
+    });
+    expect(em.modalidade).toBe('Ensino Médio');
+    expect(em.curso).toContain('Administração');
+    expect(em.turno).toBe('Vespertino');
+
+    const tec = parseTurmaIdentity({
+      turma: 'ANACNOTM1A2',
+      ofertaEnsino: 'TÉCNICO EM ANÁLISES CLÍNICAS-SUBSEQUENTE',
+      serie: 'MÓDULO I',
+      componente: 'INFORMÁTICA APLICADA',
+    });
+    expect(tec.modalidade).toBe('Técnico');
+    expect(tec.curso).toContain('Análises Clínicas');
+    expect(tec.turno).toBe('Noturno');
+  });
+
+  it('calcula estatísticas respeitando critério mínimo, 0.0 como Recuperação e vazio como Sem Nota', () => {
+    const [t1] = buildSampleTurmas();
+    const s5 = computeCetepTurmaStats(t1, 5.0);
+    expect(s5.totalAlunos).toBe(4);
+    expect(s5.aprovados).toBe(1); // 8.0
+    expect(s5.recuperacao).toBe(2); // 4.0 e 0.0
+    expect(s5.semNota).toBe(1);
+    expect(s5.mediaGeral).toBe(4.0); // (8 + 4 + 0) / 3 = 4.0
+    expect(s5.pctAprovacao).toBe(0.25);
+
+    const s85 = computeCetepTurmaStats(t1, 8.5);
+    expect(s85.aprovados).toBe(0);
+    expect(s85.recuperacao).toBe(3);
+  });
+
+  it('exporta .xlsx multi-aba com estilos OOXML, formatação condicional, fórmulas reais e round-trip', () => {
+    const turmas = buildSampleTurmas();
+    const buf = exportCetepXlsxBuffer(turmas, {
+      mode: 'multi_sheet',
+      minPassingGrade: 5.0,
+      generatedAt: new Date('2026-11-23T12:00:00Z'),
+    });
+
+    const wb = XLSX.read(buf, { type: 'array' });
+    expect(wb.SheetNames[0]).toBe('Painel Consolidado');
+    expect(wb.SheetNames).toHaveLength(3);
+
+    const panelRows = XLSX.utils.sheet_to_json(wb.Sheets['Painel Consolidado'], { header: 1 }) as unknown[][];
+    const totalGeralRow = panelRows.find((r) => r[0] === 'TOTAL GERAL');
+    expect(totalGeralRow).toBeDefined();
+    expect(totalGeralRow?.[1]).toBe(6); // 4 + 2 alunos
+    expect(totalGeralRow?.[3]).toBe(3); // 1 + 2 aprovados
+    expect(totalGeralRow?.[4]).toBe(2); // 2 + 0 recuperação
+    expect(totalGeralRow?.[5]).toBe(1); // 1 + 0 sem nota
+
+    // Verificar fórmula real na célula de Nota Geral da 1ª turma
+    const t1Sheet = wb.Sheets[wb.SheetNames[1]];
+    expect(t1Sheet['G5']?.f).toContain('SUM(');
+    expect(t1Sheet['G5']?.v).toBe(8);
+    expect(t1Sheet['H5']?.f).toContain('IF(');
+    expect(t1Sheet['H5']?.v).toBe('Aprovado');
+    expect(t1Sheet['H7']?.v).toBe('Recuperação');
+    expect(t1Sheet['H8']?.v).toBe('Sem Nota');
+
+    const t1Rows = XLSX.utils.sheet_to_json(t1Sheet, { header: 1 }) as unknown[][];
+    expect(t1Rows.some((r) => r[1] === 'MÉDIA DA TURMA')).toBe(true);
+
+    // Conferir presença de styles.xml e conditionalFormatting no XML interno
+    const zipStr = new TextDecoder('latin1').decode(buf);
+    expect(zipStr).toContain('xl/styles.xml');
+    expect(zipStr).toContain('<conditionalFormatting');
+    expect(zipStr).toContain('<mergeCell');
+
+    // Round-trip via P1.3 parser
+    const parsedWb = parseWorkbookBuffer(buf.slice().buffer, 'cetep_multi.xlsx');
+    const sel = selectBestWorkbookTarget(parsedWb, ['EDUARDA RIBEIRO SANTOS', 'FELIPE BARBOSA LIMA']);
+    expect(sel.autoSelected).toBe(true);
+    expect(sel.sheetIndex).toBe(2);
+    expect(sel.matchedCount).toBe(2);
+  });
+
+  it('exporta .xlsx em aba única consolidada compatível com o detector multi-bloco P1.3', () => {
+    const turmas = buildSampleTurmas();
+    const buf = exportCetepXlsxBuffer(turmas, {
+      mode: 'single_sheet',
+      minPassingGrade: 5.0,
+    });
+
+    const wb = XLSX.read(buf, { type: 'array' });
+    expect(wb.SheetNames).toEqual(['Consolidado CETEP']);
+
+    const parsedWb = parseWorkbookBuffer(buf.slice().buffer, 'cetep_single.xlsx');
+    expect(parsedWb.sheets).toHaveLength(1);
+    expect(parsedWb.sheets[0].blocks).toHaveLength(2);
+    const sel = selectBestWorkbookTarget(parsedWb, ['EDUARDA RIBEIRO SANTOS', 'FELIPE BARBOSA LIMA']);
+    expect(sel.autoSelected).toBe(true);
+    expect(sel.blockId).toBe(parsedWb.sheets[0].blocks[1].id);
+    expect(sel.matchedCount).toBe(2);
+  });
+});

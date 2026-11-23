@@ -76,7 +76,7 @@ export function startMockServer({ ajaxDelayMs = 25 } = {}) {
       return;
     }
 
-    if (pathname.endsWith('docente.jsf')) {
+    if (pathname.endsWith('docente.jsf') || pathname.endsWith('verPortalDocente.do')) {
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
       res.end(fs.readFileSync(path.join(fixturesDir, 'docente.html'), 'utf8'));
       return;

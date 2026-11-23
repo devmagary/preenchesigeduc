@@ -110,6 +110,25 @@ async function runTests() {
       path.join(evidenciasDir, 'modelo_notas_semestral.xlsx')
     );
 
+    // 1B. P2.4: Exportação Modelo Consolidado Padrão CETEP em turma individual (Semestral)
+    console.log('[E2E] 1B. Testando Exportação CETEP em turma individual (Semestral)...');
+    const cetepSinglePath = path.join(userDataDir, 'cetep_semestral.xlsx');
+    await captureDownload(
+      page,
+      () => page.evaluate(() => document.getElementById('preenche-sigeduc-host').shadowRoot.getElementById('ps-cetep-dl-single').click()),
+      cetepSinglePath
+    );
+    const cetepSingleWb = XLSX.read(fs.readFileSync(cetepSinglePath));
+    assert.equal(cetepSingleWb.SheetNames[0], 'Painel Consolidado');
+    assert.equal(cetepSingleWb.SheetNames.length, 2);
+    const singlePanelRows = XLSX.utils.sheet_to_json(cetepSingleWb.Sheets['Painel Consolidado'], { header: 1 });
+    const singleTotalRow = singlePanelRows.find((r) => r[0] === 'TOTAL GERAL');
+    assert.ok(singleTotalRow);
+    assert.equal(singleTotalRow[1], 45);
+    assert.equal(singleTotalRow[3], 30);
+    assert.equal(singleTotalRow[4], 10);
+    assert.equal(singleTotalRow[5], 5);
+
     // 2. Preenchimento de Notas Anual (com casos de borda: divergentes, nota > máximo, conflito Rec. na U2, campos disabled na U1, e preenchimento completo na U3)
     console.log('[E2E] 2. Testando Preenchimento de Notas (45x4 + casos de borda)...');
     await page.goto(`${srv.baseUrl}/sigeduc/diario_classe/lancar_notas/form_estudantes_notas_avaliacoes_unidade.jsf`);
@@ -487,6 +506,80 @@ async function runTests() {
     }));
     assert.equal(storageCheck.ls.includes('SenhaTeste123'), false);
     assert.equal(storageCheck.ss.includes('SenhaTeste123'), false);
+
+    // 3B. P2.4 & P2.5: Extração em Lote de Todas as Turmas (Portal Docente) + Planilha Consolidada Padrão CETEP
+    console.log('[E2E] 3B. Testando Extração em Lote de Todas as Turmas + CETEP (.xlsx)...');
+    await page.goto(`${srv.baseUrl}/sigeduc/portais/docente/docente.jsf`);
+    await openPanel(page);
+    await page.evaluate(() => {
+      const sr = document.getElementById('preenche-sigeduc-host').shadowRoot;
+      const unitSel = sr.getElementById('ps-batch-unit');
+      unitSel.value = '1';
+      unitSel.dispatchEvent(new Event('change', { bubbles: true }));
+      const matCb = sr.getElementById('ps-batch-include-mat');
+      matCb.checked = true;
+      matCb.dispatchEvent(new Event('change', { bubbles: true }));
+      sr.getElementById('ps-batch-start').click();
+    });
+
+    await page.waitForFunction(() => {
+      const sr = document.getElementById('preenche-sigeduc-host')?.shadowRoot;
+      const raw = window.sessionStorage.getItem('preenche_sigeduc_batch_extract_v1');
+      if (!sr || !raw) return false;
+      try {
+        const st = JSON.parse(raw);
+        return Boolean(sr.getElementById('ps-batch-summary')) && st.phase === 'completed' && st.autoDownloaded === true;
+      } catch {
+        return false;
+      }
+    }, null, { timeout: 45000 });
+
+    await page.screenshot({ path: path.join(evidenciasDir, 'extracao_lote_cetep_desktop.png') });
+
+    const loteCetepPath = path.join(evidenciasDir, 'consolidado_cetep_lote.xlsx');
+    await captureDownload(
+      page,
+      () => page.evaluate(() => document.getElementById('preenche-sigeduc-host').shadowRoot.getElementById('ps-batch-dl-cetep').click()),
+      loteCetepPath
+    );
+
+    const loteWb = XLSX.read(fs.readFileSync(loteCetepPath));
+    assert.equal(loteWb.SheetNames[0], 'Painel Consolidado');
+    assert.equal(loteWb.SheetNames.length, 3);
+    const lotePanel = XLSX.utils.sheet_to_json(loteWb.Sheets['Painel Consolidado'], { header: 1 });
+    const loteTotal = lotePanel.find((r) => r[0] === 'TOTAL GERAL');
+    assert.ok(loteTotal);
+    assert.equal(loteTotal[1], 90); // 45 + 45 alunos
+    assert.equal(loteTotal[2], 7); // média 7.0
+    assert.equal(loteTotal[3], 60); // 30 + 30 aprovados
+    assert.equal(loteTotal[4], 20); // 10 + 10 recuperação
+    assert.equal(loteTotal[5], 10); // 5 + 5 sem nota
+
+    const t1Rows = XLSX.utils.sheet_to_json(loteWb.Sheets[loteWb.SheetNames[1]], { header: 1 });
+    assert.equal(t1Rows[4][1], 'ANA CLARA FERREIRA');
+    assert.equal(t1Rows[4][2], '202690010001', 'Matrícula deve ser coletada automaticamente via tela de Frequência');
+    assert.ok(t1Rows.some((r) => r[1] === 'MÉDIA DA TURMA'));
+
+    // Também validar download em Aba Única Consolidada
+    const singleCetepPath = path.join(userDataDir, 'consolidado_cetep_aba_unica.xlsx');
+    await page.evaluate(() => {
+      const sr = document.getElementById('preenche-sigeduc-host').shadowRoot;
+      const modeSel = sr.getElementById('ps-cetep-mode');
+      modeSel.value = 'single_sheet';
+      modeSel.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+    await captureDownload(
+      page,
+      () => page.evaluate(() => document.getElementById('preenche-sigeduc-host').shadowRoot.getElementById('ps-batch-dl-cetep').click()),
+      singleCetepPath
+    );
+    const singleLoteWb = XLSX.read(fs.readFileSync(singleCetepPath));
+    assert.deepEqual(singleLoteWb.SheetNames, ['Consolidado CETEP']);
+
+    // Limpar estado batch da sessionStorage antes do teste Mobile
+    await page.evaluate(() => {
+      document.getElementById('preenche-sigeduc-host').shadowRoot.getElementById('ps-batch-reset').click();
+    });
 
     // 4. Mobile Android viewport (390x844) verificando responsividade e ausência de overflow horizontal
     console.log('[E2E] 4. Testando Viewport Mobile Android (390x844)...');

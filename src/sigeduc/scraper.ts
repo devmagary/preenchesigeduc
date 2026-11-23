@@ -222,11 +222,12 @@ function getActiveTabPanel(doc: Document): { activeLabel: string; allLabels: str
   return { activeLabel, allLabels, panel };
 }
 
-export function scrapeLancarNotas(doc: Document): ScrapedNotasScreen {
-  const metaTable = findTableByCaption(doc, 'Lançar Notas');
-  const meta = parseTableKeyValues(metaTable);
-  const { activeLabel, allLabels, panel } = getActiveTabPanel(doc);
-
+function scrapeNotasPanel(
+  panel: Element | null,
+  unitLabel: string,
+  allLabels: string[],
+  meta: Record<string, string>
+): ScrapedNotasScreen {
   const atividades: ScrapedAtividadeNota[] = [];
   const alunos: ScrapedAlunoNota[] = [];
 
@@ -239,7 +240,6 @@ export function scrapeLancarNotas(doc: Document): ScrapedNotasScreen {
 
       if (firstRow) {
         const avInputs = Array.from(firstRow.querySelectorAll('input[id*=":av__"]')) as HTMLInputElement[];
-        // Map header titles matching av inputs
         const ths = headerCells.length > 0 ? headerCells : Array.from(table.querySelectorAll('tr:first-child th'));
         const activityHeaders = ths.filter((th) => {
           const txt = textOf(th);
@@ -310,11 +310,60 @@ export function scrapeLancarNotas(doc: Document): ScrapedNotasScreen {
     turma: meta['Turma'] ?? '',
     componente: meta['Componente'] ?? '',
     totalAulas: meta['Total Aulas'] ?? '',
-    unidadeAtiva: activeLabel,
+    unidadeAtiva: unitLabel,
     unidadesDisponiveis: allLabels,
     atividades,
     alunos,
   };
+}
+
+export function scrapeLancarNotas(doc: Document): ScrapedNotasScreen {
+  const metaTable = findTableByCaption(doc, 'Lançar Notas');
+  const meta = parseTableKeyValues(metaTable);
+  const { activeLabel, allLabels, panel } = getActiveTabPanel(doc);
+  return scrapeNotasPanel(panel, activeLabel, allLabels, meta);
+}
+
+export function scrapeLancarNotasAllUnits(doc: Document): ScrapedNotasScreen[] {
+  const metaTable = findTableByCaption(doc, 'Lançar Notas');
+  const meta = parseTableKeyValues(metaTable);
+  const navItems = Array.from(doc.querySelectorAll('#formulario\\:tabViewId .ui-tabs-nav li'));
+  const allLabels = navItems.map((li) => textOf(li)).filter(Boolean);
+  const panels = Array.from(doc.querySelectorAll('#formulario\\:tabViewId .ui-tabs-panel'));
+
+  const unitScreens: ScrapedNotasScreen[] = [];
+  for (const li of navItems) {
+    const label = textOf(li);
+    if (!label || /res\.\s*final/i.test(label)) continue;
+    const href = li.querySelector('a')?.getAttribute('href') ?? '';
+    const targetId = href.startsWith('#') ? href.slice(1) : '';
+    const panel = targetId ? panels.find((p) => p.id === targetId) ?? null : null;
+    if (!panel) continue;
+    unitScreens.push(scrapeNotasPanel(panel, label, allLabels, meta));
+  }
+
+  return unitScreens.length > 0 ? unitScreens : [scrapeLancarNotas(doc)];
+}
+
+export function pickUnitFromScrapedList(
+  units: ScrapedNotasScreen[],
+  preferred: 'active' | '1' | '2' | '3',
+  activeLabel: string
+): ScrapedNotasScreen | null {
+  if (units.length === 0) return null;
+
+  const activeUnit = units.find((u) => u.unidadeAtiva === activeLabel) ?? units[0];
+  if (preferred === 'active') {
+    if (activeUnit.atividades.length > 0) return activeUnit;
+    const withActivities = units.filter((u) => u.atividades.length > 0);
+    return withActivities.length > 0 ? withActivities[withActivities.length - 1] : activeUnit;
+  }
+
+  const byPrefix = units.find((u) => new RegExp(`^${preferred}[ªa]?\\b`, 'i').test(u.unidadeAtiva));
+  if (byPrefix) return byPrefix;
+  const idx = Number(preferred) - 1;
+  if (idx >= 0 && idx < units.length) return units[idx];
+  return activeUnit;
 }
 
 export function scrapeAvaliacoesNaoRealizadas(doc: Document): ScrapedNaoRealizadasScreen {

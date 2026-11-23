@@ -129,16 +129,26 @@ function buildNotasHtml({ semestral = false } = {}) {
     { id: '8004', nome: 'Avaliação Escrita', valor: 3.0, disabled: false },
   ];
 
+  function sampleGradeForU1(studentIdx, avIdx) {
+    if (studentIdx < 30) {
+      return avIdx === 0 ? '2.5' : avIdx === 1 ? '2.5' : '3.0'; // total 8.0 (Aprovado)
+    }
+    if (studentIdx < 40) {
+      return avIdx === 0 ? '1.5' : avIdx === 1 ? '1.0' : '1.5'; // total 4.0 (Recuperação)
+    }
+    return ''; // Sem Nota
+  }
+
   function renderUnitRows(ativs, unitNum, prefix, includeRecConflictOnFirst = false) {
     return FICTIONAL_STUDENTS.map((st, idx) => {
       const pcdIcon = st.pcd ? ' <span aria-hidden="true">\uF193</span>' : '';
       const avCells = ativs
         .map(
-          (av) => `
+          (av, avIdx) => `
           <td>
             <input id="formulario:${prefix}:${idx}:av__${av.id}"
                    name="formulario:${prefix}:${idx}:av__${av.id}"
-                   type="text" value="" class="avaliacao" maxlength="4" size="3"
+                   type="text" value="${unitNum === 1 ? sampleGradeForU1(idx, avIdx) : ''}" class="avaliacao" maxlength="4" size="3"
                    ${av.disabled ? 'disabled="disabled"' : ''}
                    onblur="A4J.AJAX.Submit('formulario', event, {'inputId':'formulario:${prefix}:${idx}:av__${av.id}','studentIndex':${idx},'unit':${unitNum}});" />
           </td>`
@@ -261,6 +271,7 @@ function buildNotasHtml({ semestral = false } = {}) {
   </style>
 </head>
 <body>
+  <div style="margin-bottom:8px;"><a href="/sigeduc/verPortalDocente.do">Menu Professor</a></div>
   <h2>Diário de Classe Digital &gt; Lançar Notas para Avaliações das Unidades</h2>
   <table>
     <caption>Lançar Notas para Avaliações das Unidades</caption>
@@ -402,6 +413,7 @@ function buildFrequenciaHtml() {
   </style>
 </head>
 <body>
+  <div style="margin-bottom:8px;"><a href="/sigeduc/verPortalDocente.do">Menu Professor</a></div>
   <h2>Diário de Classe Digital &gt; Informar Frequência da Turma</h2>
   <p>Todos os estudantes por padrão possuem 100% de presença. Marcar significa que o estudante FALTOU.</p>
   <table id="dadosTurma">

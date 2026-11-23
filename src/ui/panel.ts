@@ -1,5 +1,12 @@
 import { parseDateHeader } from '../core/attendance';
 import {
+  computeCetepTurmaStats,
+  exportCetepXlsxBuffer,
+  parseTurmaIdentity,
+  type CetepTurmaData,
+} from '../core/cetep';
+import { normalizeName } from '../core/normalize';
+import {
   exportToCsv,
   exportToJson,
   exportToXlsxBuffer,
@@ -10,6 +17,17 @@ import {
   type ParsedSpreadsheet,
   type ParsedWorkbook,
 } from '../core/spreadsheet';
+import {
+  clearBatchExtractState,
+  collectMatriculasFromFrequencia,
+  findPortalActionLink,
+  loadBatchExtractState,
+  navigateBackToPortal,
+  saveBatchExtractState,
+  scrapedNotasToCetepTurma,
+  type BatchExtractState,
+  type BatchUnitChoice,
+} from '../sigeduc/batch-extract';
 import { detectSigeducScreen, type ScreenDetection } from '../sigeduc/detector';
 import {
   buildAttendancePreview,
@@ -32,15 +50,19 @@ import {
 } from '../sigeduc/filler-notas';
 import {
   buildExportBundle,
+  pickUnitFromScrapedList,
   scrapeAvaliacoesNaoRealizadas,
   scrapeGerenciarAvaliacoes,
   scrapeLancarFrequencia,
   scrapeLancarNotas,
+  scrapeLancarNotasAllUnits,
   scrapePortalDocente,
   type ScrapedFrequenciaScreen,
   type ScrapedNaoRealizadasScreen,
   type ScrapedNotasScreen,
+  type ScrapedPortalScreen,
   type ScrapedScreenData,
+  type ScrapedTurma,
 } from '../sigeduc/scraper';
 import { SHADOW_STYLES } from './styles';
 
@@ -138,6 +160,17 @@ export class PreenchePanelController {
   private lastFreqReport: AttendanceFillReport | null = null;
   private pendingNextDateResolver: ((action: 'continue' | 'cancel') => void) | null = null;
 
+  // Estado CETEP (P2.4) e Extração em Lote (P2.5)
+  private cetepMode: 'multi_sheet' | 'single_sheet' = 'multi_sheet';
+  private cetepMinGrade = 5.0;
+  private cetepMinGradeTouched = false;
+  private batchUnitChoice: BatchUnitChoice = 'active';
+  private batchIncludeMatricula = false;
+  private batchSelectedTurmaKeys: Set<string> = new Set();
+  private batchTurmasInitialized = false;
+  private batchState: BatchExtractState | null = null;
+  private batchTimer: number | null = null;
+
   constructor(private doc: Document) {
     this.host = doc.createElement('div');
     this.host.id = 'preenche-sigeduc-host';
@@ -155,6 +188,7 @@ export class PreenchePanelController {
     this.detection = detectSigeducScreen(this.doc, window.location.href);
     this.syncDefaultTab();
     this.checkPendingNotRealizedOnLoad();
+    this.checkBatchExtractOnLoad();
     this.render();
     (this.doc.body ?? this.doc.documentElement).appendChild(this.host);
   }
@@ -188,6 +222,168 @@ export class PreenchePanelController {
       this.isOpen = true;
     } else if (this.detection.screen === 'lancar_notas') {
       armConfirmationDialogAutoAccept(this.doc);
+    }
+  }
+
+  private turmaSelectionKey(t: ScrapedTurma): string {
+    return t.idTurmaComponente || `${t.turma}__${t.componente}`;
+  }
+
+  private initPortalSelection(portal: ScrapedPortalScreen): void {
+    if (!this.batchTurmasInitialized) {
+      this.batchSelectedTurmaKeys = new Set(portal.turmas.map((t) => this.turmaSelectionKey(t)));
+      this.batchTurmasInitialized = true;
+    }
+  }
+
+  private checkBatchExtractOnLoad(): void {
+    const state = loadBatchExtractState();
+    if (!state) return;
+
+    this.batchState = state;
+    this.cetepMode = state.options.mode;
+    this.cetepMinGrade = state.options.minPassingGrade;
+    this.activeTab = 'extrair';
+    this.isOpen = true;
+
+    const isActive =
+      state.phase === 'going_notas' ||
+      state.phase === 'collecting_notas' ||
+      state.phase === 'going_freq' ||
+      state.phase === 'collecting_freq';
+
+    if (this.detection.sessionExpired && isActive) {
+      state.phase = 'error';
+      state.errors.push('Sessão do SIGEduc expirada durante a extração em lote. Faça login e baixe os dados parciais se houver.');
+      saveBatchExtractState(state);
+      return;
+    }
+
+    this.refreshContext();
+
+    if (state.phase === 'completed') {
+      if (!state.autoDownloaded && state.results.length > 0) {
+        state.autoDownloaded = true;
+        saveBatchExtractState(state);
+        window.setTimeout(() => {
+          this.triggerCetepDownload(state.results, 'consolidado_cetep_sigeduc.xlsx');
+        }, 120);
+      }
+      return;
+    }
+
+    if (isActive) {
+      if (this.batchTimer !== null) window.clearTimeout(this.batchTimer);
+      this.batchTimer = window.setTimeout(() => {
+        void this.stepBatchExtraction();
+      }, 180);
+    }
+  }
+
+  private triggerCetepDownload(turmas: CetepTurmaData[], fileName: string): void {
+    const buf = exportCetepXlsxBuffer(turmas, {
+      mode: this.cetepMode,
+      minPassingGrade: this.cetepMinGrade,
+    });
+    downloadBlob(
+      new Blob([buf.slice().buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }),
+      fileName
+    );
+  }
+
+  private advanceOrCompleteBatch(state: BatchExtractState): 'going_notas' | 'completed' {
+    state.currentIndex += 1;
+    const nextPhase = state.currentIndex >= state.queue.length ? 'completed' : 'going_notas';
+    state.phase = nextPhase;
+    saveBatchExtractState(state);
+    return nextPhase;
+  }
+
+  private async stepBatchExtraction(): Promise<void> {
+    const state = loadBatchExtractState();
+    if (!state) return;
+    this.batchState = state;
+
+    const currentTurma = state.queue[state.currentIndex];
+    if (!currentTurma) {
+      state.phase = 'completed';
+      saveBatchExtractState(state);
+      this.render();
+      return;
+    }
+
+    if (this.detection.screen === 'lancar_notas' && state.phase === 'collecting_notas') {
+      try {
+        const units = scrapeLancarNotasAllUnits(this.doc);
+        const activeLabel = scrapeLancarNotas(this.doc).unidadeAtiva;
+        const chosen = pickUnitFromScrapedList(units, state.options.unitChoice, activeLabel) ?? scrapeLancarNotas(this.doc);
+        const cetepTurma = scrapedNotasToCetepTurma(chosen, currentTurma, state.docente);
+        state.results[state.currentIndex] = cetepTurma;
+
+        if (state.options.includeMatricula) {
+          state.phase = 'going_freq';
+          saveBatchExtractState(state);
+        } else {
+          this.advanceOrCompleteBatch(state);
+        }
+      } catch (err) {
+        state.warnings.push(`Turma ${currentTurma.turma}: falha ao ler notas (${(err as Error).message}).`);
+        this.advanceOrCompleteBatch(state);
+      }
+      navigateBackToPortal(this.doc);
+      return;
+    }
+
+    if (this.detection.screen === 'lancar_frequencia' && state.phase === 'collecting_freq') {
+      try {
+        const matMap = await collectMatriculasFromFrequencia(this.doc);
+        const target = state.results[state.currentIndex];
+        if (target && matMap.size > 0) {
+          for (const st of target.alunos) {
+            const m = matMap.get(normalizeName(st.nome));
+            if (m) st.matricula = m;
+          }
+        } else if (matMap.size === 0) {
+          state.warnings.push(`Turma ${currentTurma.turma}: nenhuma matrícula disponível no calendário de frequência.`);
+        }
+      } catch (err) {
+        state.warnings.push(`Turma ${currentTurma.turma}: falha ao coletar matrículas (${(err as Error).message}).`);
+      }
+      this.advanceOrCompleteBatch(state);
+      navigateBackToPortal(this.doc);
+      return;
+    }
+
+    if (this.detection.screen === 'portal_docente') {
+      if (state.phase === 'going_notas') {
+        const link = findPortalActionLink(this.doc, currentTurma, 'notas');
+        if (!link) {
+          state.warnings.push(`Turma ${currentTurma.turma}: link "Lançar Resultados" não encontrado no portal.`);
+          const next = this.advanceOrCompleteBatch(state);
+          this.render();
+          if (next === 'going_notas') void this.stepBatchExtraction();
+          return;
+        }
+        state.phase = 'collecting_notas';
+        saveBatchExtractState(state);
+        link.click();
+        return;
+      }
+
+      if (state.phase === 'going_freq') {
+        const link = findPortalActionLink(this.doc, currentTurma, 'frequencia');
+        if (!link) {
+          state.warnings.push(`Turma ${currentTurma.turma}: link "Lançar Frequência" não encontrado para matrícula.`);
+          const next = this.advanceOrCompleteBatch(state);
+          this.render();
+          if (next === 'going_notas') void this.stepBatchExtraction();
+          return;
+        }
+        state.phase = 'collecting_freq';
+        saveBatchExtractState(state);
+        link.click();
+        return;
+      }
     }
   }
 
@@ -239,9 +435,16 @@ export class PreenchePanelController {
   public refreshContext(): void {
     this.detection = detectSigeducScreen(this.doc, window.location.href);
     if (this.detection.screen === 'portal_docente') {
-      this.scraped = scrapePortalDocente(this.doc);
+      const portal = scrapePortalDocente(this.doc);
+      this.scraped = portal;
+      this.initPortalSelection(portal);
     } else if (this.detection.screen === 'lancar_notas') {
       this.scraped = scrapeLancarNotas(this.doc);
+      if (!this.cetepMinGradeTouched) {
+        const mediaEl = this.doc.getElementById('configMediaNatural') as HTMLInputElement | null;
+        const parsed = mediaEl ? Number(mediaEl.value.replace(',', '.')) : NaN;
+        if (Number.isFinite(parsed) && parsed > 0) this.cetepMinGrade = parsed;
+      }
       if (this.notasSheet) this.autoMapNotasColumns();
     } else if (this.detection.screen === 'avaliacoes_nao_realizadas') {
       this.scraped = scrapeAvaliacoesNaoRealizadas(this.doc);
@@ -1159,27 +1362,204 @@ export class PreenchePanelController {
 
     const isTemplate = this.scraped.kind === 'lancar_notas' || this.scraped.kind === 'lancar_frequencia';
     const xlsxLabel = isTemplate ? 'Baixar Modelo (.xlsx)' : 'Exportar .xlsx';
+    const hasBatchPriority = this.scraped.kind === 'portal_docente' && Boolean(this.batchState);
+
+    const detectedInner = `
+      <div class="ps-banner success">
+        <strong>${escapeHtml(this.detection.label)}</strong><br/>
+        Total de registros extraídos: <strong>${bundle.rows.length}</strong>
+      </div>
+      <div class="ps-table-wrap">
+        <table class="ps-table">
+          <thead><tr>${ths}</tr></thead>
+          <tbody>${trs}</tbody>
+        </table>
+      </div>
+      ${bundle.rows.length > 8 ? `<div class="ps-muted">Exibindo 8 de ${bundle.rows.length} registros. Exporte para ver todos.</div>` : ''}
+      <div class="ps-row">
+        <button class="ps-btn ps-btn-primary ps-btn-block" id="ps-exp-xlsx" type="button">${xlsxLabel}</button>
+        <button class="ps-btn ps-btn-secondary" id="ps-exp-csv" type="button" style="flex:1">Exportar .csv</button>
+        <button class="ps-btn ps-btn-secondary" id="ps-exp-json" type="button" style="flex:1">Exportar .json</button>
+      </div>
+      <button class="ps-btn ps-btn-secondary ps-btn-block" id="ps-exp-refresh" type="button">Atualizar Leitura da Tela</button>
+    `;
+
+    const detectedCard = hasBatchPriority
+      ? `<details class="ps-card ps-compact-details">
+           <summary>Dados Detectados na Tela (${bundle.rows.length} turmas)</summary>
+           <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">${detectedInner}</div>
+         </details>`
+      : `<section class="ps-card">
+           <h3 class="ps-card-title">Dados Detectados na Tela</h3>
+           ${detectedInner}
+         </section>`;
+
+    const cetepOrBatchCard = this.renderCetepAndBatchCard();
+    return hasBatchPriority ? `${cetepOrBatchCard}${detectedCard}` : `${detectedCard}${cetepOrBatchCard}`;
+  }
+
+  private renderCetepControlsHtml(): string {
+    return `
+      <div style="display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:8px;align-items:end;">
+        <div class="ps-field">
+          <label class="ps-label" for="ps-cetep-mode">Layout CETEP</label>
+          <select class="ps-select" id="ps-cetep-mode">
+            <option value="multi_sheet" ${this.cetepMode === 'multi_sheet' ? 'selected' : ''}>Multi-aba (Painel + turmas)</option>
+            <option value="single_sheet" ${this.cetepMode === 'single_sheet' ? 'selected' : ''}>Aba única consolidada</option>
+          </select>
+        </div>
+        <div class="ps-field">
+          <label class="ps-label" for="ps-cetep-min-grade">Nota mínima</label>
+          <input class="ps-input" id="ps-cetep-min-grade" type="number" step="0.5" min="0" max="10" value="${this.cetepMinGrade.toFixed(1)}" />
+        </div>
+      </div>
+    `;
+  }
+
+  private renderCetepAndBatchCard(): string {
+    if (this.scraped?.kind === 'lancar_notas') {
+      return `
+        <section class="ps-card" id="ps-cetep-single-card">
+          <h3 class="ps-card-title">Modelo Consolidado Padrão CETEP</h3>
+          <div class="ps-muted">Gera .xlsx com Painel Consolidado, fórmulas (=SUM, =AVERAGE, =IF), cores por situação e média da turma.</div>
+          ${this.renderCetepControlsHtml()}
+          <button class="ps-btn ps-btn-success ps-btn-block" id="ps-cetep-dl-single" type="button">Baixar Planilha CETEP (.xlsx)</button>
+        </section>
+      `;
+    }
+
+    if (this.scraped?.kind !== 'portal_docente' && !this.batchState) {
+      return '';
+    }
+
+    const bs = this.batchState;
+    if (
+      bs &&
+      (bs.phase === 'going_notas' ||
+        bs.phase === 'collecting_notas' ||
+        bs.phase === 'going_freq' ||
+        bs.phase === 'collecting_freq')
+    ) {
+      const total = bs.queue.length;
+      const done = bs.currentIndex;
+      const pct = total > 0 ? Math.min(100, Math.round((done / total) * 100)) : 0;
+      const cur = bs.queue[bs.currentIndex];
+      const phaseLabel =
+        bs.phase === 'going_freq' || bs.phase === 'collecting_freq' ? 'coletando matrículas (Frequência)' : 'coletando notas e avaliações';
+      return `
+        <section class="ps-card" id="ps-batch-card">
+          <h3 class="ps-card-title">Extração em Lote (Padrão CETEP)</h3>
+          <div class="ps-banner info">
+            Extraindo turma <strong>${Math.min(done + 1, total)}/${total}</strong>: <strong>${escapeHtml(cur?.turma ?? '')}</strong><br/>
+            Etapa atual: ${escapeHtml(phaseLabel)}. Aguarde a navegação automática...
+          </div>
+          <div class="ps-progress-wrap">
+            <div class="ps-progress-bar" id="ps-batch-progress" style="width:${pct}%"></div>
+          </div>
+          <button class="ps-btn ps-btn-danger ps-btn-block" id="ps-batch-cancel" type="button">Cancelar Extração</button>
+        </section>
+      `;
+    }
+
+    if (bs && (bs.phase === 'completed' || bs.phase === 'cancelled' || bs.phase === 'error')) {
+      const validResults = bs.results.filter(Boolean);
+      const totals = validResults.reduce(
+        (acc, t) => {
+          const s = computeCetepTurmaStats(t, this.cetepMinGrade);
+          acc.alunos += s.totalAlunos;
+          acc.aprovados += s.aprovados;
+          acc.rec += s.recuperacao;
+          acc.semNota += s.semNota;
+          return acc;
+        },
+        { alunos: 0, aprovados: 0, rec: 0, semNota: 0 }
+      );
+      const bannerTone = bs.phase === 'completed' && bs.errors.length === 0 ? 'success' : 'warn';
+      const statusTitle =
+        bs.phase === 'completed'
+          ? `Lote concluído (${validResults.length}/${bs.queue.length} turmas)`
+          : bs.phase === 'cancelled'
+            ? `Lote cancelado (${validResults.length}/${bs.queue.length} coletadas)`
+            : `Lote interrompido (${validResults.length}/${bs.queue.length} coletadas)`;
+
+      const alerts = [...bs.errors, ...bs.warnings];
+      return `
+        <section class="ps-card" id="ps-batch-card">
+          <h3 class="ps-card-title">Extração em Lote (Padrão CETEP)</h3>
+          <div class="ps-banner ${bannerTone}" id="ps-batch-summary">
+            <strong>${escapeHtml(statusTitle)}</strong><br/>
+            <strong>${totals.alunos}</strong> estudantes •
+            <strong>${totals.aprovados}</strong> aprovados •
+            <strong>${totals.rec}</strong> recuperação •
+            <strong>${totals.semNota}</strong> sem nota
+          </div>
+          ${alerts.length ? `<ul class="ps-list">${alerts.map((a) => `<li>${escapeHtml(a)}</li>`).join('')}</ul>` : ''}
+          ${this.renderCetepControlsHtml()}
+          <div class="ps-row">
+            <button class="ps-btn ps-btn-success ps-btn-block" id="ps-batch-dl-cetep" type="button" ${validResults.length === 0 ? 'disabled' : ''}>Baixar Planilha CETEP (.xlsx)</button>
+            <button class="ps-btn ps-btn-secondary" id="ps-batch-reset" type="button">Nova Extração</button>
+          </div>
+        </section>
+      `;
+    }
+
+    if (this.scraped?.kind !== 'portal_docente') return '';
+    const portal = this.scraped;
+    this.initPortalSelection(portal);
+    const selectedCount = portal.turmas.filter((t) => this.batchSelectedTurmaKeys.has(this.turmaSelectionKey(t))).length;
+
+    const turmaChecks = portal.turmas
+      .map((t) => {
+        const key = this.turmaSelectionKey(t);
+        const idInfo = parseTurmaIdentity({
+          turma: t.turma,
+          ofertaEnsino: t.ofertaEnsino,
+          serie: t.serie,
+          componente: t.componente,
+        });
+        const checked = this.batchSelectedTurmaKeys.has(key);
+        return `
+          <label class="ps-check-row" style="align-items:flex-start;">
+            <input type="checkbox" class="ps-batch-turma-cb" value="${escapeHtml(key)}" ${checked ? 'checked' : ''} style="margin-top:2px;" />
+            <div style="flex:1;min-width:0;">
+              <strong>${escapeHtml(t.turma)}</strong> <span class="ps-pill ok">${escapeHtml(idInfo.modalidade)} • ${escapeHtml(idInfo.turno)}</span><br/>
+              <span class="ps-muted">${escapeHtml(idInfo.curso)} • ${escapeHtml(t.componente)} (${t.qtdEstudantes} alunos)</span>
+            </div>
+          </label>
+        `;
+      })
+      .join('');
 
     return `
-      <section class="ps-card">
-        <h3 class="ps-card-title">Dados Detectados na Tela</h3>
-        <div class="ps-banner success">
-          <strong>${escapeHtml(this.detection.label)}</strong><br/>
-          Total de registros extraídos: <strong>${bundle.rows.length}</strong>
+      <section class="ps-card" id="ps-batch-card">
+        <h3 class="ps-card-title">Extração em Lote — Padrão CETEP</h3>
+        <div class="ps-muted">Percorre automaticamente as turmas selecionadas em sequência segura JSF e gera o .xlsx consolidado com fórmulas.</div>
+        <div class="ps-field">
+          <label class="ps-label" for="ps-batch-unit">Unidade a extrair</label>
+          <select class="ps-select" id="ps-batch-unit">
+            <option value="active" ${this.batchUnitChoice === 'active' ? 'selected' : ''}>Unidade ativa / mais recente com avaliações</option>
+            <option value="1" ${this.batchUnitChoice === '1' ? 'selected' : ''}>1ª Unidade</option>
+            <option value="2" ${this.batchUnitChoice === '2' ? 'selected' : ''}>2ª Unidade</option>
+            <option value="3" ${this.batchUnitChoice === '3' ? 'selected' : ''}>3ª Unidade</option>
+          </select>
         </div>
-        <div class="ps-table-wrap">
-          <table class="ps-table">
-            <thead><tr>${ths}</tr></thead>
-            <tbody>${trs}</tbody>
-          </table>
+        ${this.renderCetepControlsHtml()}
+        <label class="ps-check-row">
+          <input type="checkbox" id="ps-batch-include-mat" ${this.batchIncludeMatricula ? 'checked' : ''} />
+          <span>Incluir Matrícula via tela de Frequência (mais lento)</span>
+        </label>
+        <div class="ps-row" style="justify-content:space-between;align-items:center;">
+          <span class="ps-label">Turmas (${selectedCount}/${portal.turmas.length})</span>
+          <button class="ps-btn ps-btn-secondary" id="ps-batch-toggle-all" type="button" style="padding:4px 10px;min-height:30px;font-size:0.8em;">
+            ${selectedCount === portal.turmas.length ? 'Desmarcar todas' : 'Marcar todas'}
+          </button>
         </div>
-        ${bundle.rows.length > 8 ? `<div class="ps-muted">Exibindo 8 de ${bundle.rows.length} registros. Exporte para ver todos.</div>` : ''}
-        <div class="ps-row">
-          <button class="ps-btn ps-btn-primary ps-btn-block" id="ps-exp-xlsx" type="button">${xlsxLabel}</button>
-          <button class="ps-btn ps-btn-secondary" id="ps-exp-csv" type="button" style="flex:1">Exportar .csv</button>
-          <button class="ps-btn ps-btn-secondary" id="ps-exp-json" type="button" style="flex:1">Exportar .json</button>
+        <div style="display:flex;flex-direction:column;gap:6px;max-height:220px;overflow-y:auto;">
+          ${turmaChecks || '<div class="ps-banner warn">Nenhuma turma encontrada no Portal Docente.</div>'}
         </div>
-        <button class="ps-btn ps-btn-secondary ps-btn-block" id="ps-exp-refresh" type="button">Atualizar Leitura da Tela</button>
+        <button class="ps-btn ps-btn-primary ps-btn-block" id="ps-batch-start" type="button" ${selectedCount === 0 ? 'disabled' : ''}>
+          Extrair Lote CETEP (${selectedCount} turma(s))
+        </button>
       </section>
     `;
   }
@@ -1569,6 +1949,120 @@ export class PreenchePanelController {
     });
 
     q<HTMLButtonElement>('ps-exp-refresh')?.addEventListener('click', () => {
+      this.refreshContext();
+      this.render();
+    });
+
+    // --- CETEP (P2.4) E EXTRAÇÃO EM LOTE (P2.5) ---
+    q<HTMLSelectElement>('ps-cetep-mode')?.addEventListener('change', (ev) => {
+      const val = (ev.target as HTMLSelectElement).value;
+      this.cetepMode = val === 'single_sheet' ? 'single_sheet' : 'multi_sheet';
+      if (this.batchState) {
+        this.batchState.options.mode = this.cetepMode;
+        saveBatchExtractState(this.batchState);
+      }
+    });
+
+    q<HTMLInputElement>('ps-cetep-min-grade')?.addEventListener('change', (ev) => {
+      const num = Number((ev.target as HTMLInputElement).value.replace(',', '.'));
+      if (Number.isFinite(num) && num >= 0 && num <= 10) {
+        this.cetepMinGrade = num;
+        this.cetepMinGradeTouched = true;
+        if (this.batchState) {
+          this.batchState.options.minPassingGrade = num;
+          saveBatchExtractState(this.batchState);
+          this.render();
+        }
+      }
+    });
+
+    q<HTMLButtonElement>('ps-cetep-dl-single')?.addEventListener('click', () => {
+      if (this.scraped?.kind !== 'lancar_notas') return;
+      const turma = scrapedNotasToCetepTurma(this.scraped);
+      const slug = turma.identity.codigo.toLowerCase().replace(/[^a-z0-9_-]+/g, '_');
+      this.triggerCetepDownload([turma], `cetep_${slug || 'turma'}.xlsx`);
+    });
+
+    q<HTMLSelectElement>('ps-batch-unit')?.addEventListener('change', (ev) => {
+      const val = (ev.target as HTMLSelectElement).value as BatchUnitChoice;
+      this.batchUnitChoice = val;
+    });
+
+    q<HTMLInputElement>('ps-batch-include-mat')?.addEventListener('change', (ev) => {
+      this.batchIncludeMatricula = (ev.target as HTMLInputElement).checked;
+    });
+
+    q<HTMLButtonElement>('ps-batch-toggle-all')?.addEventListener('click', () => {
+      if (this.scraped?.kind !== 'portal_docente') return;
+      if (this.batchSelectedTurmaKeys.size === this.scraped.turmas.length) {
+        this.batchSelectedTurmaKeys.clear();
+      } else {
+        this.batchSelectedTurmaKeys = new Set(this.scraped.turmas.map((t) => this.turmaSelectionKey(t)));
+      }
+      this.render();
+    });
+
+    for (const cb of Array.from(this.shadow.querySelectorAll('.ps-batch-turma-cb'))) {
+      cb.addEventListener('change', (ev) => {
+        const el = ev.target as HTMLInputElement;
+        if (el.checked) this.batchSelectedTurmaKeys.add(el.value);
+        else this.batchSelectedTurmaKeys.delete(el.value);
+        this.render();
+      });
+    }
+
+    q<HTMLButtonElement>('ps-batch-start')?.addEventListener('click', () => {
+      if (this.scraped?.kind !== 'portal_docente') return;
+      const selected = this.scraped.turmas.filter((t) => this.batchSelectedTurmaKeys.has(this.turmaSelectionKey(t)));
+      if (selected.length === 0) return;
+
+      const state: BatchExtractState = {
+        queue: selected,
+        currentIndex: 0,
+        phase: 'going_notas',
+        options: {
+          unitChoice: this.batchUnitChoice,
+          includeMatricula: this.batchIncludeMatricula,
+          mode: this.cetepMode,
+          minPassingGrade: this.cetepMinGrade,
+        },
+        results: [],
+        warnings: [],
+        errors: [],
+        autoDownloaded: false,
+        startedAt: Date.now(),
+        docente: this.scraped.docente,
+      };
+      this.batchState = state;
+      saveBatchExtractState(state);
+      this.render();
+      void this.stepBatchExtraction();
+    });
+
+    q<HTMLButtonElement>('ps-batch-cancel')?.addEventListener('click', () => {
+      if (this.batchTimer !== null) {
+        window.clearTimeout(this.batchTimer);
+        this.batchTimer = null;
+      }
+      const st = loadBatchExtractState() ?? this.batchState;
+      if (st) {
+        st.phase = 'cancelled';
+        saveBatchExtractState(st);
+        this.batchState = st;
+      }
+      this.render();
+    });
+
+    q<HTMLButtonElement>('ps-batch-dl-cetep')?.addEventListener('click', () => {
+      const validResults = (this.batchState?.results ?? []).filter(Boolean);
+      if (validResults.length === 0) return;
+      this.triggerCetepDownload(validResults, 'consolidado_cetep_sigeduc.xlsx');
+    });
+
+    q<HTMLButtonElement>('ps-batch-reset')?.addEventListener('click', () => {
+      clearBatchExtractState();
+      this.batchState = null;
+      this.batchTurmasInitialized = false;
       this.refreshContext();
       this.render();
     });

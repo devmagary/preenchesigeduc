@@ -79,9 +79,10 @@ As sugestões são organizadas sob a ótica de engenharia sênior, equilibrando 
 - **Comportamento esperado:** Alternância entre tema claro e escuro via tokens CSS no Shadow DOM (`src/ui/styles.ts`), respeitando `prefers-color-scheme` como padrão opcional e salvando a escolha do usuário localmente.
 - **Impacto técnico / Riscos:** Isolado no Shadow DOM (`#preenche-sigeduc-host`), sem interferir no CSS da página do SIGEduc.
 
-### 3. Modelo de Planilha Consolidada (Padrão CETEP) na Exportação
+### 3. Modelo de Planilha Consolidada (Padrão CETEP) na Exportação — `[Concluído]`
 - **Prioridade:** P2 — Média
 - **Dificuldade:** Média
+- **Status:** Concluído (`src/core/cetep.ts`: parser de identidade Curso/Modalidade/Série/Turno, writer OOXML `.xlsx` nativo estilizado com bordas, zebra, células mescladas, formatação condicional e fórmulas reais do Excel `SUM`/`AVERAGE`/`IF`/`COUNTIF` com valores em cache, Painel Consolidado + abas individuais ou aba única consolidada e nota mínima configurável padrão `5,0`).
 - **Contexto:** Padronizar os modelos de planilha exportados pela extensão com base no painel consolidado de notas (resumo geral por turma + blocos detalhados por aluno).
 - **Comportamento esperado:**
   - Gerar `.xlsx` único com **Painel Consolidado no topo** (Turma, Total de Alunos, Média Geral, Aprovados `>= 5,0`, Recuperação `< 5,0`, Sem Nota, `% Aprovação`, `TOTAL GERAL`) + **uma aba por turma** (com opção de aba única consolidada).
@@ -89,9 +90,10 @@ As sugestões são organizadas sob a ótica de engenharia sênior, equilibrando 
   - Critério/média mínima configurável (padrão `5,0`) e formatação condicional/visual quando suportada.
 - **Impacto técnico / Riscos:** Evolução de `src/core/spreadsheet.ts`; atenção ao limite de tamanho do pacote (`< 1.5 MB`) caso seja usada biblioteca `.xlsx` com suporte a estilos.
 
-### 4. Extração em Lote de Todas as Turmas (Portal do Docente)
+### 4. Extração em Lote de Todas as Turmas (Portal do Docente) — `[Concluído]`
 - **Prioridade:** P2 — Média
 - **Dificuldade:** Alta
+- **Status:** Concluído (`src/sigeduc/batch-extract.ts` e `src/ui/panel.ts`: máquina de estados em `sessionStorage`, seletor de unidade, checklist de turmas com Curso/Modalidade/Turno, opção de coleta real de Matrícula via Frequência, tratamento de sessão expirada e exportação automática no Modelo Padrão CETEP).
 - **Contexto:** No `portal_docente`, permitir extrair automaticamente todas as turmas listadas sem precisar abrir manualmente uma por uma.
 - **Comportamento esperado:**
   - Botão para iniciar varredura turma por turma: entrar na turma → acessar *Lançar Notas* → coletar `Nome`, `Matrícula` e notas/avaliações → retornar ao portal e avançar para a próxima turma.
