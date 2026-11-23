@@ -19,7 +19,13 @@ As sugestões são organizadas sob a ótica de engenharia sênior, equilibrando 
 ---
 
 ## P0 — Crítico
-*(Nenhum item registrado ainda)*
+
+### 1. Respeitar Seletor de Unidade ao Puxar Matrículas
+- **Prioridade:** P0 — Crítico
+- **Dificuldade:** Média
+- **Contexto:** Ao marcar a opção para puxar matrículas, o sistema está coletando apenas os dados da 1ª unidade, ignorando o seletor de unidade escolhido pelo usuário.
+- **Comportamento esperado:** Garantir que a extração/coleta de matrículas e notas obedeça exatamente a unidade selecionada no seletor da UI (ex.: 1ª, 2ª ou 3ª unidade) antes de ler a tabela.
+- **Impacto técnico / Riscos:** Ajuste na máquina de estados/coleta em `src/sigeduc/batch-extract.ts` e `src/sigeduc/scraper.ts`, com cobertura de teste E2E.
 
 ## P1 — Alta Prioridade
 
@@ -52,6 +58,13 @@ As sugestões são organizadas sob a ótica de engenharia sênior, equilibrando 
   - Quando o arquivo possuir mais de uma aba (`workbook.SheetNames.length > 1`), exibir seletor de aba na UI para o docente escolher qual aba carregar.
   - Aprimorar a detecção de cabeçalho em `src/core/spreadsheet.ts` para pular linhas de resumo/título no topo e identificar corretamente a tabela de alunos (e, se houver múltiplos blocos `Nº / Nome do Aluno` na mesma aba, permitir selecionar o bloco/turma).
 - **Impacto técnico / Riscos:** Alterações em `src/core/spreadsheet.ts`, `src/ui/panel.ts` e novos testes unitários em `tests/unit/spreadsheet.test.ts`.
+
+### 4. Corrigir Quebra/Estouro de Texto nos Cards de Turma
+- **Prioridade:** P1 — Alta
+- **Dificuldade:** Baixa
+- **Contexto:** Na lista de turmas do painel, os nomes longos (ex.: curso, disciplina e quantidade de alunos) estão vazando para fora da borda inferior do card e sobrepondo o item seguinte.
+- **Comportamento esperado:** Os cards devem se ajustar dinamicamente ao conteúdo (`height: auto`, espaçamento/padding adequado e quebra de linha limpa), sem cortar ou sobrepor textos.
+- **Impacto técnico / Riscos:** Ajuste localizado de CSS em `src/ui/styles.ts`. Baixo risco de regressão.
 
 ### 4. Preenchimento em Lote de Conteúdo Ministrado (`Diário -> Informar Conteúdo Ministrado`)
 - **Prioridade:** P1 — Alta
