@@ -38,6 +38,7 @@ const EXPECTED_EVIDENCES = [
   'modelo_notas_semestral.xlsx',
   'modelo_frequencia.xlsx',
   'relatorio_execucao_notas_completo.json',
+  'relatorio_nao_realizadas.json',
   'relatorio_execucao_frequencia.json',
 ];
 

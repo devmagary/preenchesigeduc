@@ -54,3 +54,14 @@ Auditoria realizada por subagentes independentes (`research`) sem acesso ao cód
   - `manifest.json`: `21/21` artefatos íntegros, incluindo `extracao_lote_cetep_desktop.png` (`51.302` B) e `consolidado_cetep_lote.xlsx` (`73.467` B).
   - `extracao_lote_cetep_desktop.png`: card completo acima da dobra exibindo `Lote concluído (2/2 turmas)`, `90 estudantes • 60 aprovados • 20 recuperação • 10 sem nota`, `Layout CETEP` (`Multi-aba (Painel + turmas)` sem truncamento), `Nota mínima` e botões `Baixar Planilha CETEP (.xlsx)` + `Nova Extração` alinhados.
   - SLAs: parse `.xlsx` média `13.82 ms` / p99 `29.36 ms`, `.csv` `0.28 ms` / p99 `0.47 ms` (`< 250 ms`), abertura do painel `15.75 ms` (`< 100 ms`), `180/180` AJAX (`0%` perda), `45/45` exatos com `0` falsos positivos, `dist/chrome/` `564.0 KB` e `dist/firefox/` `564.2 KB` (`< 1536 KB`).
+
+### Rodada 7 — Unidades Mistas Médio vs Técnico e Correção das 3 Menores (`a67eb8ac`)
+- **Veredito Final:** **APROVADO — `0` defeitos `grave`, `0` `médio`, `1` nota informativa `menor` não bloqueante.**
+- **Correções das 3 menores verificadas:**
+  1. `Nota mínima` exibe literalmente `5.0` e `Layout CETEP` exibe `Multi-aba (Painel + turmas)` completo em `extracao_lote_cetep_desktop.png`.
+  2. Card `MODELO CONSOLIDADO PADRÃO CETEP` 100% visível acima da dobra em `scraping_notas_mobile.png` (`390x844`).
+  3. `relatorio_nao_realizadas.json` (`832` B) comprova as 5 entradas (`0,0`, `1,5`, `NF`, `Não Fez`, `""`) alinhadas aos checkboxes de `nao_realizadas_desktop.png`.
+- **Unidades mistas Médio vs Técnico (P2.4 & P2.5):**
+  - `extracao_lote_cetep_desktop.png` confirma `90 estudantes • 65 aprovados • 15 recuperação • 10 sem nota` e detalhamento `Ensino Médio: 1ª Unidade • Técnico: 2ª Unidade`.
+  - `manifest.json`: `22/22` artefatos íntegros (`consolidado_cetep_lote.xlsx` com `73.710` B).
+  - SLAs: `.xlsx` p99 `28.73 ms`, `.csv` p99 `0.62 ms` (`< 250 ms`), painel `15.46 ms` (`< 100 ms`), `180/180` AJAX (`0%` perda), `45/45` exatos com `0` falsos positivos, `dist/chrome/` `568.8 KB` e `dist/firefox/` `569.0 KB` (`< 1536 KB`).

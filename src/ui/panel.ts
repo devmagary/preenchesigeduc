@@ -23,6 +23,7 @@ import {
   findPortalActionLink,
   loadBatchExtractState,
   navigateBackToPortal,
+  resolveTurmaUnitChoice,
   saveBatchExtractState,
   scrapedNotasToCetepTurma,
   type BatchExtractState,
@@ -164,7 +165,9 @@ export class PreenchePanelController {
   private cetepMode: 'multi_sheet' | 'single_sheet' = 'multi_sheet';
   private cetepMinGrade = 5.0;
   private cetepMinGradeTouched = false;
-  private batchUnitChoice: BatchUnitChoice = 'active';
+  private batchUnitMedio: BatchUnitChoice = 'active';
+  private batchUnitTecnico: BatchUnitChoice = 'active';
+  private batchTurmaUnitOverrides: Record<string, BatchUnitChoice> = {};
   private batchIncludeMatricula = false;
   private batchSelectedTurmaKeys: Set<string> = new Set();
   private batchTurmasInitialized = false;
@@ -316,7 +319,8 @@ export class PreenchePanelController {
       try {
         const units = scrapeLancarNotasAllUnits(this.doc);
         const activeLabel = scrapeLancarNotas(this.doc).unidadeAtiva;
-        const chosen = pickUnitFromScrapedList(units, state.options.unitChoice, activeLabel) ?? scrapeLancarNotas(this.doc);
+        const unitChoice = resolveTurmaUnitChoice(currentTurma, this.turmaSelectionKey(currentTurma), state.options);
+        const chosen = pickUnitFromScrapedList(units, unitChoice, activeLabel) ?? scrapeLancarNotas(this.doc);
         const cetepTurma = scrapedNotasToCetepTurma(chosen, currentTurma, state.docente);
         state.results[state.currentIndex] = cetepTurma;
 
@@ -1363,12 +1367,9 @@ export class PreenchePanelController {
     const isTemplate = this.scraped.kind === 'lancar_notas' || this.scraped.kind === 'lancar_frequencia';
     const xlsxLabel = isTemplate ? 'Baixar Modelo (.xlsx)' : 'Exportar .xlsx';
     const hasBatchPriority = this.scraped.kind === 'portal_docente' && Boolean(this.batchState);
+    const collapseTableMobile = this.scraped.kind === 'lancar_notas' && window.innerWidth <= 640;
 
-    const detectedInner = `
-      <div class="ps-banner success">
-        <strong>${escapeHtml(this.detection.label)}</strong><br/>
-        Total de registros extraídos: <strong>${bundle.rows.length}</strong>
-      </div>
+    const previewTableHtml = `
       <div class="ps-table-wrap">
         <table class="ps-table">
           <thead><tr>${ths}</tr></thead>
@@ -1376,6 +1377,21 @@ export class PreenchePanelController {
         </table>
       </div>
       ${bundle.rows.length > 8 ? `<div class="ps-muted">Exibindo 8 de ${bundle.rows.length} registros. Exporte para ver todos.</div>` : ''}
+    `;
+
+    const detectedInner = `
+      <div class="ps-banner success">
+        <strong>${escapeHtml(this.detection.label)}</strong><br/>
+        Total de registros extraídos: <strong>${bundle.rows.length}</strong>
+      </div>
+      ${
+        collapseTableMobile
+          ? `<details class="ps-details" style="margin:2px 0;">
+               <summary>Prévia da tabela (${bundle.rows.length} registros • ${bundle.headers.length} colunas)</summary>
+               <div style="margin-top:6px;">${previewTableHtml}</div>
+             </details>`
+          : previewTableHtml
+      }
       <div class="ps-row">
         <button class="ps-btn ps-btn-primary ps-btn-block" id="ps-exp-xlsx" type="button">${xlsxLabel}</button>
         <button class="ps-btn ps-btn-secondary" id="ps-exp-csv" type="button" style="flex:1">Exportar .csv</button>
@@ -1410,7 +1426,7 @@ export class PreenchePanelController {
         </div>
         <div class="ps-field">
           <label class="ps-label" for="ps-cetep-min-grade">Nota mínima</label>
-          <input class="ps-input" id="ps-cetep-min-grade" type="number" step="0.5" min="0" max="10" value="${this.cetepMinGrade.toFixed(1)}" />
+          <input class="ps-input" id="ps-cetep-min-grade" type="text" inputmode="decimal" value="${this.cetepMinGrade.toFixed(1)}" />
         </div>
       </div>
     `;
@@ -1483,6 +1499,17 @@ export class PreenchePanelController {
             : `Lote interrompido (${validResults.length}/${bs.queue.length} coletadas)`;
 
       const alerts = [...bs.errors, ...bs.warnings];
+      const byModSummary = new Map<string, Set<string>>();
+      for (const res of validResults) {
+        const mod = res.identity.modalidade;
+        const set = byModSummary.get(mod) ?? new Set<string>();
+        set.add(res.unidade);
+        byModSummary.set(mod, set);
+      }
+      const modSummaryText = Array.from(byModSummary.entries())
+        .map(([mod, unitsSet]) => `${mod}: ${Array.from(unitsSet).join(', ')}`)
+        .join(' • ');
+
       return `
         <section class="ps-card" id="ps-batch-card">
           <h3 class="ps-card-title">Extração em Lote (Padrão CETEP)</h3>
@@ -1492,6 +1519,7 @@ export class PreenchePanelController {
             <strong>${totals.aprovados}</strong> aprovados •
             <strong>${totals.rec}</strong> recuperação •
             <strong>${totals.semNota}</strong> sem nota
+            ${modSummaryText ? `<br/><span class="ps-muted">${escapeHtml(modSummaryText)}</span>` : ''}
           </div>
           ${alerts.length ? `<ul class="ps-list">${alerts.map((a) => `<li>${escapeHtml(a)}</li>`).join('')}</ul>` : ''}
           ${this.renderCetepControlsHtml()}
@@ -1508,6 +1536,8 @@ export class PreenchePanelController {
     this.initPortalSelection(portal);
     const selectedCount = portal.turmas.filter((t) => this.batchSelectedTurmaKeys.has(this.turmaSelectionKey(t))).length;
 
+    const unitLabelShort = (u: BatchUnitChoice) => (u === 'active' ? 'Ativa' : `${u}ª Un.`);
+
     const turmaChecks = portal.turmas
       .map((t) => {
         const key = this.turmaSelectionKey(t);
@@ -1517,15 +1547,27 @@ export class PreenchePanelController {
           serie: t.serie,
           componente: t.componente,
         });
+        const isSemestral = idInfo.modalidade === 'Técnico' || /semestr/i.test(t.periodicidade ?? '');
+        const defaultChoice = isSemestral ? this.batchUnitTecnico : this.batchUnitMedio;
+        const overrideVal = this.batchTurmaUnitOverrides[key];
         const checked = this.batchSelectedTurmaKeys.has(key);
         return `
-          <label class="ps-check-row" style="align-items:flex-start;">
-            <input type="checkbox" class="ps-batch-turma-cb" value="${escapeHtml(key)}" ${checked ? 'checked' : ''} style="margin-top:2px;" />
-            <div style="flex:1;min-width:0;">
-              <strong>${escapeHtml(t.turma)}</strong> <span class="ps-pill ok">${escapeHtml(idInfo.modalidade)} • ${escapeHtml(idInfo.turno)}</span><br/>
-              <span class="ps-muted">${escapeHtml(idInfo.curso)} • ${escapeHtml(t.componente)} (${t.qtdEstudantes} alunos)</span>
-            </div>
-          </label>
+          <div class="ps-check-row" style="align-items:flex-start;justify-content:space-between;">
+            <label style="display:flex;align-items:flex-start;gap:8px;flex:1;min-width:0;cursor:pointer;">
+              <input type="checkbox" class="ps-batch-turma-cb" value="${escapeHtml(key)}" ${checked ? 'checked' : ''} style="margin-top:2px;" />
+              <div style="flex:1;min-width:0;">
+                <strong>${escapeHtml(t.turma)}</strong> <span class="ps-pill ok">${escapeHtml(idInfo.modalidade)} • ${escapeHtml(idInfo.turno)}</span><br/>
+                <span class="ps-muted">${escapeHtml(idInfo.curso)} • ${escapeHtml(t.componente)} (${t.qtdEstudantes} alunos)</span>
+              </div>
+            </label>
+            <select class="ps-select ps-batch-turma-unit" data-turma-key="${escapeHtml(key)}" aria-label="Unidade de ${escapeHtml(t.turma)}" style="width:auto;min-width:98px;min-height:32px;padding:4px 6px;font-size:0.8em;">
+              <option value="" ${!overrideVal ? 'selected' : ''}>Padrão (${unitLabelShort(defaultChoice)})</option>
+              <option value="active" ${overrideVal === 'active' ? 'selected' : ''}>Ativa</option>
+              <option value="1" ${overrideVal === '1' ? 'selected' : ''}>1ª Un.</option>
+              <option value="2" ${overrideVal === '2' ? 'selected' : ''}>2ª Un.</option>
+              ${isSemestral ? '' : `<option value="3" ${overrideVal === '3' ? 'selected' : ''}>3ª Un.</option>`}
+            </select>
+          </div>
         `;
       })
       .join('');
@@ -1533,15 +1575,25 @@ export class PreenchePanelController {
     return `
       <section class="ps-card" id="ps-batch-card">
         <h3 class="ps-card-title">Extração em Lote — Padrão CETEP</h3>
-        <div class="ps-muted">Percorre automaticamente as turmas selecionadas em sequência segura JSF e gera o .xlsx consolidado com fórmulas.</div>
-        <div class="ps-field">
-          <label class="ps-label" for="ps-batch-unit">Unidade a extrair</label>
-          <select class="ps-select" id="ps-batch-unit">
-            <option value="active" ${this.batchUnitChoice === 'active' ? 'selected' : ''}>Unidade ativa / mais recente com avaliações</option>
-            <option value="1" ${this.batchUnitChoice === '1' ? 'selected' : ''}>1ª Unidade</option>
-            <option value="2" ${this.batchUnitChoice === '2' ? 'selected' : ''}>2ª Unidade</option>
-            <option value="3" ${this.batchUnitChoice === '3' ? 'selected' : ''}>3ª Unidade</option>
-          </select>
+        <div class="ps-muted">Configure unidades distintas por modalidade (ou por turma individual) e gere o .xlsx consolidado agrupado.</div>
+        <div class="ps-grid-2">
+          <div class="ps-field">
+            <label class="ps-label" for="ps-batch-unit-medio">Unidade Ensino Médio</label>
+            <select class="ps-select" id="ps-batch-unit-medio">
+              <option value="active" ${this.batchUnitMedio === 'active' ? 'selected' : ''}>Ativa / mais recente</option>
+              <option value="1" ${this.batchUnitMedio === '1' ? 'selected' : ''}>1ª Unidade</option>
+              <option value="2" ${this.batchUnitMedio === '2' ? 'selected' : ''}>2ª Unidade</option>
+              <option value="3" ${this.batchUnitMedio === '3' ? 'selected' : ''}>3ª Unidade</option>
+            </select>
+          </div>
+          <div class="ps-field">
+            <label class="ps-label" for="ps-batch-unit-tecnico">Unidade Técnico</label>
+            <select class="ps-select" id="ps-batch-unit-tecnico">
+              <option value="active" ${this.batchUnitTecnico === 'active' ? 'selected' : ''}>Ativa / mais recente</option>
+              <option value="1" ${this.batchUnitTecnico === '1' ? 'selected' : ''}>1ª Unidade</option>
+              <option value="2" ${this.batchUnitTecnico === '2' ? 'selected' : ''}>2ª Unidade</option>
+            </select>
+          </div>
         </div>
         ${this.renderCetepControlsHtml()}
         <label class="ps-check-row">
@@ -1554,7 +1606,7 @@ export class PreenchePanelController {
             ${selectedCount === portal.turmas.length ? 'Desmarcar todas' : 'Marcar todas'}
           </button>
         </div>
-        <div style="display:flex;flex-direction:column;gap:6px;max-height:220px;overflow-y:auto;">
+        <div style="display:flex;flex-direction:column;gap:6px;max-height:240px;overflow-y:auto;">
           ${turmaChecks || '<div class="ps-banner warn">Nenhuma turma encontrada no Portal Docente.</div>'}
         </div>
         <button class="ps-btn ps-btn-primary ps-btn-block" id="ps-batch-start" type="button" ${selectedCount === 0 ? 'disabled' : ''}>
@@ -1964,15 +2016,19 @@ export class PreenchePanelController {
     });
 
     q<HTMLInputElement>('ps-cetep-min-grade')?.addEventListener('change', (ev) => {
-      const num = Number((ev.target as HTMLInputElement).value.replace(',', '.'));
+      const inp = ev.target as HTMLInputElement;
+      const num = Number(inp.value.replace(',', '.'));
       if (Number.isFinite(num) && num >= 0 && num <= 10) {
         this.cetepMinGrade = num;
         this.cetepMinGradeTouched = true;
+        inp.value = num.toFixed(1);
         if (this.batchState) {
           this.batchState.options.minPassingGrade = num;
           saveBatchExtractState(this.batchState);
           this.render();
         }
+      } else {
+        inp.value = this.cetepMinGrade.toFixed(1);
       }
     });
 
@@ -1983,10 +2039,25 @@ export class PreenchePanelController {
       this.triggerCetepDownload([turma], `cetep_${slug || 'turma'}.xlsx`);
     });
 
-    q<HTMLSelectElement>('ps-batch-unit')?.addEventListener('change', (ev) => {
-      const val = (ev.target as HTMLSelectElement).value as BatchUnitChoice;
-      this.batchUnitChoice = val;
+    q<HTMLSelectElement>('ps-batch-unit-medio')?.addEventListener('change', (ev) => {
+      this.batchUnitMedio = (ev.target as HTMLSelectElement).value as BatchUnitChoice;
+      this.render();
     });
+
+    q<HTMLSelectElement>('ps-batch-unit-tecnico')?.addEventListener('change', (ev) => {
+      this.batchUnitTecnico = (ev.target as HTMLSelectElement).value as BatchUnitChoice;
+      this.render();
+    });
+
+    for (const sel of Array.from(this.shadow.querySelectorAll('.ps-batch-turma-unit'))) {
+      sel.addEventListener('change', (ev) => {
+        const el = ev.target as HTMLSelectElement;
+        const key = el.dataset.turmaKey ?? '';
+        if (!key) return;
+        if (el.value) this.batchTurmaUnitOverrides[key] = el.value as BatchUnitChoice;
+        else delete this.batchTurmaUnitOverrides[key];
+      });
+    }
 
     q<HTMLInputElement>('ps-batch-include-mat')?.addEventListener('change', (ev) => {
       this.batchIncludeMatricula = (ev.target as HTMLInputElement).checked;
@@ -2021,7 +2092,9 @@ export class PreenchePanelController {
         currentIndex: 0,
         phase: 'going_notas',
         options: {
-          unitChoice: this.batchUnitChoice,
+          unitMedio: this.batchUnitMedio,
+          unitTecnico: this.batchUnitTecnico,
+          turmaUnitOverrides: { ...this.batchTurmaUnitOverrides },
           includeMatricula: this.batchIncludeMatricula,
           mode: this.cetepMode,
           minPassingGrade: this.cetepMinGrade,

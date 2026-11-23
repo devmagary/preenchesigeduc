@@ -15,10 +15,32 @@ export type BatchPhase =
   | 'error';
 
 export interface BatchExtractOptions {
-  unitChoice: BatchUnitChoice;
+  unitMedio: BatchUnitChoice;
+  unitTecnico: BatchUnitChoice;
+  turmaUnitOverrides: Record<string, BatchUnitChoice>;
   includeMatricula: boolean;
   mode: 'multi_sheet' | 'single_sheet';
   minPassingGrade: number;
+}
+
+export function resolveTurmaUnitChoice(
+  turma: ScrapedTurma,
+  turmaKey: string,
+  options: BatchExtractOptions
+): BatchUnitChoice {
+  const override = options.turmaUnitOverrides?.[turmaKey];
+  if (override) return override;
+
+  const idInfo = parseTurmaIdentity({
+    turma: turma.turma,
+    ofertaEnsino: turma.ofertaEnsino,
+    serie: turma.serie,
+    componente: turma.componente,
+  });
+  if (idInfo.modalidade === 'Técnico' || /semestr/i.test(turma.periodicidade ?? '')) {
+    return options.unitTecnico;
+  }
+  return options.unitMedio;
 }
 
 export interface BatchExtractState {

@@ -815,6 +815,30 @@ function appendTurmaBlockToBuilder(
   };
 }
 
+function shortUnitTag(unidade: string): string {
+  const m = String(unidade ?? '').match(/(\d+)/);
+  if (m?.[1]) return `${m[1]}U`;
+  return '';
+}
+
+function groupTurmasByModalidade(turmas: CetepTurmaData[]): {
+  orderedTurmas: CetepTurmaData[];
+  groups: Array<{ modalidade: CetepModalidade; count: number }>;
+} {
+  const order: CetepModalidade[] = ['Ensino Médio', 'Técnico', 'Outro'];
+  const orderedTurmas: CetepTurmaData[] = [];
+  const groups: Array<{ modalidade: CetepModalidade; count: number }> = [];
+
+  for (const mod of order) {
+    const items = turmas.filter((t) => t.identity.modalidade === mod);
+    if (items.length > 0) {
+      orderedTurmas.push(...items);
+      groups.push({ modalidade: mod, count: items.length });
+    }
+  }
+  return { orderedTurmas, groups };
+}
+
 function appendPainelConsolidado(
   sb: SheetBuilder,
   startRow: number,
@@ -822,155 +846,213 @@ function appendPainelConsolidado(
   minPassingGrade: number,
   crossSheet: boolean
 ): number {
-  const minStr = minPassingGrade.toFixed(1).replace(',', '.');
   const minDisplay = minPassingGrade.toFixed(1).replace('.', ',');
 
-  sb.setColWidth(0, 44); // Turma
-  sb.setColWidth(1, 16); // Total de Alunos
-  sb.setColWidth(2, 14); // Média Geral
-  sb.setColWidth(3, 18); // Aprovados
-  sb.setColWidth(4, 18); // Recuperação
-  sb.setColWidth(5, 13); // Sem Nota
-  sb.setColWidth(6, 15); // % Aprovação
+  sb.setColWidth(0, 42); // Turma
+  sb.setColWidth(1, 15); // Modalidade
+  sb.setColWidth(2, 13); // Unidade
+  sb.setColWidth(3, 15); // Total de Alunos
+  sb.setColWidth(4, 13); // Média Geral
+  sb.setColWidth(5, 18); // Aprovados
+  sb.setColWidth(6, 18); // Recuperação
+  sb.setColWidth(7, 12); // Sem Nota
+  sb.setColWidth(8, 14); // % Aprovação
 
   let r = startRow;
 
-  // Faixa Painel Consolidado
+  // Faixa Painel Consolidado (A..I = cols 0..8)
   sb.addRow(
     r,
     [
       { col: 0, style: 3, kind: 'str', val: 'PAINEL CONSOLIDADO DE DESEMPENHO POR TURMA' },
-      { col: 1, style: 3, kind: 'empty' },
-      { col: 2, style: 3, kind: 'empty' },
-      { col: 3, style: 3, kind: 'empty' },
-      { col: 4, style: 3, kind: 'empty' },
-      { col: 5, style: 3, kind: 'empty' },
-      { col: 6, style: 3, kind: 'empty' },
+      ...Array.from({ length: 8 }, (_, idx) => ({ col: idx + 1, style: 3, kind: 'empty' as const })),
     ],
     24
   );
-  sb.addMerge(r, 0, r, 6);
+  sb.addMerge(r, 0, r, 8);
   r++;
 
   sb.addRow(
     r,
     [
-      { col: 0, style: 4, kind: 'str', val: 'Turma (Curso • Modalidade • Série • Turno)' },
-      { col: 1, style: 4, kind: 'str', val: 'Total de Alunos' },
-      { col: 2, style: 4, kind: 'str', val: 'Média Geral' },
-      { col: 3, style: 4, kind: 'str', val: `Aprovados (>= ${minDisplay})` },
-      { col: 4, style: 4, kind: 'str', val: `Recuperação (< ${minDisplay})` },
-      { col: 5, style: 4, kind: 'str', val: 'Sem Nota' },
-      { col: 6, style: 4, kind: 'str', val: '% Aprovação' },
+      { col: 0, style: 4, kind: 'str', val: 'Turma (Curso • Série • Código • Turno)' },
+      { col: 1, style: 4, kind: 'str', val: 'Modalidade' },
+      { col: 2, style: 4, kind: 'str', val: 'Unidade' },
+      { col: 3, style: 4, kind: 'str', val: 'Total de Alunos' },
+      { col: 4, style: 4, kind: 'str', val: 'Média Geral' },
+      { col: 5, style: 4, kind: 'str', val: `Aprovados (>= ${minDisplay})` },
+      { col: 6, style: 4, kind: 'str', val: `Recuperação (< ${minDisplay})` },
+      { col: 7, style: 4, kind: 'str', val: 'Sem Nota' },
+      { col: 8, style: 4, kind: 'str', val: '% Aprovação' },
     ],
     26
   );
   r++;
 
-  const firstPanelRow = r;
+  // Agrupar por modalidade mantendo ordem
+  const groups: Array<{ modalidade: CetepModalidade; refs: TurmaRangeRef[] }> = [];
+  for (const ref of turmaRanges) {
+    const existing = groups.find((g) => g.modalidade === ref.turma.identity.modalidade);
+    if (existing) existing.refs.push(ref);
+    else groups.push({ modalidade: ref.turma.identity.modalidade, refs: [ref] });
+  }
+  const hasMultipleGroups = groups.length > 1;
+
+  const dataRanges: Array<{ start: number; end: number }> = [];
   let totalAlunosAll = 0;
   let totalAprovAll = 0;
   let totalRecAll = 0;
   let totalSemNotaAll = 0;
-  let turmaMediaSum = 0;
-  let turmaMediaCount = 0;
+  let turmaMediaSumAll = 0;
+  let turmaMediaCountAll = 0;
+  let rowZebraIdx = 0;
 
-  for (let i = 0; i < turmaRanges.length; i++) {
-    const ref = turmaRanges[i];
-    const stats = computeCetepTurmaStats(ref.turma, minPassingGrade);
-    const zebra = i % 2 === 1;
-    const hasStudents = ref.turma.alunos.length > 0;
+  for (const group of groups) {
+    const groupStart = r;
+    let gAlunos = 0;
+    let gAprov = 0;
+    let gRec = 0;
+    let gSemNota = 0;
+    let gMediaSum = 0;
+    let gMediaCount = 0;
 
-    totalAlunosAll += stats.totalAlunos;
-    totalAprovAll += stats.aprovados;
-    totalRecAll += stats.recuperacao;
-    totalSemNotaAll += stats.semNota;
-    if (stats.mediaGeral !== null) {
-      turmaMediaSum += stats.mediaGeral;
-      turmaMediaCount++;
+    for (const ref of group.refs) {
+      const stats = computeCetepTurmaStats(ref.turma, minPassingGrade);
+      const zebra = rowZebraIdx % 2 === 1;
+      rowZebraIdx++;
+      const hasStudents = ref.turma.alunos.length > 0;
+
+      gAlunos += stats.totalAlunos;
+      gAprov += stats.aprovados;
+      gRec += stats.recuperacao;
+      gSemNota += stats.semNota;
+      if (stats.mediaGeral !== null) {
+        gMediaSum += stats.mediaGeral;
+        gMediaCount++;
+      }
+
+      totalAlunosAll += stats.totalAlunos;
+      totalAprovAll += stats.aprovados;
+      totalRecAll += stats.recuperacao;
+      totalSemNotaAll += stats.semNota;
+      if (stats.mediaGeral !== null) {
+        turmaMediaSumAll += stats.mediaGeral;
+        turmaMediaCountAll++;
+      }
+
+      const rRange = (colL: string) =>
+        crossSheet
+          ? sheetRef(ref.sheetName, `${colL}${ref.firstStudentRow}:${colL}${ref.lastStudentRow}`)
+          : `${colL}${ref.firstStudentRow}:${colL}${ref.lastStudentRow}`;
+
+      const labelWithComp = ref.turma.identity.componente
+        ? `${ref.turma.identity.displayLabel} — ${ref.turma.identity.componente}`
+        : ref.turma.identity.displayLabel;
+
+      sb.addRow(
+        r,
+        [
+          { col: 0, style: zebra ? 6 : 5, kind: 'str', val: labelWithComp },
+          { col: 1, style: zebra ? 8 : 7, kind: 'str', val: ref.turma.identity.modalidade },
+          { col: 2, style: zebra ? 8 : 7, kind: 'str', val: ref.turma.unidade },
+          {
+            col: 3,
+            style: zebra ? 21 : 20,
+            kind: hasStudents ? 'formula_num' : 'num',
+            formula: hasStudents ? `COUNTA(${rRange(ref.nameColLetter)})` : undefined,
+            val: stats.totalAlunos,
+          },
+          {
+            col: 4,
+            style: zebra ? 10 : 9,
+            kind: hasStudents ? 'formula_num' : 'empty',
+            formula: hasStudents ? `IFERROR(AVERAGE(${rRange(ref.notaGeralColLetter)}),"")` : undefined,
+            val: stats.mediaGeral,
+          },
+          {
+            col: 5,
+            style: zebra ? 21 : 20,
+            kind: hasStudents ? 'formula_num' : 'num',
+            formula: hasStudents ? `COUNTIF(${rRange(ref.situacaoColLetter)},"Aprovado")` : undefined,
+            val: stats.aprovados,
+          },
+          {
+            col: 6,
+            style: zebra ? 21 : 20,
+            kind: hasStudents ? 'formula_num' : 'num',
+            formula: hasStudents ? `COUNTIF(${rRange(ref.situacaoColLetter)},"Recuperação")` : undefined,
+            val: stats.recuperacao,
+          },
+          {
+            col: 7,
+            style: zebra ? 21 : 20,
+            kind: hasStudents ? 'formula_num' : 'num',
+            formula: hasStudents ? `COUNTIF(${rRange(ref.situacaoColLetter)},"Sem Nota")` : undefined,
+            val: stats.semNota,
+          },
+          {
+            col: 8,
+            style: zebra ? 12 : 11,
+            kind: 'formula_num',
+            formula: `IF(D${r}=0,0,F${r}/D${r})`,
+            val: Math.round(stats.pctAprovacao * 10000) / 10000,
+          },
+        ],
+        20
+      );
+      r++;
     }
 
-    const rRange = (colL: string) =>
-      crossSheet
-        ? sheetRef(ref.sheetName, `${colL}${ref.firstStudentRow}:${colL}${ref.lastStudentRow}`)
-        : `${colL}${ref.firstStudentRow}:${colL}${ref.lastStudentRow}`;
+    const groupEnd = Math.max(groupStart, r - 1);
+    dataRanges.push({ start: groupStart, end: groupEnd });
 
-    const labelWithComp = ref.turma.identity.componente
-      ? `${ref.turma.identity.displayLabel} — ${ref.turma.identity.componente}`
-      : ref.turma.identity.displayLabel;
+    if (hasMultipleGroups) {
+      const gAvg = gMediaCount > 0 ? Math.round((gMediaSum / gMediaCount) * 100) / 100 : null;
+      const gPct = gAlunos > 0 ? Math.round((gAprov / gAlunos) * 10000) / 10000 : 0;
+      const unitSet = new Set(group.refs.map((x) => x.turma.unidade));
+      const unitSummary = unitSet.size === 1 ? Array.from(unitSet)[0] : 'Mista';
 
-    sb.addRow(
-      r,
-      [
-        { col: 0, style: zebra ? 6 : 5, kind: 'str', val: labelWithComp },
-        {
-          col: 1,
-          style: zebra ? 21 : 20,
-          kind: hasStudents ? 'formula_num' : 'num',
-          formula: hasStudents ? `COUNTA(${rRange(ref.nameColLetter)})` : undefined,
-          val: stats.totalAlunos,
-        },
-        {
-          col: 2,
-          style: zebra ? 10 : 9,
-          kind: hasStudents ? 'formula_num' : 'empty',
-          formula: hasStudents ? `IFERROR(AVERAGE(${rRange(ref.notaGeralColLetter)}),"")` : undefined,
-          val: stats.mediaGeral,
-        },
-        {
-          col: 3,
-          style: zebra ? 21 : 20,
-          kind: hasStudents ? 'formula_num' : 'num',
-          formula: hasStudents ? `COUNTIF(${rRange(ref.situacaoColLetter)},"Aprovado")` : undefined,
-          val: stats.aprovados,
-        },
-        {
-          col: 4,
-          style: zebra ? 21 : 20,
-          kind: hasStudents ? 'formula_num' : 'num',
-          formula: hasStudents ? `COUNTIF(${rRange(ref.situacaoColLetter)},"Recuperação")` : undefined,
-          val: stats.recuperacao,
-        },
-        {
-          col: 5,
-          style: zebra ? 21 : 20,
-          kind: hasStudents ? 'formula_num' : 'num',
-          formula: hasStudents ? `COUNTIF(${rRange(ref.situacaoColLetter)},"Sem Nota")` : undefined,
-          val: stats.semNota,
-        },
-        {
-          col: 6,
-          style: zebra ? 12 : 11,
-          kind: 'formula_num',
-          formula: `IF(B${r}=0,0,D${r}/B${r})`,
-          val: Math.round(stats.pctAprovacao * 10000) / 10000,
-        },
-      ],
-      20
-    );
-    r++;
+      sb.addRow(
+        r,
+        [
+          { col: 0, style: 16, kind: 'str', val: `SUBTOTAL — ${group.modalidade.toUpperCase()}` },
+          { col: 1, style: 16, kind: 'str', val: group.modalidade },
+          { col: 2, style: 16, kind: 'str', val: unitSummary },
+          { col: 3, style: 18, kind: 'formula_num', formula: `SUM(D${groupStart}:D${groupEnd})`, val: gAlunos },
+          { col: 4, style: 17, kind: 'formula_num', formula: `IFERROR(AVERAGE(E${groupStart}:E${groupEnd}),"")`, val: gAvg },
+          { col: 5, style: 18, kind: 'formula_num', formula: `SUM(F${groupStart}:F${groupEnd})`, val: gAprov },
+          { col: 6, style: 18, kind: 'formula_num', formula: `SUM(G${groupStart}:G${groupEnd})`, val: gRec },
+          { col: 7, style: 18, kind: 'formula_num', formula: `SUM(H${groupStart}:H${groupEnd})`, val: gSemNota },
+          { col: 8, style: 19, kind: 'formula_num', formula: `IF(D${r}=0,0,F${r}/D${r})`, val: gPct },
+        ],
+        21
+      );
+      r++;
+    }
   }
 
-  const lastPanelRow = Math.max(firstPanelRow, r - 1);
-  const overallAvg = turmaMediaCount > 0 ? Math.round((turmaMediaSum / turmaMediaCount) * 100) / 100 : null;
+  const joinColRanges = (colL: string) =>
+    dataRanges.map((g) => (g.start === g.end ? `${colL}${g.start}` : `${colL}${g.start}:${colL}${g.end}`)).join(',');
+
+  const overallAvg = turmaMediaCountAll > 0 ? Math.round((turmaMediaSumAll / turmaMediaCountAll) * 100) / 100 : null;
   const overallPct = totalAlunosAll > 0 ? Math.round((totalAprovAll / totalAlunosAll) * 10000) / 10000 : 0;
 
   sb.addRow(
     r,
     [
       { col: 0, style: 16, kind: 'str', val: 'TOTAL GERAL' },
-      { col: 1, style: 18, kind: 'formula_num', formula: `SUM(B${firstPanelRow}:B${lastPanelRow})`, val: totalAlunosAll },
-      { col: 2, style: 17, kind: 'formula_num', formula: `IFERROR(AVERAGE(C${firstPanelRow}:C${lastPanelRow}),"")`, val: overallAvg },
-      { col: 3, style: 18, kind: 'formula_num', formula: `SUM(D${firstPanelRow}:D${lastPanelRow})`, val: totalAprovAll },
-      { col: 4, style: 18, kind: 'formula_num', formula: `SUM(E${firstPanelRow}:E${lastPanelRow})`, val: totalRecAll },
-      { col: 5, style: 18, kind: 'formula_num', formula: `SUM(F${firstPanelRow}:F${lastPanelRow})`, val: totalSemNotaAll },
-      { col: 6, style: 19, kind: 'formula_num', formula: `IF(B${r}=0,0,D${r}/B${r})`, val: overallPct },
+      { col: 1, style: 16, kind: 'str', val: hasMultipleGroups ? 'Todas' : groups[0]?.modalidade ?? '' },
+      { col: 2, style: 16, kind: 'str', val: '—' },
+      { col: 3, style: 18, kind: 'formula_num', formula: `SUM(${joinColRanges('D')})`, val: totalAlunosAll },
+      { col: 4, style: 17, kind: 'formula_num', formula: `IFERROR(AVERAGE(${joinColRanges('E')}),"")`, val: overallAvg },
+      { col: 5, style: 18, kind: 'formula_num', formula: `SUM(${joinColRanges('F')})`, val: totalAprovAll },
+      { col: 6, style: 18, kind: 'formula_num', formula: `SUM(${joinColRanges('G')})`, val: totalRecAll },
+      { col: 7, style: 18, kind: 'formula_num', formula: `SUM(${joinColRanges('H')})`, val: totalSemNotaAll },
+      { col: 8, style: 19, kind: 'formula_num', formula: `IF(D${r}=0,0,F${r}/D${r})`, val: overallPct },
     ],
     22
   );
 
-  // Garantir largura suficiente se houver texto minStr
-  void minStr;
   return r + 1;
 }
 
@@ -983,13 +1065,14 @@ export function exportCetepXlsxBuffer(turmas: CetepTurmaData[], options: CetepEx
     throw new Error('Nenhuma turma informada para exportar no modelo CETEP.');
   }
 
+  const { orderedTurmas, groups } = groupTurmasByModalidade(turmas);
   const minPassingGrade = Number.isFinite(options.minPassingGrade) && options.minPassingGrade >= 0 ? options.minPassingGrade : 5.0;
   const minGradeStr = minPassingGrade.toFixed(1).replace(',', '.');
   const minDisplay = minPassingGrade.toFixed(1).replace('.', ',');
   const genDate = (options.generatedAt ?? new Date()).toLocaleString('pt-BR');
-  const escola = turmas.find((t) => t.escola)?.escola || 'ESCOLA ESTADUAL';
-  const docente = turmas.find((t) => t.docente)?.docente || 'DOCENTE';
-  const ano = turmas.find((t) => t.ano)?.ano || String(new Date().getFullYear());
+  const escola = orderedTurmas.find((t) => t.escola)?.escola || 'ESCOLA ESTADUAL';
+  const docente = orderedTurmas.find((t) => t.docente)?.docente || 'DOCENTE';
+  const ano = orderedTurmas.find((t) => t.ano)?.ano || String(new Date().getFullYear());
   const titleText = options.title ?? `CONSOLIDADO DE NOTAS — PADRÃO CETEP (${ano})`;
   const subtitleText = `Instituição: ${escola} • Docente: ${docente} • Critério de aprovação: Nota >= ${minDisplay} • Gerado em ${genDate}`;
 
@@ -999,19 +1082,21 @@ export function exportCetepXlsxBuffer(turmas: CetepTurmaData[], options: CetepEx
     const usedNames = new Set<string>(['painel consolidado']);
     const turmaRanges: TurmaRangeRef[] = [];
 
-    for (const turma of turmas) {
-      const sheetName = makeUniqueSheetName(turma.identity.sheetTabBase, usedNames);
+    for (const turma of orderedTurmas) {
+      const uTag = shortUnitTag(turma.unidade);
+      const baseWithUnit = uTag ? `${turma.identity.sheetTabBase} ${uTag}` : turma.identity.sheetTabBase;
+      const sheetName = makeUniqueSheetName(baseWithUnit, usedNames);
       const sb = new SheetBuilder();
       const maxCols = Math.max(7, 6 + Math.max(1, turma.atividades.length));
 
       // Linha 1: Título da Turma
-      const row1Cells: CellSpec[] = [{ col: 0, style: 1, kind: 'str', val: `${turma.identity.displayLabel} — ${turma.identity.componente}` }];
+      const row1Cells: CellSpec[] = [{ col: 0, style: 1, kind: 'str', val: `${turma.identity.displayLabel} — ${turma.identity.componente} (${turma.unidade})` }];
       for (let c = 1; c < maxCols; c++) row1Cells.push({ col: c, style: 1, kind: 'empty' });
       sb.addRow(1, row1Cells, 28);
       sb.addMerge(1, 0, 1, maxCols - 1);
 
       // Linha 2: Subtítulo metadados
-      const metaSub = `${turma.escola || escola} • ${turma.unidade} • Critério: >= ${minDisplay} • ${turma.alunos.length} estudante(s)`;
+      const metaSub = `${turma.escola || escola} • ${turma.identity.modalidadeDetalhe} • ${turma.unidade} • Critério: >= ${minDisplay} • ${turma.alunos.length} estudante(s)`;
       const row2Cells: CellSpec[] = [{ col: 0, style: 2, kind: 'str', val: metaSub }];
       for (let c = 1; c < maxCols; c++) row2Cells.push({ col: c, style: 2, kind: 'empty' });
       sb.addRow(2, row2Cells, 20);
@@ -1026,17 +1111,17 @@ export function exportCetepXlsxBuffer(turmas: CetepTurmaData[], options: CetepEx
     const panelSb = new SheetBuilder();
     panelSb.addRow(
       1,
-      [{ col: 0, style: 1, kind: 'str', val: titleText }, ...Array.from({ length: 6 }, (_, i) => ({ col: i + 1, style: 1, kind: 'empty' as const }))],
+      [{ col: 0, style: 1, kind: 'str', val: titleText }, ...Array.from({ length: 8 }, (_, i) => ({ col: i + 1, style: 1, kind: 'empty' as const }))],
       30
     );
-    panelSb.addMerge(1, 0, 1, 6);
+    panelSb.addMerge(1, 0, 1, 8);
 
     panelSb.addRow(
       2,
-      [{ col: 0, style: 2, kind: 'str', val: subtitleText }, ...Array.from({ length: 6 }, (_, i) => ({ col: i + 1, style: 2, kind: 'empty' as const }))],
+      [{ col: 0, style: 2, kind: 'str', val: subtitleText }, ...Array.from({ length: 8 }, (_, i) => ({ col: i + 1, style: 2, kind: 'empty' as const }))],
       22
     );
-    panelSb.addMerge(2, 0, 2, 6);
+    panelSb.addMerge(2, 0, 2, 8);
 
     appendPainelConsolidado(panelSb, 4, turmaRanges, minPassingGrade, true);
     panelSb.setFreezeRow(6);
@@ -1046,8 +1131,8 @@ export function exportCetepXlsxBuffer(turmas: CetepTurmaData[], options: CetepEx
     // single_sheet: Painel Consolidado no topo (linhas 4..) + blocos de turmas empilhados na mesma aba
     const singleName = 'Consolidado CETEP';
     const maxColsAcrossAll = Math.max(
-      7,
-      ...turmas.map((t) => 6 + Math.max(1, t.atividades.length))
+      9,
+      ...orderedTurmas.map((t) => 6 + Math.max(1, t.atividades.length))
     );
 
     const addBannerPair = (target: SheetBuilder) => {
@@ -1065,14 +1150,15 @@ export function exportCetepXlsxBuffer(turmas: CetepTurmaData[], options: CetepEx
       target.addMerge(2, 0, 2, maxColsAcrossAll - 1);
     };
 
-    // Passo 1: calcular ranges exatos de cada bloco na aba única
+    // Passo 1: calcular ranges exatos de cada bloco na aba única (considerando subtotais por modalidade)
     const painelHeaderRows = 2;
-    const painelEndRow = 4 + painelHeaderRows + turmas.length + 1; // inclui TOTAL GERAL
+    const subtotalRowsCount = groups.length > 1 ? groups.length : 0;
+    const painelEndRow = 4 + painelHeaderRows + orderedTurmas.length + subtotalRowsCount + 1; // inclui TOTAL GERAL
     let cursorRow = painelEndRow + 1;
 
     const drySb = new SheetBuilder();
     const turmaRanges: TurmaRangeRef[] = [];
-    for (const turma of turmas) {
+    for (const turma of orderedTurmas) {
       const { nextRow, rangeRef } = appendTurmaBlockToBuilder(
         drySb,
         cursorRow,
@@ -1091,7 +1177,7 @@ export function exportCetepXlsxBuffer(turmas: CetepTurmaData[], options: CetepEx
     addBannerPair(finalSb);
     const afterPanelRow = appendPainelConsolidado(finalSb, 4, turmaRanges, minPassingGrade, false);
     let writeRow = afterPanelRow + 1;
-    for (const turma of turmas) {
+    for (const turma of orderedTurmas) {
       const res = appendTurmaBlockToBuilder(
         finalSb,
         writeRow,

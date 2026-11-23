@@ -82,7 +82,7 @@ As sugestões são organizadas sob a ótica de engenharia sênior, equilibrando 
 ### 3. Modelo de Planilha Consolidada (Padrão CETEP) na Exportação — `[Concluído]`
 - **Prioridade:** P2 — Média
 - **Dificuldade:** Média
-- **Status:** Concluído (`src/core/cetep.ts`: parser de identidade Curso/Modalidade/Série/Turno, writer OOXML `.xlsx` nativo estilizado com bordas, zebra, células mescladas, formatação condicional e fórmulas reais do Excel `SUM`/`AVERAGE`/`IF`/`COUNTIF` com valores em cache, Painel Consolidado + abas individuais ou aba única consolidada e nota mínima configurável padrão `5,0`).
+- **Status:** Concluído (`src/core/cetep.ts`: parser de identidade Curso/Modalidade/Série/Turno, writer OOXML `.xlsx` nativo estilizado com bordas, zebra, células mescladas, formatação condicional e fórmulas reais do Excel `SUM`/`AVERAGE`/`IF`/`COUNTIF` com valores em cache, Painel Consolidado com colunas `Modalidade` e `Unidade` + subtotais por modalidade + `TOTAL GERAL` + abas com sufixo de unidade `1U`/`2U`/`3U` ou aba única consolidada e nota mínima configurável padrão `5.0`).
 - **Contexto:** Padronizar os modelos de planilha exportados pela extensão com base no painel consolidado de notas (resumo geral por turma + blocos detalhados por aluno).
 - **Comportamento esperado:**
   - Gerar `.xlsx` único com **Painel Consolidado no topo** (Turma, Total de Alunos, Média Geral, Aprovados `>= 5,0`, Recuperação `< 5,0`, Sem Nota, `% Aprovação`, `TOTAL GERAL`) + **uma aba por turma** (com opção de aba única consolidada).
@@ -93,7 +93,7 @@ As sugestões são organizadas sob a ótica de engenharia sênior, equilibrando 
 ### 4. Extração em Lote de Todas as Turmas (Portal do Docente) — `[Concluído]`
 - **Prioridade:** P2 — Média
 - **Dificuldade:** Alta
-- **Status:** Concluído (`src/sigeduc/batch-extract.ts` e `src/ui/panel.ts`: máquina de estados em `sessionStorage`, seletor de unidade, checklist de turmas com Curso/Modalidade/Turno, opção de coleta real de Matrícula via Frequência, tratamento de sessão expirada e exportação automática no Modelo Padrão CETEP).
+- **Status:** Concluído (`src/sigeduc/batch-extract.ts` e `src/ui/panel.ts`: máquina de estados em `sessionStorage`, seletores separados de unidade para Ensino Médio vs Técnico + sobrescrita individual por turma, checklist de turmas com Curso/Modalidade/Turno, opção de coleta real de Matrícula via Frequência, tratamento de sessão expirada e exportação automática agrupada no Modelo Padrão CETEP).
 - **Contexto:** No `portal_docente`, permitir extrair automaticamente todas as turmas listadas sem precisar abrir manualmente uma por uma.
 - **Comportamento esperado:**
   - Botão para iniciar varredura turma por turma: entrar na turma → acessar *Lançar Notas* → coletar `Nome`, `Matrícula` e notas/avaliações → retornar ao portal e avançar para a próxima turma.

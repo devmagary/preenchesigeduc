@@ -122,6 +122,11 @@ function buildNotasHtml({ semestral = false } = {}) {
         { id: '7103', nome: 'Simulado', valor: 4.0, disabled: true },
       ];
 
+  const atividadesSemU2 = [
+    { id: '9201', nome: 'Projeto Final', valor: 5.0, disabled: false },
+    { id: '9202', nome: 'Prova Semestral', valor: 5.0, disabled: false },
+  ];
+
   const atividadesU3 = [
     { id: '8001', nome: 'Participação', valor: 2.0, disabled: false },
     { id: '8002', nome: 'Atividade Prática', valor: 3.0, disabled: false },
@@ -129,14 +134,22 @@ function buildNotasHtml({ semestral = false } = {}) {
     { id: '8004', nome: 'Avaliação Escrita', valor: 3.0, disabled: false },
   ];
 
-  function sampleGradeForU1(studentIdx, avIdx) {
-    if (studentIdx < 30) {
-      return avIdx === 0 ? '2.5' : avIdx === 1 ? '2.5' : '3.0'; // total 8.0 (Aprovado)
+  function sampleGradeForUnit(studentIdx, avIdx, unitNum, isSemestral) {
+    if (unitNum === 1) {
+      if (studentIdx < 30) {
+        return avIdx === 0 ? '2.5' : avIdx === 1 ? '2.5' : '3.0'; // total 8.0 (Aprovado)
+      }
+      if (studentIdx < 40) {
+        return avIdx === 0 ? '1.5' : avIdx === 1 ? '1.0' : '1.5'; // total 4.0 (Recuperação)
+      }
+      return ''; // Sem Nota
     }
-    if (studentIdx < 40) {
-      return avIdx === 0 ? '1.5' : avIdx === 1 ? '1.0' : '1.5'; // total 4.0 (Recuperação)
+    if (isSemestral && unitNum === 2) {
+      if (studentIdx < 35) return '4.0'; // total 8.0 (35 Aprovados)
+      if (studentIdx < 40) return '2.0'; // total 4.0 (5 Recuperação)
+      return ''; // 5 Sem Nota
     }
-    return ''; // Sem Nota
+    return '';
   }
 
   function renderUnitRows(ativs, unitNum, prefix, includeRecConflictOnFirst = false) {
@@ -148,7 +161,7 @@ function buildNotasHtml({ semestral = false } = {}) {
           <td>
             <input id="formulario:${prefix}:${idx}:av__${av.id}"
                    name="formulario:${prefix}:${idx}:av__${av.id}"
-                   type="text" value="${unitNum === 1 ? sampleGradeForU1(idx, avIdx) : ''}" class="avaliacao" maxlength="4" size="3"
+                   type="text" value="${sampleGradeForUnit(idx, avIdx, unitNum, semestral)}" class="avaliacao" maxlength="4" size="3"
                    ${av.disabled ? 'disabled="disabled"' : ''}
                    onblur="A4J.AJAX.Submit('formulario', event, {'inputId':'formulario:${prefix}:${idx}:av__${av.id}','studentIndex':${idx},'unit':${unitNum}});" />
           </td>`
@@ -209,7 +222,16 @@ function buildNotasHtml({ semestral = false } = {}) {
         </table>
       </div>
       <div id="formulario:tab1j_id_1" class="ui-tabs-panel ui-widget-content ui-tabs-hide">
-        <table><thead><tr><th>Estudante</th><th>Avaliações</th><th>Nota da Unidade</th></tr></thead><tbody></tbody></table>
+        <table>
+          <thead>
+            <tr>
+              <th>Estudante</th>
+              ${atividadesSemU2.map((a) => `<th>${a.nome} Valor: ${a.valor.toFixed(1)}</th>`).join('')}
+              <th>Rec. da Unidade</th><th>Nota da Unidade</th>
+            </tr>
+          </thead>
+          <tbody>${renderUnitRows(atividadesSemU2, 2, 'resultj_id_1', false)}</tbody>
+        </table>
       </div>
     `
     : `

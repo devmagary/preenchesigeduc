@@ -7,6 +7,7 @@ import {
   type CetepTurmaData,
 } from '../../src/core/cetep';
 import { parseWorkbookBuffer, selectBestWorkbookTarget } from '../../src/core/spreadsheet';
+import { resolveTurmaUnitChoice } from '../../src/sigeduc/batch-extract';
 
 function buildSampleTurmas(): CetepTurmaData[] {
   return [
@@ -40,7 +41,7 @@ function buildSampleTurmas(): CetepTurmaData[] {
       escola: 'CETEP RECÔNCAVO II',
       docente: 'PROFESSOR TESTE',
       ano: '2026',
-      unidade: '1ª Unidade',
+      unidade: '2ª Unidade',
       identity: parseTurmaIdentity({
         turma: 'ANACNOTM1A2',
         ofertaEnsino: 'TÉCNICO EM ANÁLISES CLÍNICAS-SUBSEQUENTE',
@@ -108,14 +109,25 @@ describe('CETEP identity, stats and OOXML xlsx export', () => {
     const wb = XLSX.read(buf, { type: 'array' });
     expect(wb.SheetNames[0]).toBe('Painel Consolidado');
     expect(wb.SheetNames).toHaveLength(3);
+    expect(wb.SheetNames[1]).toContain('1U');
+    expect(wb.SheetNames[2]).toContain('2U');
 
     const panelRows = XLSX.utils.sheet_to_json(wb.Sheets['Painel Consolidado'], { header: 1 }) as unknown[][];
+    const subtotalMedio = panelRows.find((r) => r[0] === 'SUBTOTAL — ENSINO MÉDIO');
+    const subtotalTec = panelRows.find((r) => r[0] === 'SUBTOTAL — TÉCNICO');
+    expect(subtotalMedio?.[1]).toBe('Ensino Médio');
+    expect(subtotalMedio?.[2]).toBe('1ª Unidade');
+    expect(subtotalMedio?.[3]).toBe(4);
+    expect(subtotalTec?.[1]).toBe('Técnico');
+    expect(subtotalTec?.[2]).toBe('2ª Unidade');
+    expect(subtotalTec?.[3]).toBe(2);
+
     const totalGeralRow = panelRows.find((r) => r[0] === 'TOTAL GERAL');
     expect(totalGeralRow).toBeDefined();
-    expect(totalGeralRow?.[1]).toBe(6); // 4 + 2 alunos
-    expect(totalGeralRow?.[3]).toBe(3); // 1 + 2 aprovados
-    expect(totalGeralRow?.[4]).toBe(2); // 2 + 0 recuperação
-    expect(totalGeralRow?.[5]).toBe(1); // 1 + 0 sem nota
+    expect(totalGeralRow?.[3]).toBe(6); // 4 + 2 alunos (sem dupla contagem de subtotais)
+    expect(totalGeralRow?.[5]).toBe(3); // 1 + 2 aprovados
+    expect(totalGeralRow?.[6]).toBe(2); // 2 + 0 recuperação
+    expect(totalGeralRow?.[7]).toBe(1); // 1 + 0 sem nota
 
     // Verificar fórmula real na célula de Nota Geral da 1ª turma
     const t1Sheet = wb.Sheets[wb.SheetNames[1]];
@@ -160,5 +172,44 @@ describe('CETEP identity, stats and OOXML xlsx export', () => {
     expect(sel.autoSelected).toBe(true);
     expect(sel.blockId).toBe(parsedWb.sheets[0].blocks[1].id);
     expect(sel.matchedCount).toBe(2);
+  });
+
+  it('resolve unidade por modalidade (Ensino Médio vs Técnico) e sobrescrita individual', () => {
+    const opts = {
+      unitMedio: '1' as const,
+      unitTecnico: '2' as const,
+      turmaUnitOverrides: { '900099': '3' as const },
+      includeMatricula: false,
+      mode: 'multi_sheet' as const,
+      minPassingGrade: 5.0,
+    };
+
+    const medioTurma = {
+      idTurmaComponente: '900001',
+      turma: 'ADMVES1SA',
+      ano: '2026',
+      escola: 'ESCOLA',
+      ofertaEnsino: 'TÉCNICO EM ADMINISTRAÇÃO-ENSINO MÉDIO INTEGRADO',
+      serie: '1ª SÉRIE',
+      periodicidade: 'Anual',
+      componente: 'EDUCAÇÃO DIGITAL',
+      qtdEstudantes: 35,
+    };
+    const tecTurma = {
+      idTurmaComponente: '900002',
+      turma: 'ANACNOTM1A2',
+      ano: '2026',
+      escola: 'ESCOLA',
+      ofertaEnsino: 'TÉCNICO EM ANÁLISES CLÍNICAS-SUBSEQUENTE',
+      serie: 'MÓDULO I',
+      periodicidade: '2º Semestre',
+      componente: 'INFORMÁTICA APLICADA',
+      qtdEstudantes: 38,
+    };
+    const overrideTurma = { ...medioTurma, idTurmaComponente: '900099' };
+
+    expect(resolveTurmaUnitChoice(medioTurma, '900001', opts)).toBe('1');
+    expect(resolveTurmaUnitChoice(tecTurma, '900002', opts)).toBe('2');
+    expect(resolveTurmaUnitChoice(overrideTurma, '900099', opts)).toBe('3');
   });
 });

@@ -122,12 +122,18 @@ async function runTests() {
     assert.equal(cetepSingleWb.SheetNames[0], 'Painel Consolidado');
     assert.equal(cetepSingleWb.SheetNames.length, 2);
     const singlePanelRows = XLSX.utils.sheet_to_json(cetepSingleWb.Sheets['Painel Consolidado'], { header: 1 });
+    const singleTurmaRow = singlePanelRows.find((r) => String(r[0] ?? '').includes('TURMA-SEM-M1'));
+    assert.ok(singleTurmaRow);
+    assert.equal(singleTurmaRow[1], 'Técnico');
+    assert.equal(singleTurmaRow[2], '1ª Unidade');
     const singleTotalRow = singlePanelRows.find((r) => r[0] === 'TOTAL GERAL');
     assert.ok(singleTotalRow);
-    assert.equal(singleTotalRow[1], 45);
-    assert.equal(singleTotalRow[3], 30);
-    assert.equal(singleTotalRow[4], 10);
-    assert.equal(singleTotalRow[5], 5);
+    assert.equal(singleTotalRow[1], 'Técnico');
+    assert.equal(singleTotalRow[2], '—');
+    assert.equal(singleTotalRow[3], 45);
+    assert.equal(singleTotalRow[5], 30);
+    assert.equal(singleTotalRow[6], 10);
+    assert.equal(singleTotalRow[7], 5);
 
     // 2. Preenchimento de Notas Anual (com casos de borda: divergentes, nota > máximo, conflito Rec. na U2, campos disabled na U1, e preenchimento completo na U3)
     console.log('[E2E] 2. Testando Preenchimento de Notas (45x4 + casos de borda)...');
@@ -293,6 +299,27 @@ async function runTests() {
     assert.equal(nrState.cb3, true, 'Nao Fez deve marcar checkbox Nao Realizada');
     assert.equal(nrState.cb4, true, 'Celula vazia deve marcar checkbox Nao Realizada');
     assert.equal(nrState.queueCleared, true);
+    fs.writeFileSync(
+      path.join(evidenciasDir, 'relatorio_nao_realizadas.json'),
+      JSON.stringify(
+        {
+          unidade: '3ª Unidade',
+          atividade: 'Participação (id 8001, Valor: 2.0)',
+          entradasPlanilha: nrRows.slice(1).map((r) => ({ estudante: r[0], valorParticipacao: r[1] })),
+          resultadosCheckboxesSigeduc: {
+            ANA_CLARA_FERREIRA_0_0: nrState.cb0,
+            BRUNO_HENRIQUE_SOUZA_1_5: nrState.cb1,
+            CARLA_MENDES_OLIVEIRA_NF: nrState.cb2,
+            DANIEL_COSTA_ALMEIDA_NAO_FEZ: nrState.cb3,
+            EDUARDA_RIBEIRO_SANTOS_VAZIO: nrState.cb4,
+          },
+          filaSessionStorageLimpa: nrState.queueCleared,
+        },
+        null,
+        2
+      ),
+      'utf8'
+    );
     await page.screenshot({ path: path.join(evidenciasDir, 'nao_realizadas_desktop.png') });
 
     // 2C. P1.3: Seleção automática de Aba + Bloco em Planilha Consolidada (múltiplas abas e múltiplas turmas na mesma aba)
@@ -508,14 +535,17 @@ async function runTests() {
     assert.equal(storageCheck.ss.includes('SenhaTeste123'), false);
 
     // 3B. P2.4 & P2.5: Extração em Lote de Todas as Turmas (Portal Docente) + Planilha Consolidada Padrão CETEP
-    console.log('[E2E] 3B. Testando Extração em Lote de Todas as Turmas + CETEP (.xlsx)...');
+    console.log('[E2E] 3B. Testando Extração em Lote (Ensino Médio 1ª Un. + Técnico 2ª Un.) + CETEP (.xlsx)...');
     await page.goto(`${srv.baseUrl}/sigeduc/portais/docente/docente.jsf`);
     await openPanel(page);
     await page.evaluate(() => {
       const sr = document.getElementById('preenche-sigeduc-host').shadowRoot;
-      const unitSel = sr.getElementById('ps-batch-unit');
-      unitSel.value = '1';
-      unitSel.dispatchEvent(new Event('change', { bubbles: true }));
+      const medioSel = sr.getElementById('ps-batch-unit-medio');
+      medioSel.value = '1';
+      medioSel.dispatchEvent(new Event('change', { bubbles: true }));
+      const tecSel = sr.getElementById('ps-batch-unit-tecnico');
+      tecSel.value = '2';
+      tecSel.dispatchEvent(new Event('change', { bubbles: true }));
       const matCb = sr.getElementById('ps-batch-include-mat');
       matCb.checked = true;
       matCb.dispatchEvent(new Event('change', { bubbles: true }));
@@ -546,14 +576,25 @@ async function runTests() {
     const loteWb = XLSX.read(fs.readFileSync(loteCetepPath));
     assert.equal(loteWb.SheetNames[0], 'Painel Consolidado');
     assert.equal(loteWb.SheetNames.length, 3);
+    assert.ok(loteWb.SheetNames[1].includes('1U'), 'Aba do Ensino Médio deve indicar 1U');
+    assert.ok(loteWb.SheetNames[2].includes('2U'), 'Aba do Técnico deve indicar 2U');
+
     const lotePanel = XLSX.utils.sheet_to_json(loteWb.Sheets['Painel Consolidado'], { header: 1 });
+    const subMedio = lotePanel.find((r) => r[0] === 'SUBTOTAL — ENSINO MÉDIO');
+    const subTec = lotePanel.find((r) => r[0] === 'SUBTOTAL — TÉCNICO');
+    assert.ok(subMedio && subTec);
+    assert.equal(subMedio[2], '1ª Unidade');
+    assert.equal(subMedio[5], 30);
+    assert.equal(subTec[2], '2ª Unidade');
+    assert.equal(subTec[5], 35);
+
     const loteTotal = lotePanel.find((r) => r[0] === 'TOTAL GERAL');
     assert.ok(loteTotal);
-    assert.equal(loteTotal[1], 90); // 45 + 45 alunos
-    assert.equal(loteTotal[2], 7); // média 7.0
-    assert.equal(loteTotal[3], 60); // 30 + 30 aprovados
-    assert.equal(loteTotal[4], 20); // 10 + 10 recuperação
-    assert.equal(loteTotal[5], 10); // 5 + 5 sem nota
+    assert.equal(loteTotal[3], 90); // 45 + 45 alunos
+    assert.equal(loteTotal[4], 7.25); // média (7.0 + 7.5) / 2 = 7.25
+    assert.equal(loteTotal[5], 65); // 30 + 35 aprovados
+    assert.equal(loteTotal[6], 15); // 10 + 5 recuperação
+    assert.equal(loteTotal[7], 10); // 5 + 5 sem nota
 
     const t1Rows = XLSX.utils.sheet_to_json(loteWb.Sheets[loteWb.SheetNames[1]], { header: 1 });
     assert.equal(t1Rows[4][1], 'ANA CLARA FERREIRA');
@@ -611,6 +652,15 @@ async function runTests() {
     await page.evaluate(() => {
       document.getElementById('preenche-sigeduc-host').shadowRoot.querySelector('[data-tab="extrair"]').click();
     });
+    const cetepMobileVisible = await page.evaluate(() => {
+      const btn = document.getElementById('preenche-sigeduc-host').shadowRoot.getElementById('ps-cetep-dl-single');
+      const rect = btn.getBoundingClientRect();
+      return { bottom: rect.bottom, viewportHeight: window.innerHeight };
+    });
+    assert.ok(
+      cetepMobileVisible.bottom <= cetepMobileVisible.viewportHeight,
+      `Botão CETEP no mobile deve caber acima da dobra (${cetepMobileVisible.bottom} <= ${cetepMobileVisible.viewportHeight})`
+    );
     await page.screenshot({ path: path.join(evidenciasDir, 'scraping_notas_mobile.png') });
 
     await page.goto(`${srv.baseUrl}/sigeduc/diario_classe/frequencia_aluno/form.jsf`);
