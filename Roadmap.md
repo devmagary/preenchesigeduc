@@ -116,6 +116,15 @@ As sugestões são organizadas sob a ótica de engenharia sênior, equilibrando 
   - Consolidar tudo automaticamente no modelo de planilha `.xlsx` descrito no item 4.
 - **Impacto técnico / Riscos:** Navegação JSF multi-página com `javax.faces.ViewState` exige máquina de estados persistida em `sessionStorage` para sobreviver aos recarregamentos de página, além de tratamento robusto de sessão expirada e fila sequencial.
 
+### 5. Links Rápidos de Download e Empacotamento `.crx` para Edge Mobile
+- **Prioridade:** P2 — Média
+- **Dificuldade:** Média
+- **Contexto:** Facilitar o download das versões Chrome, Firefox e Edge Mobile (Edge Canary Android) com URLs curtas e memorizáveis apontadas via domínio próprio ou encurtador externo.
+- **Comportamento esperado:**
+  - Publicar artefatos com nomes fixos no **GitHub Releases** (`/releases/latest/download/preenche-sigeduc-chrome.zip`, `preenche-sigeduc-firefox.zip`, `preenche-sigeduc-edge-mobile.crx`) para que o domínio próprio / encurtador nunca precise ser atualizado a cada versão.
+  - Estender `scripts/package.mjs` para gerar também o pacote `.crx` assinado localmente para Edge Mobile ao final das builds (mantendo a chave `.pem` fora do repositório, já coberta pelo `.gitignore`).
+- **Impacto técnico / Riscos:** Ajuste em `scripts/package.mjs` (assinatura `.crx` MV3) e documentação das URLs fixas no `README.md`.
+
 ### 5. Scraping e Exportação de Grade de Horários e Calendário Escolar (`Ensino`)
 - **Prioridade:** P2 — Média
 - **Dificuldade:** Baixa
