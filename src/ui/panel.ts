@@ -1267,9 +1267,12 @@ export class PreenchePanelController {
         .map((d: AttendanceDateResult) => {
           const pill = d.status === 'filled' ? 'ok' : d.status === 'date_unavailable' ? 'warn' : 'bad';
           const statusLabel = d.status === 'filled' ? 'Preenchida' : d.status === 'date_unavailable' ? 'Indisponível' : d.status;
+          const baseSummary = `${d.absentStudentsCount} ${d.absentStudentsCount === 1 ? 'falta' : 'faltas'} / ${d.presentStudentsCount} pres.`;
           const summaryCell =
             d.status === 'filled'
-              ? `${d.absentStudentsCount} ${d.absentStudentsCount === 1 ? 'falta' : 'faltas'} / ${d.presentStudentsCount} pres.`
+              ? d.notInSheet.length > 0
+                ? `${baseSummary} (${d.notInSheet.length} ausentes)`
+                : baseSummary
               : '— (não processada)';
           return `<tr><td>${escapeHtml(d.dateDisplay)}</td><td><span class="ps-pill ${pill}">${escapeHtml(statusLabel)}</span></td><td>${summaryCell}</td></tr>`;
         })

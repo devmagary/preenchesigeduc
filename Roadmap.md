@@ -167,3 +167,14 @@ As sugestões são organizadas sob a ótica de engenharia sênior, equilibrando 
 - **Comportamento esperado:**
   - Na tela `busca.jsf`, oferecer fila sequencial para baixar os PDFs de múltiplas turmas selecionadas sem corromper o `javax.faces.ViewState` ou `DOUBLE_CHECK_TOKEN`.
 - **Impacto técnico / Riscos:** Alto cuidado com downloads binários via POST JSF stateful e controle de fila para não invalidar o token da sessão.
+
+---
+
+## Auditoria Contínua de Achados "Menor" (Crítico Independente)
+
+Para evitar que apontamentos `menor` do Crítico Cego se percam entre rodadas sem testes correspondentes:
+- Todo achado `menor` é catalogado com ID sequencial (`CR-NNN`) em [`trabalho/critico_backlog.json`](trabalho/critico_backlog.json) e espelhado em [`trabalho/critico_backlog.md`](trabalho/critico_backlog.md).
+- O [`trabalho/harness.mjs`](trabalho/harness.mjs) impõe teto máximo de `5` itens em `aberto`/`agendado` e valida que todo item `resolvido` possua um teste real verificado (`testFile` + `testPattern`).
+- **Histórico Rodadas 1–11 (`CR-001` a `CR-012`):** `8` itens `resolvido`, `2` `aceito_design` e `2` `agendado` (dentro do teto `5`):
+  - **`CR-011`:** Captura complementar opcional de `frequencia_dia_unico_desktop.png` com painel fechado/rolado para exibir visualmente os checkboxes marcados sob a gaveta de 440px.
+  - **`CR-012`:** Exibir os hashes SHA-256 dos pacotes `.zip`/`.crx` também na tabela Markdown de `trabalho/relatorio_metricas.md` (já gravados e auditados em `trabalho/relatorio_metricas.json`).

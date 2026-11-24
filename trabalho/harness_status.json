@@ -1,37 +1,37 @@
 {
-  "startedAt": "2026-11-24T11:09:17.913Z",
-  "finishedAt": "2026-11-24T11:09:58.739Z",
+  "startedAt": "2026-11-24T11:27:07.514Z",
+  "finishedAt": "2026-11-24T11:27:46.310Z",
   "overallStatus": "PASSED",
   "steps": [
     {
       "name": "typecheck",
       "status": "passed",
-      "elapsedMs": 3242
+      "elapsedMs": 3266.2
     },
     {
       "name": "build",
       "status": "passed",
-      "elapsedMs": 3259.3
+      "elapsedMs": 3052
     },
     {
       "name": "package",
       "status": "passed",
-      "elapsedMs": 1746
+      "elapsedMs": 1471.6
     },
     {
       "name": "unit_tests",
       "status": "passed",
-      "elapsedMs": 4442
+      "elapsedMs": 4759.2
     },
     {
       "name": "benchmark",
       "status": "passed",
-      "elapsedMs": 11275.6
+      "elapsedMs": 9327.4
     },
     {
       "name": "e2e_tests",
       "status": "passed",
-      "elapsedMs": 16832.1
+      "elapsedMs": 16883.4
     }
   ],
   "slaChecks": {
@@ -39,7 +39,16 @@
     "panelOpen_lt_100ms": true,
     "ajaxLossRate_0pct": true,
     "matching_exact_45_and_0_fp": true,
-    "bundles_lt_1536KB": true
+    "bundles_lt_1536KB": true,
+    "packages_lt_512KB": true
   },
-  "evidenceCount": 24
+  "evidenceCount": 24,
+  "minorBacklog": {
+    "total": 12,
+    "resolved": 8,
+    "acceptedDesign": 2,
+    "open": 2,
+    "maxOpenAllowed": 5,
+    "allResolvedTestsVerified": true
+  }
 }

@@ -82,6 +82,13 @@ function validateSlasAndManifest() {
       metrics.sequentialFill_45x4?.exactMatched === 45 &&
       metrics.sequentialFill_45x4?.falsePositives === 0,
     bundles_lt_1536KB: Boolean(metrics.bundleSizes_KB?.passed),
+    packages_lt_512KB:
+      Number(metrics.bundleSizes_KB?.chromeZip_KB) > 0 &&
+      Number(metrics.bundleSizes_KB?.chromeZip_KB) < 512 &&
+      Number(metrics.bundleSizes_KB?.firefoxZip_KB) > 0 &&
+      Number(metrics.bundleSizes_KB?.firefoxZip_KB) < 512 &&
+      Number(metrics.bundleSizes_KB?.edgeCrx_KB) > 0 &&
+      Number(metrics.bundleSizes_KB?.edgeCrx_KB) < 512,
   };
 
   for (const [k, ok] of Object.entries(slaChecks)) {
@@ -116,6 +123,20 @@ function validateSlasAndManifest() {
     throw new Error(`dist/preenche-sigeduc-edge-mobile.crx inválido: ${crxCheck.reason}`);
   }
 
+  // Verificar hashes SHA-256 dos pacotes .zip/.crx em dist/ contra relatorio_metricas.json (CR-010)
+  const expectedPkgHashes = {
+    chromeZip: path.join(rootDir, 'dist', 'preenche-sigeduc-chrome.zip'),
+    firefoxZip: path.join(rootDir, 'dist', 'preenche-sigeduc-firefox.zip'),
+    edgeCrx: edgeCrxPath,
+  };
+  for (const [k, absPath] of Object.entries(expectedPkgHashes)) {
+    const recorded = metrics.bundleSizes_KB?.packages_sha256?.[k];
+    const actual = sha256File(absPath);
+    if (!recorded || recorded !== actual) {
+      throw new Error(`Hash SHA-256 divergente para pacote ${k}: esperado=${recorded}, atual=${actual}`);
+    }
+  }
+
   // Verificar evidências obrigatórias
   const missing = [];
   const manifestFiles = [];
@@ -144,7 +165,95 @@ function validateSlasAndManifest() {
   };
   fs.writeFileSync(path.join(evidenciasDir, 'manifest.json'), JSON.stringify(manifest, null, 2));
 
-  return { slaChecks, metrics, evidenceCount: manifestFiles.length };
+  // Auditar acúmulo de achados "menor" do Crítico Independente
+  const backlogPath = path.join(rootDir, 'trabalho', 'critico_backlog.json');
+  if (!fs.existsSync(backlogPath)) {
+    throw new Error('trabalho/critico_backlog.json não encontrado para auditoria de achados menores.');
+  }
+  const backlog = JSON.parse(fs.readFileSync(backlogPath, 'utf8'));
+  const items = Array.isArray(backlog.items) ? backlog.items : [];
+  const maxOpenAllowed = Number.isFinite(backlog.maxOpenMinorAllowed) ? backlog.maxOpenMinorAllowed : 5;
+  const seenIds = new Set();
+  const roadmapTxt = fs.readFileSync(path.join(rootDir, 'Roadmap.md'), 'utf8');
+
+  let resolvedCount = 0;
+  let acceptedDesignCount = 0;
+  let openCount = 0;
+
+  for (const item of items) {
+    if (!item.id || seenIds.has(item.id)) {
+      throw new Error(`ID duplicado ou ausente em critico_backlog.json: ${item.id}`);
+    }
+    seenIds.add(item.id);
+
+    if (item.status === 'resolvido') {
+      resolvedCount++;
+      if (!item.resolutionNote || !item.testFile || !item.testPattern) {
+        throw new Error(`Item ${item.id} marcado como resolvido sem resolutionNote/testFile/testPattern.`);
+      }
+      const absTest = path.join(rootDir, item.testFile);
+      if (!fs.existsSync(absTest)) {
+        throw new Error(`Item ${item.id} aponta para arquivo de teste inexistente: ${item.testFile}`);
+      }
+      const testTxt = fs.readFileSync(absTest, 'utf8');
+      if (!testTxt.includes(item.testPattern)) {
+        throw new Error(`Item ${item.id}: padrão de teste "${item.testPattern}" não encontrado em ${item.testFile}`);
+      }
+    } else if (item.status === 'aceito_design') {
+      acceptedDesignCount++;
+      if (!item.justification) {
+        throw new Error(`Item ${item.id} marcado como aceito_design sem justification.`);
+      }
+      if (item.testFile && item.testPattern) {
+        const absTest = path.join(rootDir, item.testFile);
+        if (!fs.existsSync(absTest) || !fs.readFileSync(absTest, 'utf8').includes(item.testPattern)) {
+          throw new Error(`Item ${item.id} possui teste vinculado inválido em ${item.testFile}`);
+        }
+      }
+    } else if (item.status === 'aberto' || item.status === 'agendado') {
+      openCount++;
+      if (item.status === 'agendado' && !roadmapTxt.includes(item.id)) {
+        throw new Error(`Item ${item.id} está agendado mas não referenciado no Roadmap.md.`);
+      }
+    } else {
+      throw new Error(`Status inválido em critico_backlog.json (${item.id}): ${item.status}`);
+    }
+  }
+
+  if (openCount > maxOpenAllowed) {
+    throw new Error(`Acúmulo de achados "menor" excedeu o teto (${openCount} > ${maxOpenAllowed}). Resolva ou triaje itens em trabalho/critico_backlog.json.`);
+  }
+
+  const backlogMdLines = [
+    '# Backlog Auditado de Achados "Menor" — Crítico Independente',
+    '',
+    `Atualizado automaticamente pelo harness em: ${new Date().toISOString()}`,
+    '',
+    `- **Total catalogado:** ${items.length}`,
+    `- **Resolvidos (com teste verificado):** ${resolvedCount}`,
+    `- **Aceitos por design:** ${acceptedDesignCount}`,
+    `- **Abertos / Agendados:** ${openCount} (limite máximo: ${maxOpenAllowed})`,
+    '',
+    '| ID | Rodada | Status | Título | Teste / Verificação Vinculada |',
+    '| :--- | :---: | :---: | :--- | :--- |',
+    ...items.map(
+      (i) =>
+        `| **${i.id}** | ${i.round} | \`${i.status}\` | ${i.title} | ${i.testFile ? `\`${i.testFile}\` (\`${i.testPattern}\`)` : '—'} |`
+    ),
+    '',
+  ];
+  fs.writeFileSync(path.join(rootDir, 'trabalho', 'critico_backlog.md'), backlogMdLines.join('\n'), 'utf8');
+
+  const minorBacklog = {
+    total: items.length,
+    resolved: resolvedCount,
+    acceptedDesign: acceptedDesignCount,
+    open: openCount,
+    maxOpenAllowed,
+    allResolvedTestsVerified: true,
+  };
+
+  return { slaChecks, metrics, evidenceCount: manifestFiles.length, minorBacklog };
 }
 
 async function main() {
@@ -163,6 +272,7 @@ async function main() {
     steps: stepResults,
     slaChecks: validation.slaChecks,
     evidenceCount: validation.evidenceCount,
+    minorBacklog: validation.minorBacklog,
   };
 
   fs.writeFileSync(
@@ -172,6 +282,9 @@ async function main() {
 
   console.log('\n[HARNESS] TODOS OS PORTÕES AUTOMATIZADOS PASSARAM!');
   console.log(`[HARNESS] Evidências validadas: ${validation.evidenceCount}/${EXPECTED_EVIDENCES.length}`);
+  console.log(
+    `[HARNESS] Backlog menor auditado: ${validation.minorBacklog.resolved} resolvidos, ${validation.minorBacklog.acceptedDesign} aceitos por design, ${validation.minorBacklog.open}/${validation.minorBacklog.maxOpenAllowed} abertos`
+  );
 }
 
 main().catch((err) => {

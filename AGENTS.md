@@ -69,4 +69,4 @@ Antes de concluir qualquer alteração neste projeto, execute:
 npm run harness
 ```
 
-O harness executa `tsc --noEmit`, `build`, `package`, `test:unit`, `benchmark`, `test:e2e`, valida os SLAs e gera o manifesto em `trabalho/evidencias/manifest.json` para inspeção pelo Crítico Independente.
+O harness executa `tsc --noEmit`, `build`, `package`, `test:unit`, `benchmark`, `test:e2e`, valida os SLAs (incluindo pacotes `.zip`/`.crx` e SHA-256), audita o acúmulo de achados `menor` em `trabalho/critico_backlog.json` (gerando `trabalho/critico_backlog.md` e exigindo testes para cada item resolvido) e gera o manifesto em `trabalho/evidencias/manifest.json` para inspeção pelo Crítico Independente.

@@ -20,7 +20,7 @@ Executado por [`trabalho/harness.mjs`](trabalho/harness.mjs), o pipeline percorr
 | 4 | **Testes Unitários** | `npm run test:unit` | 100% dos testes Vitest em `tests/unit/` verdes. |
 | 5 | **Benchmarks SLA** | `npm run benchmark` | Parse 500×10 `< 250 ms` (p99), abertura `< 100 ms`, perda AJAX `= 0%`, matching `45/45` exato e `0` falsos positivos. |
 | 6 | **Testes E2E** | `npm run test:e2e` | Chromium carregando `trabalho/dist-e2e/` via CDP contra `trabalho/mock-server.mjs` em `1280x720` e `390x844`, gerando `trabalho/evidencias/`. |
-| 7 | **Auditoria de Pacote e Evidências** | Validação interna do harness | Confirma ausência de `127.0.0.1` e `trabalho/` em `dist/`, valida 16 evidências obrigatórias e gera `trabalho/evidencias/manifest.json` e `trabalho/harness_status.json`. |
+| 7 | **Auditoria de Pacote, Evidências e Backlog Menor** | Validação interna do harness | Confirma ausência de `127.0.0.1`, `trabalho/` e `.pem`/`.key` em `dist/`, valida CRX3 + SHA-256 + SLA `< 512 KB` dos pacotes, confere 24 evidências em `trabalho/evidencias/manifest.json` e audita `trabalho/critico_backlog.json` (teto `<= 5` abertos e testes verificados para cada item `resolvido`). |
 
 ---
 
@@ -42,6 +42,11 @@ Após `npm run harness` retornar `0`, invoque um subagente novo (`research`) **s
 - **`menor`:** Polimento estético, espaçamento ou microtexto.
 
 **Critério de parada:** Iterar corrigindo tudo acima de `menor`, reexecutando `npm run harness` e invocando um **novo** subagente cego a cada rodada, até zero defeitos `grave` ou `médio`.
+
+### Acúmulo e Auditoria de Achados `menor`
+- Toda observação `menor` apontada pelo Crítico Independente deve ser registrada em [`trabalho/critico_backlog.json`](trabalho/critico_backlog.json) com ID (`CR-NNN`), rodada, descrição, status (`aberto`, `agendado`, `aceito_design` ou `resolvido`) e referência de teste (`testFile` + `testPattern`).
+- Itens adiados como `agendado` devem ser referenciados pelo ID no `Roadmap.md`.
+- O `trabalho/harness.mjs` falha se houver mais de `5` achados `menor` abertos/agendados acumulados ou se algum item marcado como `resolvido` não apontar para um teste real verificável em `tests/` ou `trabalho/`, regenerando automaticamente a visão em tabela em [`trabalho/critico_backlog.md`](trabalho/critico_backlog.md).
 
 ---
 

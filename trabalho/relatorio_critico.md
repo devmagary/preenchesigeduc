@@ -80,3 +80,9 @@ Auditoria realizada por subagentes independentes (`research`) sem acesso ao cód
   - Pacotes registrados e validados: `dist/chrome/` (`569.9 KB`), `dist/firefox/` (`570.1 KB`), `preenche-sigeduc-chrome.zip` (`183.3 KB`), `preenche-sigeduc-firefox.zip` (`183.4 KB`) e `preenche-sigeduc-edge-mobile.crx` (`183.9 KB`).
   - `manifest.json`: `24/24` evidências conferidas em disco com 100% de correspondência SHA-256 (`13` PNGs, `5` XLSX, `1` CSV, `5` JSONs) e `harness_status.json` `PASSED`.
   - SLAs: `.xlsx` p99 `37.36 ms`, `.csv` p99 `0.53 ms` (`< 250 ms`), painel `16.31 ms` (`< 100 ms`), `180/180` AJAX (`0%` perda), `45/45` exatos com `0` falsos positivos.
+
+### Rodada 11 — Backlog Auditado de Achados "Menor" & Resolução Histórica (`817cc83d`)
+- **Veredito Final:** **APROVADO — `0` defeitos `grave`, `0` `médio`, `2` observações `menor` registradas como `CR-011` e `CR-012` no backlog (`2/5` abertos).**
+  - **`frequencia_dia_unico_desktop.png` (`CR-003` & `CR-004`):** Confirma execução real de dia único (`05/08/2026`, `1/1 data(s) preenchida(s)`) e célula `Resumo` exibindo `2 faltas / 1 pres. (42 ausentes)`.
+  - **`cards_turmas_longos_desktop.png` (`CR-009`):** `TURMA-LONGA-1-NOTURNO` integralmente visível na lista rolável `#ps-batch-turma-list` sem cortes nem sobreposição.
+  - **`CR-010` & Backlog (`critico_backlog.json` / `critico_backlog.md`):** Todos os 6 portões `slaChecks` (`packages_lt_512KB: true`), `packages_sha256`, `24/24` evidências conferidas em SHA-256 e `minorBacklog` (`8` resolvidos com testes verificados, `2` aceitos por design, `2/5` agendados) consistentes com `harness_status.json`.

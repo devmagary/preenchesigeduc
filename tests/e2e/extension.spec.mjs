@@ -470,15 +470,53 @@ async function runTests() {
     // Por padrão, apenas as 3 datas disponíveis no calendário vêm pré-selecionadas (25/08/2026 Indisponível fica desmarcada)
     const initialRunText = await page.evaluate(() => document.getElementById('preenche-sigeduc-host').shadowRoot.getElementById('ps-freq-run').textContent.trim());
     assert.equal(initialRunText, 'Preencher Frequência (3 data(s))');
-    await page.screenshot({ path: path.join(evidenciasDir, 'frequencia_dia_unico_desktop.png') });
 
-    // Marcar explicitamente 25/08/2026 para validar também o tratamento de data indisponível no lote
+    // CR-003: Executar primeiro o dia único 05/08/2026 no Modo Assistido para validar marcação real e capturar evidência pós-execução
     await page.evaluate(() => {
       const sr = document.getElementById('preenche-sigeduc-host').shadowRoot;
-      const cb25 = sr.querySelector('.ps-freq-date-cb[value="25/08/2026"]');
-      if (cb25 && !cb25.checked) {
-        cb25.checked = true;
-        cb25.dispatchEvent(new Event('change', { bubbles: true }));
+      for (const dt of ['12/08/2026', '19/08/2026']) {
+        const cb = sr.querySelector(`.ps-freq-date-cb[value="${dt}"]`);
+        if (cb && cb.checked) {
+          cb.checked = false;
+          cb.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+      }
+    });
+    const singleRunText = await page.evaluate(() => document.getElementById('preenche-sigeduc-host').shadowRoot.getElementById('ps-freq-run').textContent.trim());
+    assert.equal(singleRunText, 'Preencher Frequência (1 data(s))');
+
+    await fetch(`${srv.baseUrl}/__reset`);
+    await page.evaluate(() => {
+      document.getElementById('preenche-sigeduc-host').shadowRoot.getElementById('ps-freq-run').click();
+    });
+    await page.waitForFunction(() => Boolean(document.getElementById('preenche-sigeduc-host').shadowRoot.getElementById('ps-freq-report')), null, { timeout: 15000 });
+
+    const singleDayChecks = await page.evaluate(() => {
+      const sr = document.getElementById('preenche-sigeduc-host').shadowRoot;
+      const summaryCell = sr.querySelector('#ps-freq-report tbody tr td:nth-child(3)')?.textContent?.trim() ?? '';
+      const rows = Array.from(document.querySelectorAll('#freqTbody tr'));
+      return {
+        summaryCell,
+        anaFalta: Boolean(rows[0]?.querySelector('input[type="checkbox"]')?.checked),
+        brunoFalta: Boolean(rows[1]?.querySelector('input[type="checkbox"]')?.checked),
+        gabrielaFalta: Boolean(rows[6]?.querySelector('input[type="checkbox"]')?.checked),
+      };
+    });
+    assert.equal(singleDayChecks.anaFalta, true, 'CR-003: ANA CLARA (F) deve marcar checkbox FALTA em 05/08');
+    assert.equal(singleDayChecks.brunoFalta, false, 'CR-003: BRUNO (P) deve ficar desmarcado em 05/08');
+    assert.equal(singleDayChecks.gabrielaFalta, true, 'CR-003: GABRIELA (F) deve marcar checkbox FALTA em 05/08');
+    assert.ok(singleDayChecks.summaryCell.includes('(42 ausentes)'), `CR-004: célula Resumo deve explicitar ausentes na planilha (${singleDayChecks.summaryCell})`);
+    await page.screenshot({ path: path.join(evidenciasDir, 'frequencia_dia_unico_desktop.png') });
+
+    // Re-marcar 12/08, 19/08 e 25/08/2026 para validar o lote multi-datas + data indisponível
+    await page.evaluate(() => {
+      const sr = document.getElementById('preenche-sigeduc-host').shadowRoot;
+      for (const dt of ['12/08/2026', '19/08/2026', '25/08/2026']) {
+        const cb = sr.querySelector(`.ps-freq-date-cb[value="${dt}"]`);
+        if (cb && !cb.checked) {
+          cb.checked = true;
+          cb.dispatchEvent(new Event('change', { bubbles: true }));
+        }
       }
     });
 
@@ -498,7 +536,10 @@ async function runTests() {
       document.getElementById('preenche-sigeduc-host').shadowRoot.getElementById('ps-freq-run').click();
     });
 
-    await page.waitForFunction(() => Boolean(document.getElementById('preenche-sigeduc-host').shadowRoot.getElementById('ps-freq-report')), null, { timeout: 30000 });
+    await page.waitForFunction(() => {
+      const sr = document.getElementById('preenche-sigeduc-host')?.shadowRoot;
+      return (sr?.querySelectorAll('#ps-freq-report tbody tr')?.length ?? 0) === 4;
+    }, null, { timeout: 30000 });
     await page.screenshot({ path: path.join(evidenciasDir, 'frequencia_multiplas_datas_desktop.png') });
 
     await captureDownload(
@@ -728,10 +769,43 @@ async function runTests() {
     assert.ok(turmaCardsCheck.maxInfoBottomOverflow <= 1.5, `Texto do card não pode vazar da borda inferior (overflow=${turmaCardsCheck.maxInfoBottomOverflow})`);
     assert.ok(turmaCardsCheck.maxSelRightOverflow <= 1.5, `Seletor de unidade deve caber dentro do card (overflow=${turmaCardsCheck.maxSelRightOverflow})`);
     assert.ok(turmaCardsCheck.maxPairOverlap <= 1, `Cards adjacentes não podem se sobrepor (overlap=${turmaCardsCheck.maxPairOverlap})`);
+
+    // CR-009: rolar a lista interna para exibir integralmente a primeira turma de nome longo e validar visibilidade completa
+    const longCardVisible = await page.evaluate(() => {
+      const sr = document.getElementById('preenche-sigeduc-host')?.shadowRoot;
+      const list = sr?.getElementById('ps-batch-turma-list');
+      const cards = Array.from(sr?.querySelectorAll('.ps-turma-card') ?? []);
+      list?.scrollIntoView({ block: 'center', behavior: 'instant' });
+      cards[2]?.scrollIntoView({ block: 'center', behavior: 'instant' });
+      const lr = list.getBoundingClientRect();
+      const cr = cards[2].getBoundingClientRect();
+      const mr = cards[2].querySelector('.ps-turma-meta')?.getBoundingClientRect();
+      return {
+        cardTopOk: cr.top >= lr.top - 1,
+        cardBottomOk: cr.bottom <= lr.bottom + 1,
+        metaInsideCard: mr ? mr.bottom <= cr.bottom + 1 : false,
+      };
+    });
+    assert.equal(longCardVisible.cardTopOk && longCardVisible.cardBottomOk && longCardVisible.metaInsideCard, true, 'CR-009: TURMA-LONGA-1-NOTURNO deve ficar integralmente visível sem corte na lista rolável');
+
+    // CR-005: confirmar que fechar e reabrir o painel libera e restaura a tabela do SIGEduc sem perder estado
+    const toggleCheck = await page.evaluate(() => {
+      const sr = document.getElementById('preenche-sigeduc-host').shadowRoot;
+      sr.getElementById('ps-close-btn').click();
+      const closedOk = !sr.getElementById('ps-drawer')?.classList.contains('open');
+      sr.getElementById('ps-fab-btn').click();
+      const reopenedOk =
+        Boolean(sr.getElementById('ps-drawer')?.classList.contains('open')) &&
+        sr.querySelectorAll('.ps-turma-card').length === 8;
+      return { closedOk, reopenedOk };
+    });
+    assert.equal(toggleCheck.closedOk && toggleCheck.reopenedOk, true, 'CR-005: fechar e reabrir gaveta lateral deve preservar lista de turmas');
     await page.evaluate(() => {
       const sr = document.getElementById('preenche-sigeduc-host')?.shadowRoot;
       const list = sr?.getElementById('ps-batch-turma-list');
+      const cards = Array.from(sr?.querySelectorAll('.ps-turma-card') ?? []);
       list?.scrollIntoView({ block: 'center', behavior: 'instant' });
+      cards[2]?.scrollIntoView({ block: 'center', behavior: 'instant' });
     });
     await page.screenshot({ path: path.join(evidenciasDir, 'cards_turmas_longos_desktop.png') });
 
