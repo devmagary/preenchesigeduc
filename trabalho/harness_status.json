@@ -1,37 +1,37 @@
 {
-  "startedAt": "2026-11-24T11:59:42.251Z",
-  "finishedAt": "2026-11-24T12:00:20.708Z",
+  "startedAt": "2026-11-24T15:40:35.872Z",
+  "finishedAt": "2026-11-24T15:41:21.010Z",
   "overallStatus": "PASSED",
   "steps": [
     {
       "name": "typecheck",
       "status": "passed",
-      "elapsedMs": 3187
+      "elapsedMs": 4745.3
     },
     {
       "name": "build",
       "status": "passed",
-      "elapsedMs": 2951.8
+      "elapsedMs": 5287.4
     },
     {
       "name": "package",
       "status": "passed",
-      "elapsedMs": 1460.7
+      "elapsedMs": 1793.6
     },
     {
       "name": "unit_tests",
       "status": "passed",
-      "elapsedMs": 4880.4
+      "elapsedMs": 5682.4
     },
     {
       "name": "benchmark",
       "status": "passed",
-      "elapsedMs": 9082.8
+      "elapsedMs": 10121.8
     },
     {
       "name": "e2e_tests",
       "status": "passed",
-      "elapsedMs": 16857.4
+      "elapsedMs": 17474.1
     }
   ],
   "slaChecks": {
@@ -44,10 +44,10 @@
   },
   "evidenceCount": 24,
   "minorBacklog": {
-    "total": 12,
+    "total": 13,
     "resolved": 8,
     "acceptedDesign": 2,
-    "open": 2,
+    "open": 3,
     "maxOpenAllowed": 5,
     "allResolvedTestsVerified": true
   }

@@ -141,6 +141,15 @@
       "description": "Os hashes SHA-256 dos pacotes estão validados e gravados em trabalho/relatorio_metricas.json, faltando exibi-los na tabela Markdown de trabalho/relatorio_metricas.md.",
       "status": "agendado",
       "resolutionNote": "Agendado no Roadmap.md para espelhar os hashes SHA-256 na tabela Markdown de benchmark.mjs."
+    },
+    {
+      "id": "CR-013",
+      "round": 13,
+      "severity": "menor",
+      "title": "Quebra de linha (wrapText) em rótulos longos da coluna A do Painel Consolidado CETEP",
+      "description": "Os estilos de hiperlink xf[22]/xf[23] na coluna A do Painel Consolidado (largura 42) não possuem wrapText=\"1\", cortando visualmente rótulos longos sem tooltip.",
+      "status": "agendado",
+      "resolutionNote": "Agendado no Roadmap.md para habilitar wrapText=\"1\" nos estilos de link da coluna A."
     }
   ]
 }

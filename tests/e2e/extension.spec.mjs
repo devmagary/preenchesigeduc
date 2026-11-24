@@ -641,6 +641,16 @@ async function runTests() {
     assert.equal(t1Rows[4][1], 'ANA CLARA FERREIRA');
     assert.equal(t1Rows[4][2], '202690010001', 'Matrícula deve ser coletada automaticamente via tela de Frequência');
     assert.ok(t1Rows.some((r) => r[1] === 'MÉDIA DA TURMA'));
+    assert.equal(
+      loteWb.Sheets['Painel Consolidado']['A6']?.l?.Target,
+      `#'${loteWb.SheetNames[1]}'!A1`,
+      'Painel Consolidado deve ter hiperlink clicável para a aba da turma'
+    );
+    assert.equal(
+      loteWb.Sheets[loteWb.SheetNames[1]]['A3']?.l?.Target,
+      "#'Painel Consolidado'!A1",
+      'Aba da turma deve ter hiperlink ← Voltar ao Painel'
+    );
 
     // Também validar download em Aba Única Consolidada
     const singleCetepPath = path.join(userDataDir, 'consolidado_cetep_aba_unica.xlsx');
@@ -657,6 +667,11 @@ async function runTests() {
     );
     const singleLoteWb = XLSX.read(fs.readFileSync(singleCetepPath));
     assert.deepEqual(singleLoteWb.SheetNames, ['Consolidado CETEP']);
+    assert.match(
+      singleLoteWb.Sheets['Consolidado CETEP']['A6']?.l?.Target ?? '',
+      /^#'Consolidado CETEP'!A\d+$/,
+      'Modo aba única deve incluir hiperlink interno para o bloco da turma'
+    );
 
     // Limpar estado batch da sessionStorage antes do teste P0 #1 (Ativa / mais recente + Matrícula)
     await page.evaluate(() => {

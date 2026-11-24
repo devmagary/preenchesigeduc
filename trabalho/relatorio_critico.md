@@ -92,3 +92,10 @@ Auditoria realizada por subagentes independentes (`research`) sem acesso ao cód
   - `harness_status.json`: `overallStatus: "PASSED"` com todos os 6 portões `slaChecks: true` (`packages_lt_512KB: true`), `evidenceCount: 24` e `minorBacklog` íntegro (`8` resolvidos, `2` aceitos por design, `2/5` agendados: `CR-011`, `CR-012`).
   - `relatorio_metricas.json`: `.xlsx` p99 `34.28 ms`, `.csv` p99 `0.65 ms` (`< 250 ms`), painel `14.33 ms` (`< 100 ms`), `180/180` AJAX (`0%` perda), `45/45` exatos com `0` falsos positivos, `dist/chrome/` `569.9 KB`, `dist/firefox/` `570.1 KB`, pacotes `.zip`/`.crx` `< 512 KB` (`183.4 KB` / `183.4 KB` / `183.9 KB`) com SHA-256 conferido em disco.
   - `manifest.json`: `24/24` evidências conferidas com `0` divergências.
+
+### Rodada 13 — Roadmap P2 #6: Hiperlinks de Navegação no Painel Consolidado CETEP (`99afb2b7`)
+- **Veredito Final:** **APROVADO — `0` defeitos `grave`, `0` `médio`, `1` observação `menor` registrada como `CR-013` (`3/5` abertos).**
+  - **`consolidado_cetep_lote.xlsx` e `consolidado_cetep_ativo_mat.xlsx` (OOXML & `openpyxl`):**
+    - `Painel Consolidado`: `A6` e `A8` com `<hyperlink>` válido apontando para `!A1` de cada aba (`#'TURMA-ANUAL-1A Ves 1U'!A1`, `#'TURMA-ANUAL-1A Ves 3U'!A1`, `#'TURMA-SEM-M1 Not 2U'!A1`), estilo azul sublinhado `#1D4ED8` e todas as `30/30` fórmulas com cache preservadas.
+    - Abas individuais: barra `← Voltar ao Painel` na linha `A3` congelada (`ySplit="4"`) apontando para `#'Painel Consolidado'!A1`, cabeçalhos na linha 4 e estudantes nas linhas 5..49 preservados.
+  - `manifest.json`: `24/24` evidências conferidas com `sha256` idêntico; **6/6** portões `slaChecks` aprovados; `dist/chrome/` `571.8 KB`, `dist/firefox/` `572.0 KB`, `edge-mobile.crx` `184.3 KB`.

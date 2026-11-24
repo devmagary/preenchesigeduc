@@ -429,7 +429,7 @@ function buildStylesXml(): string {
     <numFmt numFmtId="165" formatCode="0.0%"/>
     <numFmt numFmtId="166" formatCode="0"/>
   </numFmts>
-  <fonts count="8">
+  <fonts count="11">
     <font><sz val="10"/><color rgb="FF0F172A"/><name val="Calibri"/></font>
     <font><b/><sz val="13"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font>
     <font><i/><sz val="10"/><color rgb="FF1E3A5F"/><name val="Calibri"/></font>
@@ -438,6 +438,9 @@ function buildStylesXml(): string {
     <font><b/><sz val="10"/><color rgb="FF166534"/><name val="Calibri"/></font>
     <font><b/><sz val="10"/><color rgb="FF991B1B"/><name val="Calibri"/></font>
     <font><b/><sz val="10"/><color rgb="FF1E3A5F"/><name val="Calibri"/></font>
+    <font><u/><sz val="10"/><color rgb="FF1D4ED8"/><name val="Calibri"/></font>
+    <font><b/><u/><sz val="10"/><color rgb="FF1D4ED8"/><name val="Calibri"/></font>
+    <font><b/><u/><sz val="10"/><color rgb="FFE0F2FE"/><name val="Calibri"/></font>
   </fonts>
   <fills count="11">
     <fill><patternFill patternType="none"/></fill>
@@ -472,7 +475,7 @@ function buildStylesXml(): string {
   <cellStyleXfs count="1">
     <xf numFmtId="0" fontId="0" fillId="0" borderId="0"/>
   </cellStyleXfs>
-  <cellXfs count="22">
+  <cellXfs count="26">
     <xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>
     <xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>
     <xf numFmtId="0" fontId="2" fillId="3" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="left" vertical="center" wrapText="1"/></xf>
@@ -495,6 +498,10 @@ function buildStylesXml(): string {
     <xf numFmtId="165" fontId="7" fillId="10" borderId="2" xfId="0" applyNumberFormat="1" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
     <xf numFmtId="166" fontId="0" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
     <xf numFmtId="166" fontId="0" fillId="6" borderId="1" xfId="0" applyNumberFormat="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
+    <xf numFmtId="0" fontId="8" fillId="0" borderId="1" xfId="0" applyFont="1" applyBorder="1" applyAlignment="1"><alignment horizontal="left" vertical="center"/></xf>
+    <xf numFmtId="0" fontId="8" fillId="6" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="left" vertical="center"/></xf>
+    <xf numFmtId="0" fontId="9" fillId="3" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="left" vertical="center"/></xf>
+    <xf numFmtId="0" fontId="10" fillId="4" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="right" vertical="center"/></xf>
   </cellXfs>
   <dxfs count="3">
     <dxf><font><b/><color rgb="FF166534"/></font><fill><patternFill patternType="solid"><bgColor rgb="FFDCFCE7"/></patternFill></fill></dxf>
@@ -518,11 +525,19 @@ interface RowSpec {
   cells: CellSpec[];
 }
 
+interface HyperlinkSpec {
+  ref: string;
+  location: string;
+  display?: string;
+  tooltip?: string;
+}
+
 class SheetBuilder {
   private rows: RowSpec[] = [];
   private merges: string[] = [];
   private colWidths = new Map<number, number>();
   private condFormats: string[] = [];
+  private hyperlinks: HyperlinkSpec[] = [];
   private freezeAtRow: number | null = null;
 
   public setColWidth(col: number, width: number): void {
@@ -536,6 +551,10 @@ class SheetBuilder {
 
   public setFreezeRow(rowNumBelow: number): void {
     this.freezeAtRow = rowNumBelow;
+  }
+
+  public addHyperlink(ref: string, location: string, display?: string, tooltip?: string): void {
+    this.hyperlinks.push({ ref, location, display, tooltip });
   }
 
   public addStatusConditionalFormat(sqref: string): void {
@@ -603,6 +622,16 @@ class SheetBuilder {
       ? `<mergeCells count="${this.merges.length}">${this.merges.map((m) => `<mergeCell ref="${m}"/>`).join('')}</mergeCells>`
       : '';
 
+    const hyperlinksXml = this.hyperlinks.length
+      ? `<hyperlinks>${this.hyperlinks
+          .map((h) => {
+            const disp = h.display ? ` display="${xmlEscape(h.display)}"` : '';
+            const tip = h.tooltip ? ` tooltip="${xmlEscape(h.tooltip)}"` : '';
+            return `<hyperlink ref="${h.ref}" location="${xmlEscape(h.location)}"${disp}${tip}/>`;
+          })
+          .join('')}</hyperlinks>`
+      : '';
+
     return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
   ${viewsXml}
@@ -611,12 +640,14 @@ class SheetBuilder {
   <sheetData>${rowsXml}</sheetData>
   ${mergesXml}
   ${this.condFormats.join('')}
+  ${hyperlinksXml}
 </worksheet>`;
   }
 }
 
 interface TurmaRangeRef {
   sheetName: string;
+  anchorRow: number;
   firstStudentRow: number;
   lastStudentRow: number;
   nameColLetter: string;
@@ -665,9 +696,16 @@ function appendTurmaBlockToBuilder(
     const bannerCells: CellSpec[] = [
       { col: 0, style: 3, kind: 'str', val: `${turma.identity.displayLabel} — ${turma.identity.componente} (${turma.unidade})` },
     ];
-    for (let c = 1; c <= colObs; c++) bannerCells.push({ col: c, style: 3, kind: 'empty' });
+    for (let c = 1; c < colObs; c++) bannerCells.push({ col: c, style: 3, kind: 'empty' });
+    bannerCells.push({ col: colObs, style: 25, kind: 'str', val: '↑ Voltar ao Painel' });
     sb.addRow(r, bannerCells, 24);
-    sb.addMerge(r, 0, r, colObs);
+    if (colObs - 1 >= 1) sb.addMerge(r, 0, r, colObs - 1);
+    sb.addHyperlink(
+      `${colToLetter(colObs)}${r}`,
+      sheetRef(sheetName, 'A4'),
+      '↑ Voltar ao Painel',
+      'Voltar ao Painel Consolidado no topo da planilha'
+    );
     r++;
   }
 
@@ -805,6 +843,7 @@ function appendTurmaBlockToBuilder(
     nextRow: r,
     rangeRef: {
       sheetName,
+      anchorRow: showBannerHeader ? startRow : 1,
       firstStudentRow,
       lastStudentRow,
       nameColLetter: colToLetter(colNome),
@@ -952,7 +991,7 @@ function appendPainelConsolidado(
       sb.addRow(
         r,
         [
-          { col: 0, style: zebra ? 6 : 5, kind: 'str', val: labelWithComp },
+          { col: 0, style: zebra ? 23 : 22, kind: 'str', val: labelWithComp },
           { col: 1, style: zebra ? 8 : 7, kind: 'str', val: ref.turma.identity.modalidade },
           { col: 2, style: zebra ? 8 : 7, kind: 'str', val: ref.turma.unidade },
           {
@@ -999,6 +1038,13 @@ function appendPainelConsolidado(
           },
         ],
         20
+      );
+      const targetLocation = sheetRef(ref.sheetName, `A${ref.anchorRow}`);
+      sb.addHyperlink(
+        `A${r}`,
+        targetLocation,
+        labelWithComp,
+        crossSheet ? `Abrir aba ${ref.sheetName}` : `Ir para bloco ${labelWithComp}`
       );
       r++;
     }
@@ -1101,6 +1147,13 @@ export function exportCetepXlsxBuffer(turmas: CetepTurmaData[], options: CetepEx
       for (let c = 1; c < maxCols; c++) row2Cells.push({ col: c, style: 2, kind: 'empty' });
       sb.addRow(2, row2Cells, 20);
       sb.addMerge(2, 0, 2, maxCols - 1);
+
+      // Linha 3: Barra de navegação de volta ao Painel Consolidado
+      const row3Cells: CellSpec[] = [{ col: 0, style: 24, kind: 'str', val: '← Voltar ao Painel' }];
+      for (let c = 1; c < maxCols; c++) row3Cells.push({ col: c, style: 24, kind: 'empty' });
+      sb.addRow(3, row3Cells, 20);
+      sb.addMerge(3, 0, 3, maxCols - 1);
+      sb.addHyperlink('A3', sheetRef('Painel Consolidado', 'A1'), '← Voltar ao Painel', 'Voltar para a aba Painel Consolidado');
 
       const { rangeRef } = appendTurmaBlockToBuilder(sb, 4, turma, minGradeStr, minPassingGrade, sheetName, false);
       sb.setFreezeRow(5);

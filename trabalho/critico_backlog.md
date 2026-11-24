@@ -1,11 +1,11 @@
 # Backlog Auditado de Achados "Menor" — Crítico Independente
 
-Atualizado automaticamente pelo harness em: 2026-11-24T12:00:20.707Z
+Atualizado automaticamente pelo harness em: 2026-11-24T15:41:21.010Z
 
-- **Total catalogado:** 12
+- **Total catalogado:** 13
 - **Resolvidos (com teste verificado):** 8
 - **Aceitos por design:** 2
-- **Abertos / Agendados:** 2 (limite máximo: 5)
+- **Abertos / Agendados:** 3 (limite máximo: 5)
 
 | ID | Rodada | Status | Título | Teste / Verificação Vinculada |
 | :--- | :---: | :---: | :--- | :--- |
@@ -21,3 +21,4 @@ Atualizado automaticamente pelo harness em: 2026-11-24T12:00:20.707Z
 | **CR-010** | 10 | `resolvido` | Ausência de SLA explícito e verificação SHA-256 para pacotes .zip e .crx em relatorio_metricas.json | `trabalho/harness.mjs` (`packages_lt_512KB`) |
 | **CR-011** | 11 | `agendado` | Checkboxes de frequência sob a gaveta lateral em frequencia_dia_unico_desktop.png | — |
 | **CR-012** | 11 | `agendado` | Exibir prefixos SHA-256 dos pacotes .zip/.crx também em trabalho/relatorio_metricas.md | — |
+| **CR-013** | 13 | `agendado` | Quebra de linha (wrapText) em rótulos longos da coluna A do Painel Consolidado CETEP | — |

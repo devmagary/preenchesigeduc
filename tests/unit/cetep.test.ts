@@ -253,4 +253,53 @@ describe('CETEP identity, stats and OOXML xlsx export', () => {
     const closedUnits = [makeUnit('1ª Unidade', true, true), makeUnit('2ª Unidade', true, true), makeUnit('3ª Unidade', true, false, true)];
     expect(pickUnitFromScrapedList(closedUnits, 'active', '1ª Unidade')?.unidadeAtiva).toBe('2ª Unidade');
   });
+
+  it('gera hiperlinks bidirecionais válidos entre Painel Consolidado e abas/blocos de turma (multi-aba e aba única)', () => {
+    const turmas = buildSampleTurmas();
+
+    // Multi-aba (A6 = 1ª turma, A7 = SUBTOTAL ENSINO MÉDIO, A8 = 2ª turma)
+    const multiBuf = exportCetepXlsxBuffer(turmas, { mode: 'multi_sheet', minPassingGrade: 5.0 });
+    const multiWb = XLSX.read(multiBuf, { type: 'array' });
+    const panelWs = multiWb.Sheets['Painel Consolidado'];
+    expect(panelWs['A6']?.l?.Target).toBe(`#'${multiWb.SheetNames[1]}'!A1`);
+    expect(panelWs['A8']?.l?.Target).toBe(`#'${multiWb.SheetNames[2]}'!A1`);
+
+    for (const tabName of [multiWb.SheetNames[1], multiWb.SheetNames[2]]) {
+      const ws = multiWb.Sheets[tabName];
+      expect(ws['A3']?.v).toBe('← Voltar ao Painel');
+      expect(ws['A3']?.l?.Target).toBe("#'Painel Consolidado'!A1");
+    }
+
+    // Sanitização de caracteres especiais (incluindo apóstrofo/barra) no nome da aba e no link
+    const quotedTurma = {
+      ...turmas[0],
+      identity: {
+        ...turmas[0].identity,
+        sheetTabBase: "D'AVILA/1A",
+      },
+    };
+    const quotedWb = XLSX.read(exportCetepXlsxBuffer([quotedTurma], { mode: 'multi_sheet', minPassingGrade: 5.0 }), { type: 'array' });
+    const quotedTab = quotedWb.SheetNames[1];
+    expect(quotedTab).toBe('D AVILA 1A 1U');
+    expect(quotedWb.Sheets['Painel Consolidado']['A6']?.l?.Target).toBe(`#'${quotedTab}'!A1`);
+
+    // Aba única consolidada (A6 = 1ª turma, A7 = SUBTOTAL, A8 = 2ª turma)
+    const singleBuf = exportCetepXlsxBuffer(turmas, { mode: 'single_sheet', minPassingGrade: 5.0 });
+    const singleWb = XLSX.read(singleBuf, { type: 'array' });
+    const singleWs = singleWb.Sheets['Consolidado CETEP'];
+    const link1 = singleWs['A6']?.l?.Target ?? '';
+    const link2 = singleWs['A8']?.l?.Target ?? '';
+    expect(link1).toMatch(/^#'Consolidado CETEP'!A\d+$/);
+    expect(link2).toMatch(/^#'Consolidado CETEP'!A\d+$/);
+    const block1Row = Number(link1.split('!A')[1]);
+    expect(String(singleWs[`A${block1Row}`]?.v ?? '')).toContain('TURMA-ANUAL-1A');
+
+    const backCells = Object.entries(singleWs).filter(
+      ([ref, cell]) => /^[A-Z]+\d+$/.test(ref) && (cell as XLSX.CellObject)?.v === '↑ Voltar ao Painel'
+    );
+    expect(backCells).toHaveLength(2);
+    for (const [, cell] of backCells) {
+      expect((cell as XLSX.CellObject).l?.Target).toBe("#'Consolidado CETEP'!A4");
+    }
+  });
 });

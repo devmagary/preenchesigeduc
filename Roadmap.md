@@ -126,9 +126,10 @@ As sugestões são organizadas sob a ótica de engenharia sênior, equilibrando 
   - Estender `scripts/package.mjs` para gerar também o pacote `.crx` assinado localmente para Edge Mobile ao final das builds (mantendo a chave `.pem` fora do repositório, já coberta pelo `.gitignore`).
 - **Impacto técnico / Riscos:** Ajuste em `scripts/package.mjs` (assinatura `.crx` MV3) e documentação das URLs fixas no `README.md`.
 
-### 6. Hiperlinks de Navegação no Painel Consolidado CETEP
+### 6. Hiperlinks de Navegação no Painel Consolidado CETEP — `[Concluído]`
 - **Prioridade:** P2 — Média
 - **Dificuldade:** Baixa
+- **Status:** Concluído (`src/core/cetep.ts`: suporte nativo OOXML `<hyperlinks>` e estilos de link `#1D4ED8`/`#E0F2FE` em `SheetBuilder`; coluna `A` de `Painel Consolidado` aponta para `'Aba'!A1` no modo Multi-aba ou para `'Consolidado CETEP'!A<linha>` no modo Aba Única; retorno via `← Voltar ao Painel` na linha `A3` congelada [Multi-aba] e `↑ Voltar ao Painel` no banner de cada bloco [Aba Única], validado por testes unitários, E2E e Rodada 13 do Crítico Independente).
 - **Contexto:** Na planilha consolidada gerada pela coleta em lote (`src/core/cetep.ts`), facilitar a navegação entre o Painel Consolidado e as abas/blocos individuais de cada turma.
 - **Comportamento esperado:**
   - Cada linha de turma no **Painel Consolidado** deve ser um hiperlink interno clicável levando diretamente à aba correspondente (ex.: `#'Nome da Aba'!A1`, ou à célula inicial do bloco no modo aba única).
@@ -184,6 +185,7 @@ As sugestões são organizadas sob a ótica de engenharia sênior, equilibrando 
 Para evitar que apontamentos `menor` do Crítico Cego se percam entre rodadas sem testes correspondentes:
 - Todo achado `menor` é catalogado com ID sequencial (`CR-NNN`) em [`trabalho/critico_backlog.json`](trabalho/critico_backlog.json) e espelhado em [`trabalho/critico_backlog.md`](trabalho/critico_backlog.md).
 - O [`trabalho/harness.mjs`](trabalho/harness.mjs) impõe teto máximo de `5` itens em `aberto`/`agendado` e valida que todo item `resolvido` possua um teste real verificado (`testFile` + `testPattern`).
-- **Histórico Rodadas 1–11 (`CR-001` a `CR-012`):** `8` itens `resolvido`, `2` `aceito_design` e `2` `agendado` (dentro do teto `5`):
+- **Histórico Rodadas 1–13 (`CR-001` a `CR-013`):** `8` itens `resolvido`, `2` `aceito_design` e `3` `agendado` (dentro do teto `5`):
   - **`CR-011`:** Captura complementar opcional de `frequencia_dia_unico_desktop.png` com painel fechado/rolado para exibir visualmente os checkboxes marcados sob a gaveta de 440px.
   - **`CR-012`:** Exibir os hashes SHA-256 dos pacotes `.zip`/`.crx` também na tabela Markdown de `trabalho/relatorio_metricas.md` (já gravados e auditados em `trabalho/relatorio_metricas.json`).
+  - **`CR-013`:** Habilitar `wrapText="1"` (ou largura dinâmica) nos estilos `xf[22]`/`xf[23]` da coluna `A` no `Painel Consolidado` CETEP para exibir rótulos longos de turma sem truncamento visual.
