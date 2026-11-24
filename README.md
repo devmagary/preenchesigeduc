@@ -18,9 +18,41 @@ Compatível com Chrome/Chromium Desktop e navegadores Android com suporte a exte
 - `src/sigeduc/` — Adaptadores DOM para as telas do SIGEduc-BA (detector, scraper, fillers).
 - `src/ui/` — Interface isolada em Shadow DOM (`#preenche-sigeduc-host`), responsiva para desktop e mobile.
 - `src/popup/` — Popup da barra do navegador.
-- `scripts/` — Scripts de build (`dist/chrome/`, `dist/firefox/`, `trabalho/dist-e2e/`) e empacotamento (`.zip`).
+- `scripts/` — Scripts de build (`dist/chrome/`, `dist/firefox/`, `trabalho/dist-e2e/`) e empacotamento (`.zip` e `.crx` CRX3).
+- `docs/` — Página estática de download direto e guia rápido para GitHub Pages ([docs/index.html](docs/index.html)).
 - `tests/unit/` — Testes unitários com Vitest.
 - `tests/e2e/` — Testes E2E com Playwright contra servidor mock local (`trabalho/mock-server.mjs`).
+
+## Links Rápidos de Download (URLs Fixas)
+
+Os lançamentos publicados em **GitHub Releases** mantêm nomes de arquivos constantes para permitir redirecionamento direto via domínio próprio ou encurtador externo sem precisar atualizar o link a cada versão:
+
+| Plataforma / Navegador | Artefato | URL Direta (`latest`) |
+| :--- | :--- | :--- |
+| **Edge Canary (Android)** | `preenche-sigeduc-edge-mobile.crx` | `https://github.com/devmagary/preenchesigeduc/releases/latest/download/preenche-sigeduc-edge-mobile.crx` |
+| **Chrome Desktop / Mises / Lemur** | `preenche-sigeduc-chrome.zip` | `https://github.com/devmagary/preenchesigeduc/releases/latest/download/preenche-sigeduc-chrome.zip` |
+| **Firefox Desktop / Android** | `preenche-sigeduc-firefox.zip` | `https://github.com/devmagary/preenchesigeduc/releases/latest/download/preenche-sigeduc-firefox.zip` |
+
+> Também incluímos uma página estática pronta para GitHub Pages em [docs/index.html](docs/index.html) com os botões de download direto e guia rápido.
+
+## Instalação (PC e Android)
+
+### Google Chrome / Chromium (PC)
+1. Baixe e descompacte `preenche-sigeduc-chrome.zip` (ou gere localmente via `npm run build && npm run package`).
+2. Acesse `chrome://extensions`, ative o **Modo do desenvolvedor** e clique em **Carregar sem compactação**, selecionando a pasta extraída (ou `dist/chrome/`).
+
+### Edge Canary (Android) via `.crx`
+1. Baixe `preenche-sigeduc-edge-mobile.crx` diretamente no celular.
+2. No **Edge Canary Android**, abra **Configurações → Sobre o Microsoft Edge** e toque 5 vezes no número da versão para habilitar as **Opções do desenvolvedor**.
+3. Acesse **Opções do desenvolvedor → Instalar extensão por .crx** (*Extension install by crx*) e selecione o arquivo `preenche-sigeduc-edge-mobile.crx`.
+
+### Mises / Lemur (Android)
+1. Baixe `preenche-sigeduc-chrome.zip`.
+2. Abra a página de **Extensões**, ative o modo desenvolvedor e importe diretamente o `.zip`.
+
+### Firefox Desktop / Firefox Android
+1. Baixe `preenche-sigeduc-firefox.zip`.
+2. No Desktop, abra `about:debugging#/runtime/this-firefox` → **Carregar extensão temporária** selecionando o `.zip` ou `dist/firefox/manifest.json` (ou instale via arquivo assinado/coleção no Firefox Android).
 
 ## Desenvolvimento e Verificação
 
@@ -28,9 +60,16 @@ Compatível com Chrome/Chromium Desktop e navegadores Android com suporte a exte
 # Instalar dependências
 npm install
 
+# Gerar builds (dist/chrome e dist/firefox) e pacotes (.zip + .crx assinado)
+npm run build && npm run package
+
 # Executar verificação completa (typecheck, build, package, testes unitários, benchmark e E2E)
 npm run harness
 ```
+
+### Assinatura `.crx` e GitHub Releases
+- O comando `npm run package` gera automaticamente `dist/preenche-sigeduc-edge-mobile.crx` no formato **CRX3** usando a chave privada RSA em `.keys/preenche-sigeduc.pem` (criada localmente na primeira execução e ignorada pelo `.gitignore`, mantendo o ID da extensão estável entre versões).
+- Em pipelines de CI (`.github/workflows/release.yml`), configure o secret **`CRX_PRIVATE_KEY_PEM`** com o conteúdo do `.pem` para manter o mesmo Extension ID nas releases publicadas por tag (`v*`) ou disparo manual.
 
 ## Documentação Adicional
 

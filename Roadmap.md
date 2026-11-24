@@ -116,9 +116,10 @@ As sugestões são organizadas sob a ótica de engenharia sênior, equilibrando 
   - Consolidar tudo automaticamente no modelo de planilha `.xlsx` descrito no item 4.
 - **Impacto técnico / Riscos:** Navegação JSF multi-página com `javax.faces.ViewState` exige máquina de estados persistida em `sessionStorage` para sobreviver aos recarregamentos de página, além de tratamento robusto de sessão expirada e fila sequencial.
 
-### 5. Links Rápidos de Download e Empacotamento `.crx` para Edge Mobile
+### 5. Links Rápidos de Download e Empacotamento `.crx` para Edge Mobile — `[Concluído]`
 - **Prioridade:** P2 — Média
 - **Dificuldade:** Média
+- **Status:** Concluído (`scripts/crx3.mjs` + `scripts/package.mjs` gerando `dist/preenche-sigeduc-edge-mobile.crx` assinado em CRX3 com chave `.keys/preenche-sigeduc.pem` ignorada pelo Git ou via `CRX_PRIVATE_KEY_PEM`; `.github/workflows/release.yml` publicando os 3 artefatos fixos em `/releases/latest/download/`; página estática `docs/index.html` e guia + URLs fixas documentadas em `README.md`, validados por testes unitários e pelo harness).
 - **Contexto:** Facilitar o download das versões Chrome, Firefox e Edge Mobile (Edge Canary Android) com URLs curtas e memorizáveis apontadas via domínio próprio ou encurtador externo.
 - **Comportamento esperado:**
   - Publicar artefatos com nomes fixos no **GitHub Releases** (`/releases/latest/download/preenche-sigeduc-chrome.zip`, `preenche-sigeduc-firefox.zip`, `preenche-sigeduc-edge-mobile.crx`) para que o domínio próprio / encurtador nunca precise ser atualizado a cada versão.

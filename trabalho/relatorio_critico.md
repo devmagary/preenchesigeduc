@@ -74,3 +74,9 @@ Auditoria realizada por subagentes independentes (`research`) sem acesso ao cód
   - `cards_turmas_longos_desktop.png` & `scraping_notas_mobile.png`: cards `.ps-turma-card` com `flex-shrink: 0` e `height: auto` sem sobreposição ou estouro horizontal; `Layout CETEP` exibindo integralmente `"Multi-aba (Painel + turmas)"` no mobile.
   - `manifest.json`: `24/24` evidências íntegras.
   - SLAs: parse `.xlsx` p99 `30.58 ms` (`13.46 ms` média), `.csv` p99 `0.43 ms` (`0.27 ms` média) (`< 250 ms`), abertura do painel `17.08 ms` (`< 100 ms`), `180/180` AJAX (`0%` perda), `45/45` exatos com `0` falsos positivos, `dist/chrome/` `569.9 KB` e `dist/firefox/` `570.1 KB` (`< 1536 KB`).
+
+### Rodada 10 — Roadmap P2 #5 (Links Rápidos e Empacotamento `.crx` Edge Mobile) (`6fd8ee67`)
+- **Veredito Final:** **APROVADO — `0` defeitos `grave`, `0` `médio`, `1` nota informativa `menor` não bloqueante.**
+  - Pacotes registrados e validados: `dist/chrome/` (`569.9 KB`), `dist/firefox/` (`570.1 KB`), `preenche-sigeduc-chrome.zip` (`183.3 KB`), `preenche-sigeduc-firefox.zip` (`183.4 KB`) e `preenche-sigeduc-edge-mobile.crx` (`183.9 KB`).
+  - `manifest.json`: `24/24` evidências conferidas em disco com 100% de correspondência SHA-256 (`13` PNGs, `5` XLSX, `1` CSV, `5` JSONs) e `harness_status.json` `PASSED`.
+  - SLAs: `.xlsx` p99 `37.36 ms`, `.csv` p99 `0.53 ms` (`< 250 ms`), painel `16.31 ms` (`< 100 ms`), `180/180` AJAX (`0%` perda), `45/45` exatos com `0` falsos positivos.

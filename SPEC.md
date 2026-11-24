@@ -16,7 +16,7 @@ Tecnologia e dependências: TypeScript + Vite (build multi-target MV3 para Chrom
 
 Origem de dados e recursos: 100% local e offline no navegador. Nenhum backend, nenhuma telemetria, nenhuma chamada de rede externa além das interações normais da página do próprio SIGEduc (`https://sigeduc.educacao.ba.gov.br/*`).
 
-Formato de entrega: Pastas prontas para carregar no navegador `dist/chrome/` e `dist/firefox/` (ambas Manifest V3 válidas) + pacotes compactados `dist/preenche-sigeduc-chrome.zip` e `dist/preenche-sigeduc-firefox.zip` + scripts `npm` (`dev`, `build`, `test`, `package`) + guia curto de instalação no PC e no Android (`README.md`). Informe no relatório final o tamanho total descompactado (em KB) de `dist/chrome/` e `dist/firefox/` e o tamanho dos `.zip`.
+Formato de entrega: Pastas prontas para carregar no navegador `dist/chrome/` e `dist/firefox/` (ambas Manifest V3 válidas) + pacotes compactados `dist/preenche-sigeduc-chrome.zip`, `dist/preenche-sigeduc-firefox.zip` e `dist/preenche-sigeduc-edge-mobile.crx` (CRX3 assinado localmente com chave `.pem` fora do repositório) + workflow `.github/workflows/release.yml` para GitHub Releases com nomes fixos + página estática `docs/index.html` + scripts `npm` (`dev`, `build`, `test`, `package`) + guia de instalação no PC e no Android (`README.md`). Informe no relatório final o tamanho total descompactado (em KB) de `dist/chrome/` e `dist/firefox/` e o tamanho dos `.zip` e `.crx`.
 
 Engenharia e runtime:
 - Todo o painel injetado deve usar Shadow DOM (`mode: 'open'` ou isolado) para não sofrer nem causar conflito de CSS com o SIGEduc (Bootstrap/RichFaces/PrimeFaces).

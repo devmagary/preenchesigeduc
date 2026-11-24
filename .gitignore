@@ -21,6 +21,7 @@ coverage/
 .env
 .env.*
 !.env.example
+.keys/
 *.pem
 *.key
 

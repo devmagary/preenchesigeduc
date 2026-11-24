@@ -173,6 +173,8 @@ async function run() {
   const firefoxDirKB = Number((getDirSizeBytes(path.join(rootDir, 'dist', 'firefox')) / 1024).toFixed(1));
   const chromeZipKB = Number((fs.statSync(path.join(rootDir, 'dist', 'preenche-sigeduc-chrome.zip')).size / 1024).toFixed(1));
   const firefoxZipKB = Number((fs.statSync(path.join(rootDir, 'dist', 'preenche-sigeduc-firefox.zip')).size / 1024).toFixed(1));
+  const edgeCrxPath = path.join(rootDir, 'dist', 'preenche-sigeduc-edge-mobile.crx');
+  const edgeCrxKB = fs.existsSync(edgeCrxPath) ? Number((fs.statSync(edgeCrxPath).size / 1024).toFixed(1)) : 0;
 
   const report = {
     generatedAt: new Date().toISOString(),
@@ -198,6 +200,7 @@ async function run() {
       distFirefox_KB: firefoxDirKB,
       chromeZip_KB: chromeZipKB,
       firefoxZip_KB: firefoxZipKB,
+      edgeCrx_KB: edgeCrxKB,
       sla_uncompressed_limit_KB: 1536,
       passed: chromeDirKB < 1536 && firefoxDirKB < 1536,
     },
@@ -233,6 +236,7 @@ Gerado em: ${report.generatedAt}
 | \`dist/firefox/\` (descompactado) | ${firefoxDirKB} KB | < 1536 KB | ${firefoxDirKB < 1536 ? 'PASSOU' : 'FALHOU'} |
 | \`dist/preenche-sigeduc-chrome.zip\` | ${chromeZipKB} KB | — | OK |
 | \`dist/preenche-sigeduc-firefox.zip\` | ${firefoxZipKB} KB | — | OK |
+| \`dist/preenche-sigeduc-edge-mobile.crx\` | ${edgeCrxKB} KB | — | OK |
 `;
 
   fs.writeFileSync(path.join(rootDir, 'trabalho', 'relatorio_metricas.md'), md, 'utf8');

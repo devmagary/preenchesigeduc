@@ -3,6 +3,7 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { verifyCrx3Buffer } from '../scripts/crx3.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, '..');
@@ -98,6 +99,21 @@ function validateSlasAndManifest() {
     if (fs.existsSync(trabalhoInDist)) {
       throw new Error(`dist/${target} contém pasta trabalho/ indevidamente!`);
     }
+    for (const file of fs.readdirSync(path.join(rootDir, 'dist', target))) {
+      if (file.endsWith('.pem') || file.endsWith('.key')) {
+        throw new Error(`dist/${target} contém chave privada ${file} indevidamente!`);
+      }
+    }
+  }
+
+  // Verificar pacote CRX3 assinado para Edge Mobile
+  const edgeCrxPath = path.join(rootDir, 'dist', 'preenche-sigeduc-edge-mobile.crx');
+  if (!fs.existsSync(edgeCrxPath)) {
+    throw new Error('dist/preenche-sigeduc-edge-mobile.crx não foi gerado!');
+  }
+  const crxCheck = verifyCrx3Buffer(fs.readFileSync(edgeCrxPath));
+  if (!crxCheck.valid) {
+    throw new Error(`dist/preenche-sigeduc-edge-mobile.crx inválido: ${crxCheck.reason}`);
   }
 
   // Verificar evidências obrigatórias

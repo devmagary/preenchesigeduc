@@ -1,0 +1,76 @@
+name: Release Preenche SIGEduc
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag da release (ex.: v1.0.0). Deixe vazio para usar v<version> do package.json'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repositório
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Verificar tipos e testes unitários
+        run: |
+          npx tsc --noEmit
+          npm run test:unit
+
+      - name: Build e empacotamento (.zip e .crx)
+        env:
+          CRX_PRIVATE_KEY_PEM: ${{ secrets.CRX_PRIVATE_KEY_PEM }}
+        run: |
+          npm run build
+          npm run package
+
+      - name: Definir tag da release
+        id: meta
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            TAG="${GITHUB_REF_NAME}"
+          elif [ -n "${{ inputs.tag }}" ]; then
+            TAG="${{ inputs.tag }}"
+          else
+            TAG="v$(node -p "require('./package.json').version")"
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Publicar artefatos no GitHub Releases
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ steps.meta.outputs.tag }}"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" \
+              dist/preenche-sigeduc-chrome.zip \
+              dist/preenche-sigeduc-firefox.zip \
+              dist/preenche-sigeduc-edge-mobile.crx \
+              --clobber
+          else
+            gh release create "$TAG" \
+              dist/preenche-sigeduc-chrome.zip \
+              dist/preenche-sigeduc-firefox.zip \
+              dist/preenche-sigeduc-edge-mobile.crx \
+              --title "Preenche SIGEduc $TAG" \
+              --notes "Pacotes oficiais Manifest V3 com nomes fixos para Chrome/Chromium, Firefox e Edge Canary Mobile (.crx)." \
+              --latest
+          fi

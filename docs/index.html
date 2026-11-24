@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Preenche SIGEduc — Download e Instalação</title>
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --text: #0f172a;
+      --muted: #475569;
+      --border: #cbd5e1;
+      --primary: #404e82;
+      --primary-hover: #313d68;
+      --accent: #047857;
+      --accent-hover: #065f46;
+      --code-bg: #f1f5f9;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0f172a;
+        --card: #1e293b;
+        --text: #f1f5f9;
+        --muted: #cbd5e1;
+        --border: #334155;
+        --primary: #4f46e5;
+        --primary-hover: #4338ca;
+        --accent: #059669;
+        --accent-hover: #047857;
+        --code-bg: #0f172a;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.55;
+      padding: 24px 16px 48px;
+    }
+    .wrap {
+      max-width: 820px;
+      margin: 0 auto;
+    }
+    header {
+      background: var(--primary);
+      color: #fff;
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+    header h1 {
+      margin: 0 0 8px;
+      font-size: 1.6rem;
+    }
+    header p {
+      margin: 0;
+      opacity: 0.94;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 14px;
+      margin-bottom: 22px;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .card h2 {
+      margin: 0;
+      font-size: 1.08rem;
+    }
+    .card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.92rem;
+      flex: 1;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 44px;
+      padding: 10px 14px;
+      border-radius: 10px;
+      text-decoration: none;
+      font-weight: 600;
+      color: #fff;
+      background: var(--primary);
+      text-align: center;
+    }
+    .btn:hover { background: var(--primary-hover); }
+    .btn.edge { background: var(--accent); }
+    .btn.edge:hover { background: var(--accent-hover); }
+    .steps {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+    .steps h3 {
+      margin: 0 0 10px;
+      font-size: 1.05rem;
+    }
+    .steps ol {
+      margin: 0;
+      padding-left: 20px;
+    }
+    .steps li + li {
+      margin-top: 6px;
+    }
+    code {
+      background: var(--code-bg);
+      padding: 2px 6px;
+      border-radius: 6px;
+      font-size: 0.88em;
+      word-break: break-all;
+    }
+    footer {
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.88rem;
+      margin-top: 24px;
+    }
+    footer a { color: inherit; }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <h1>Preenche SIGEduc — Download Direto</h1>
+      <p>Extensão local (Manifest V3) para importação de notas, frequências e extração de turmas/CETEP no SIGEduc-BA.</p>
+    </header>
+
+    <section class="grid" aria-label="Links diretos da última versão">
+      <article class="card">
+        <h2>Edge Mobile (Canary Android)</h2>
+        <p>Pacote assinado <code>.crx</code> pronto para instalação direta nas opções de desenvolvedor do Edge Canary no Android.</p>
+        <a class="btn edge" href="https://github.com/devmagary/preenchesigeduc/releases/latest/download/preenche-sigeduc-edge-mobile.crx">Baixar .crx (Edge Mobile)</a>
+      </article>
+
+      <article class="card">
+        <h2>Chrome / Mises / Lemur</h2>
+        <p>Pacote <code>.zip</code> para Google Chrome (Windows/macOS/Linux) e navegadores Chromium Android (Mises e Lemur).</p>
+        <a class="btn" href="https://github.com/devmagary/preenchesigeduc/releases/latest/download/preenche-sigeduc-chrome.zip">Baixar .zip (Chrome / Android)</a>
+      </article>
+
+      <article class="card">
+        <h2>Firefox / Firefox Android</h2>
+        <p>Pacote WebExtension MV3 (<code>.zip</code>) para Firefox Desktop e Firefox Nightly/Beta no Android.</p>
+        <a class="btn" href="https://github.com/devmagary/preenchesigeduc/releases/latest/download/preenche-sigeduc-firefox.zip">Baixar .zip (Firefox)</a>
+      </article>
+    </section>
+
+    <section class="steps">
+      <h3>Como instalar no Edge Canary (Android) via <code>.crx</code></h3>
+      <ol>
+        <li>Baixe o arquivo <code>preenche-sigeduc-edge-mobile.crx</code> no botão acima.</li>
+        <li>No Edge Canary Android, abra <strong>Configurações → Sobre o Microsoft Edge</strong> e toque 5 vezes no número da versão para ativar as <strong>Opções do desenvolvedor</strong>.</li>
+        <li>Entre em <strong>Opções do desenvolvedor → Extension install by crx</strong> (ou <em>Instalar extensão por .crx</em>) e selecione o arquivo baixado.</li>
+        <li>Acesse o portal <code>sigeduc.educacao.ba.gov.br</code> e toque no botão flutuante <strong>Preenche SIGEduc</strong>.</li>
+      </ol>
+    </section>
+
+    <section class="steps">
+      <h3>Como instalar no Chrome Desktop / Mises / Lemur</h3>
+      <ol>
+        <li>Baixe e descompacte <code>preenche-sigeduc-chrome.zip</code> (no Mises/Lemur você também pode carregar o <code>.zip</code> diretamente em <em>Extensões</em>).</li>
+        <li>Abra <code>chrome://extensions</code>, ative o <strong>Modo do desenvolvedor</strong> e clique em <strong>Carregar sem compactação</strong> (PC) ou <strong>+(from .zip)</strong> (Android).</li>
+      </ol>
+    </section>
+
+    <footer>
+      100% local e sem telemetria • Código-fonte e versões em
+      <a href="https://github.com/devmagary/preenchesigeduc/releases/latest">GitHub Releases</a>
+    </footer>
+  </main>
+</body>
+</html>
