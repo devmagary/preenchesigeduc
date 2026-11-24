@@ -86,3 +86,9 @@ Auditoria realizada por subagentes independentes (`research`) sem acesso ao cód
   - **`frequencia_dia_unico_desktop.png` (`CR-003` & `CR-004`):** Confirma execução real de dia único (`05/08/2026`, `1/1 data(s) preenchida(s)`) e célula `Resumo` exibindo `2 faltas / 1 pres. (42 ausentes)`.
   - **`cards_turmas_longos_desktop.png` (`CR-009`):** `TURMA-LONGA-1-NOTURNO` integralmente visível na lista rolável `#ps-batch-turma-list` sem cortes nem sobreposição.
   - **`CR-010` & Backlog (`critico_backlog.json` / `critico_backlog.md`):** Todos os 6 portões `slaChecks` (`packages_lt_512KB: true`), `packages_sha256`, `24/24` evidências conferidas em SHA-256 e `minorBacklog` (`8` resolvidos com testes verificados, `2` aceitos por design, `2/5` agendados) consistentes com `harness_status.json`.
+
+### Rodada 12 — Automação de Releases (`npm run release`) & Versão Dinâmica (`e3043990`)
+- **Veredito Final:** **APROVADO — `0` defeitos `grave`, `0` `médio`, `0` achados `menor` novos.**
+  - `harness_status.json`: `overallStatus: "PASSED"` com todos os 6 portões `slaChecks: true` (`packages_lt_512KB: true`), `evidenceCount: 24` e `minorBacklog` íntegro (`8` resolvidos, `2` aceitos por design, `2/5` agendados: `CR-011`, `CR-012`).
+  - `relatorio_metricas.json`: `.xlsx` p99 `34.28 ms`, `.csv` p99 `0.65 ms` (`< 250 ms`), painel `14.33 ms` (`< 100 ms`), `180/180` AJAX (`0%` perda), `45/45` exatos com `0` falsos positivos, `dist/chrome/` `569.9 KB`, `dist/firefox/` `570.1 KB`, pacotes `.zip`/`.crx` `< 512 KB` (`183.4 KB` / `183.4 KB` / `183.9 KB`) com SHA-256 conferido em disco.
+  - `manifest.json`: `24/24` evidências conferidas com `0` divergências.

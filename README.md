@@ -33,7 +33,7 @@ Os lançamentos publicados em **GitHub Releases** mantêm nomes de arquivos cons
 | **Chrome Desktop / Mises / Lemur** | `preenche-sigeduc-chrome.zip` | `https://github.com/devmagary/preenchesigeduc/releases/latest/download/preenche-sigeduc-chrome.zip` |
 | **Firefox Desktop / Android** | `preenche-sigeduc-firefox.zip` | `https://github.com/devmagary/preenchesigeduc/releases/latest/download/preenche-sigeduc-firefox.zip` |
 
-> Também incluímos uma página estática pronta para GitHub Pages em [docs/index.html](docs/index.html) com os botões de download direto e guia rápido.
+> **Portal Web de Download Direto (GitHub Pages):** https://devmagary.github.io/preenchesigeduc/ (publicado a partir de [docs/index.html](docs/index.html)) com os botões e passo a passo para cada navegador.
 
 ## Instalação (PC e Android)
 
@@ -68,8 +68,16 @@ npm run harness
 ```
 
 ### Assinatura `.crx` e GitHub Releases
-- O comando `npm run package` gera automaticamente `dist/preenche-sigeduc-edge-mobile.crx` no formato **CRX3** usando a chave privada RSA em `.keys/preenche-sigeduc.pem` (criada localmente na primeira execução e ignorada pelo `.gitignore`, mantendo o ID da extensão estável entre versões).
-- Em pipelines de CI (`.github/workflows/release.yml`), configure o secret **`CRX_PRIVATE_KEY_PEM`** com o conteúdo do `.pem` para manter o mesmo Extension ID nas releases publicadas por tag (`v*`) ou disparo manual.
+- O comando `npm run package` gera automaticamente `dist/preenche-sigeduc-edge-mobile.crx` no formato **CRX3** usando a chave privada RSA em `.keys/preenche-sigeduc.pem` (criada localmente na primeira execução e ignorada pelo `.gitignore`, mantendo o ID `mdckmbhobjcoaamkcfloofpdmciidjjg` estável entre versões).
+- Em pipelines de CI (`.github/workflows/release.yml`), o secret **`CRX_PRIVATE_KEY_PEM`** já deve conter o conteúdo da chave `.pem` para manter o mesmo Extension ID nas releases publicadas por tag (`v*`) ou disparo manual (`gh workflow run`).
+- Para publicar uma nova versão com segurança (rodando `npm run harness`, atualizando `package.json` + `manifest.json`, criando tag `vX.Y.Z` e enviando ao GitHub), utilize:
+  ```bash
+  # Simular sem alterar arquivos
+  npm run release -- patch --dry-run
+
+  # Publicar nova versão (patch, minor, major ou X.Y.Z)
+  npm run release -- patch
+  ```
 
 ## Documentação Adicional
 

@@ -12,7 +12,8 @@
     "benchmark": "node trabalho/benchmark.mjs",
     "test:e2e": "node tests/e2e/extension.spec.mjs",
     "test": "npm run build && npm run test:unit && npm run benchmark && npm run test:e2e",
-    "harness": "node trabalho/harness.mjs"
+    "harness": "node trabalho/harness.mjs",
+    "release": "node scripts/release.mjs"
   },
   "dependencies": {
     "xlsx": "^0.18.5"

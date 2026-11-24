@@ -12,7 +12,13 @@ const distFirefox = path.join(rootDir, 'dist', 'firefox');
 const distE2E = path.join(rootDir, 'trabalho', 'dist-e2e');
 const stageDir = path.join(rootDir, 'trabalho', '.build-stage');
 
-function createManifest({ firefox = false, e2e = false } = {}) {
+function readPackageVersion() {
+  const pkgPath = path.join(rootDir, 'package.json');
+  const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+  return String(pkg.version || '1.0.0');
+}
+
+function createManifest({ firefox = false, e2e = false, version = readPackageVersion() } = {}) {
   const matches = e2e
     ? ['https://sigeduc.educacao.ba.gov.br/sigeduc/*', 'http://127.0.0.1/*']
     : ['https://sigeduc.educacao.ba.gov.br/sigeduc/*'];
@@ -23,7 +29,7 @@ function createManifest({ firefox = false, e2e = false } = {}) {
   const manifest = {
     manifest_version: 3,
     name: 'Preenche SIGEduc',
-    version: '1.0.0',
+    version,
     description:
       'Importa planilhas de notas e frequências para preenchimento assistido no SIGEduc-BA e extrai turmas, alunos e atividades.',
     permissions: ['activeTab'],
