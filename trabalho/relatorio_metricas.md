@@ -1,21 +1,21 @@
 # Relatório de Métricas e SLA — Preenche SIGEduc
 
-Gerado em: 2026-11-24T11:40:40.772Z
+Gerado em: 2026-11-24T12:00:03.776Z
 
 ## 1. Parse de Planilha (500 linhas × 10 colunas, 20 execuções)
 
 | Formato | Média (ms) | p99 (ms) | Máximo (ms) | Meta SLA | Status |
 | :--- | ---: | ---: | ---: | :---: | :---: |
-| **.xlsx** | 16.15 | 34.28 | 34.28 | < 250 ms | PASSOU |
-| **.csv** | 0.32 | 0.65 | 0.65 | < 250 ms | PASSOU |
+| **.xlsx** | 13.91 | 28.16 | 28.16 | < 250 ms | PASSOU |
+| **.csv** | 0.29 | 0.63 | 0.63 | < 250 ms | PASSOU |
 
 ## 2. Preenchimento Sequencial AJAX & Matching (45 alunos × 4 atividades + 2 divergentes)
 
-- **Tempo de abertura do painel Shadow DOM:** 14.33 ms (Meta: < 100 ms)
+- **Tempo de abertura do painel Shadow DOM:** 52.12 ms (Meta: < 100 ms)
 - **Eventos `onblur` AJAX esperados:** 180
 - **Eventos `onblur` AJAX recebidos pelo servidor mock:** 180
 - **Taxa de perda de eventos AJAX:** 0% (Meta: 0%)
-- **Tempo total do lote sequencial (com latência mock 25ms/req):** 5973.32 ms
+- **Tempo total do lote sequencial (com latência mock 25ms/req):** 6045 ms
 - **Precisão de matching:** 45/45 exatos, 0 falsos positivos (Meta: 100% exatos, 0 falsos positivos)
 
 ## 3. Tamanho Final dos Pacotes

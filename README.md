@@ -27,13 +27,13 @@ Compatível com Chrome/Chromium Desktop e navegadores Android com suporte a exte
 
 Os lançamentos publicados em **GitHub Releases** mantêm nomes de arquivos constantes para permitir redirecionamento direto via domínio próprio ou encurtador externo sem precisar atualizar o link a cada versão:
 
-| Plataforma / Navegador | Artefato | URL Direta (`latest`) |
-| :--- | :--- | :--- |
-| **Edge Canary (Android)** | `preenche-sigeduc-edge-mobile.crx` | `https://github.com/devmagary/preenchesigeduc/releases/latest/download/preenche-sigeduc-edge-mobile.crx` |
-| **Chrome Desktop / Mises / Lemur** | `preenche-sigeduc-chrome.zip` | `https://github.com/devmagary/preenchesigeduc/releases/latest/download/preenche-sigeduc-chrome.zip` |
-| **Firefox Desktop / Android** | `preenche-sigeduc-firefox.zip` | `https://github.com/devmagary/preenchesigeduc/releases/latest/download/preenche-sigeduc-firefox.zip` |
+| Plataforma / Navegador | Artefato | Link Curto | URL Direta (`latest`) |
+| :--- | :--- | :--- | :--- |
+| **Edge Canary (Android)** | `preenche-sigeduc-edge-mobile.crx` | https://is.gd/sige_mobile | `https://github.com/devmagary/preenchesigeduc/releases/latest/download/preenche-sigeduc-edge-mobile.crx` |
+| **Chrome Desktop / Mises / Lemur** | `preenche-sigeduc-chrome.zip` | https://is.gd/sige_navegador | `https://github.com/devmagary/preenchesigeduc/releases/latest/download/preenche-sigeduc-chrome.zip` |
+| **Firefox Desktop / Android** | `preenche-sigeduc-firefox.zip` | https://is.gd/sige_firefox | `https://github.com/devmagary/preenchesigeduc/releases/latest/download/preenche-sigeduc-firefox.zip` |
 
-> **Portal Web de Download Direto (GitHub Pages):** https://devmagary.github.io/preenchesigeduc/ (publicado a partir de [docs/index.html](docs/index.html)) com os botões e passo a passo para cada navegador.
+> **Portal Web de Download Direto (GitHub Pages):** https://is.gd/sigeduc → https://devmagary.github.io/preenchesigeduc/ (publicado a partir de [docs/index.html](docs/index.html)) com os botões e passo a passo para cada navegador.
 
 ## Instalação (PC e Android)
 
