@@ -126,6 +126,15 @@ As sugestões são organizadas sob a ótica de engenharia sênior, equilibrando 
   - Estender `scripts/package.mjs` para gerar também o pacote `.crx` assinado localmente para Edge Mobile ao final das builds (mantendo a chave `.pem` fora do repositório, já coberta pelo `.gitignore`).
 - **Impacto técnico / Riscos:** Ajuste em `scripts/package.mjs` (assinatura `.crx` MV3) e documentação das URLs fixas no `README.md`.
 
+### 6. Hiperlinks de Navegação no Painel Consolidado CETEP
+- **Prioridade:** P2 — Média
+- **Dificuldade:** Baixa
+- **Contexto:** Na planilha consolidada gerada pela coleta em lote (`src/core/cetep.ts`), facilitar a navegação entre o Painel Consolidado e as abas/blocos individuais de cada turma.
+- **Comportamento esperado:**
+  - Cada linha de turma no **Painel Consolidado** deve ser um hiperlink interno clicável levando diretamente à aba correspondente (ex.: `#'Nome da Aba'!A1`, ou à célula inicial do bloco no modo aba única).
+  - No topo de cada aba de turma, incluir um link **"← Voltar ao Painel"** apontando para o Painel Consolidado.
+- **Impacto técnico / Riscos:** Ajuste localizado no gerador OOXML em `src/core/cetep.ts`, com atenção ao escape de nomes de abas e cobertura em testes unitários.
+
 ### 5. Scraping e Exportação de Grade de Horários e Calendário Escolar (`Ensino`)
 - **Prioridade:** P2 — Média
 - **Dificuldade:** Baixa
