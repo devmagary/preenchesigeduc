@@ -99,6 +99,8 @@
 
     html {
       scroll-behavior: smooth;
+      background: var(--bg);
+      color: var(--text);
     }
 
     body {
@@ -109,7 +111,6 @@
       line-height: 1.55;
       -webkit-font-smoothing: antialiased;
       overflow-x: hidden;
-      transition: background-color 0.22s ease, color 0.22s ease;
     }
 
     a { color: inherit; }
@@ -126,10 +127,11 @@
     /* Navbar fixa */
     .nav-wrap {
       position: sticky;
-      top: 12px;
+      top: 0;
       z-index: 100;
-      padding: 0 16px;
-      margin-top: 12px;
+      padding: 10px 16px 6px;
+      margin-top: 0;
+      background: linear-gradient(to bottom, var(--bg) 76%, transparent);
     }
 
     .nav {
@@ -229,7 +231,7 @@
       font-weight: 600;
       text-decoration: none;
       cursor: pointer;
-      transition: transform 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
       white-space: nowrap;
     }
 
@@ -259,6 +261,12 @@
       background: var(--surface);
       color: var(--text);
       border-color: var(--border-strong);
+    }
+
+    html[data-theme="dark"] .pill-btn.ghost {
+      background: #1e293b;
+      color: #f8fafc;
+      border-color: rgba(255, 255, 255, 0.28);
     }
 
     .pill-btn.ghost:hover {
@@ -560,7 +568,12 @@
     .mock-table-wrap {
       padding: 14px 16px;
       overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
       flex: 1;
+    }
+
+    .mobile-scroll-hint {
+      display: none;
     }
 
     table.mock-tbl {
@@ -585,6 +598,10 @@
       padding: 8px 8px;
       border-bottom: 1px solid var(--border);
       vertical-align: middle;
+    }
+
+    table.mock-tbl td:first-child {
+      white-space: nowrap;
     }
 
     table.mock-tbl tr:last-child td {
@@ -1331,6 +1348,9 @@
     }
 
     @media (max-width: 720px) {
+      .nav-wrap {
+        padding: 8px 10px 6px;
+      }
       .nav-links {
         display: none;
       }
@@ -1338,13 +1358,182 @@
         grid-template-columns: 1fr;
       }
       .hero {
-        padding: 44px 0 36px;
+        padding: 32px 0 28px;
       }
       section.block {
         padding: 40px 0;
       }
       .stage {
         padding: 14px;
+        border-radius: 20px;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .nav {
+        padding: 6px 10px;
+        gap: 6px;
+      }
+      .brand {
+        font-size: 0.86rem;
+        gap: 7px;
+        min-height: 44px;
+        min-width: 0;
+      }
+      .brand svg {
+        width: 24px;
+        height: 24px;
+      }
+      .nav-actions {
+        gap: 6px;
+        flex-shrink: 0;
+      }
+      .icon-btn {
+        min-width: 44px;
+        min-height: 44px;
+      }
+      .nav-cta {
+        min-height: 44px;
+        padding: 8px 12px;
+        font-size: 0.8rem;
+      }
+      .eyebrow {
+        font-size: 0.75rem;
+        padding: 6px 12px;
+        gap: 6px;
+        max-width: 100%;
+      }
+      .mobile-scroll-hint {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 7px 12px;
+        font-size: 0.74rem;
+        font-weight: 600;
+        color: var(--indigo-link);
+        background: var(--bg-alt);
+        border-bottom: 1px solid var(--border);
+      }
+      table.mock-tbl {
+        min-width: 440px;
+      }
+      .dp-tool-btn {
+        min-width: 44px;
+        min-height: 44px;
+        padding: 0 10px;
+      }
+      .dp-tab {
+        min-height: 44px;
+        padding: 8px 4px;
+        font-size: 0.8rem;
+      }
+      .dp-actions .pill-btn {
+        min-height: 44px;
+      }
+      .sheet-topbar {
+        padding: 10px 12px;
+        font-size: 0.82rem;
+      }
+      .sheet-banner {
+        padding: 10px 12px;
+      }
+      table.excel-tbl th:first-child,
+      table.excel-tbl td:first-child {
+        min-width: 195px;
+      }
+      .sheet-tab-btn {
+        min-height: 44px;
+        padding: 8px 12px;
+      }
+      .sheet-back-link,
+      .sheet-link-btn {
+        min-height: 44px;
+        display: inline-flex;
+        align-items: center;
+        padding: 6px 10px;
+      }
+      .guide-tab {
+        min-height: 44px;
+        padding: 8px 12px;
+      }
+      .dl-short a,
+      .footer-links a {
+        display: inline-flex;
+        align-items: center;
+        min-height: 44px;
+        padding: 6px 4px;
+      }
+    }
+
+    @media (max-width: 420px) {
+      .container {
+        padding: 0 14px;
+      }
+      .nav-wrap {
+        padding: 6px 10px 4px;
+      }
+      .hero {
+        padding: 20px 0 24px;
+      }
+      .eyebrow {
+        font-size: 0.73rem;
+        padding: 5px 10px;
+        margin-bottom: 14px;
+      }
+      .hero h1 {
+        font-size: clamp(1.85rem, 8.2vw, 2.25rem);
+        line-height: 1.08;
+        margin-bottom: 12px;
+      }
+      .hero-sub {
+        font-size: 0.96rem;
+        line-height: 1.5;
+        margin-bottom: 18px;
+      }
+      .hero-ctas {
+        gap: 10px;
+        margin-bottom: 14px;
+      }
+      .hero-ctas .pill-btn {
+        min-height: 44px;
+        padding: 10px 16px;
+        font-size: 0.9rem;
+      }
+      .hero-meta {
+        font-size: 0.8rem;
+        gap: 6px;
+      }
+      .stage {
+        padding: 12px;
+        gap: 14px;
+        border-radius: 18px;
+      }
+      .dp-header {
+        flex-wrap: wrap;
+        gap: 8px;
+        padding: 10px 12px;
+      }
+      .dp-title {
+        min-width: 0;
+        flex-wrap: wrap;
+        gap: 5px;
+      }
+      .dp-body {
+        padding: 12px;
+        gap: 10px;
+      }
+      .dp-kpis {
+        gap: 6px;
+      }
+      .pillar-card,
+      .dl-card,
+      .guide-box {
+        padding: 16px;
+        border-radius: 16px;
+      }
+      .final-cta {
+        padding: 28px 16px;
         border-radius: 20px;
       }
     }
@@ -1420,7 +1609,7 @@
     <div class="container hero-inner">
       <div class="eyebrow">
         <span class="eyebrow-dot" aria-hidden="true"></span>
-        <span>Gratuito para professores · Funciona direto no SIGEduc-BA</span>
+        <span>Gratuito para professores · Funciona direto no <span style="white-space:nowrap;">SIGEduc-BA</span></span>
       </div>
       <h1>Notas e frequência no SIGEduc, sem retrabalho.</h1>
       <p class="hero-sub">
@@ -1458,6 +1647,9 @@
             <div class="sig-context">
               <strong id="mock-context-title">1ª Série A (Vespertino) — 3ª Unidade</strong>
               <span id="mock-context-badge" class="sig-tag">Pronto para preencher</span>
+            </div>
+            <div class="mobile-scroll-hint" aria-hidden="true">
+              <span>↔ Arraste a tabela para o lado para ver todas as colunas</span>
             </div>
             <div id="mock-screen-body" class="mock-table-wrap"></div>
           </div>
@@ -1518,6 +1710,9 @@
             <span>Exemplo fictício • Média para aprovação: 5,0</span>
           </div>
           <div id="sheet-banner" class="sheet-banner"></div>
+          <div class="mobile-scroll-hint" aria-hidden="true">
+            <span>↔ Arraste a planilha para o lado para ver notas, aprovação e hiperlinks</span>
+          </div>
           <div id="sheet-table-wrap" class="sheet-scroll"></div>
           <div class="sheet-tabs-bar" role="tablist" aria-label="Abas da planilha de exemplo">
             <button class="sheet-tab-btn" type="button" role="tab" aria-selected="true" data-sheet-tab="painel">Painel Consolidado</button>
@@ -1966,7 +2161,7 @@
             <div id="demo-extract-done" class="nr-modal">
               <strong>Planilha CETEP pronta!</strong> As 3 turmas foram reunidas com painel de resumo, médias e atalhos entre abas.
               <div style="margin-top:8px;">
-                <a class="pill-btn emerald" style="min-height:36px;padding:6px 14px;font-size:0.8rem;" href="#planilha">Ver planilha pronta ↓</a>
+                <a class="pill-btn emerald" style="min-height:44px;padding:8px 16px;font-size:0.84rem;" href="#planilha">Ver planilha pronta ↓</a>
               </div>
             </div>
           `;

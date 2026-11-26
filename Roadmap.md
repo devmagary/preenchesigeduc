@@ -86,9 +86,10 @@ As sugestões são organizadas sob a ótica de engenharia sênior, equilibrando 
   - Importar planilha/CSV ou colagem `(Data, Conteúdo)` no painel, casar por data da aula dentro da unidade aberta (ignorando linhas `disabled`), marcar os checkboxes correspondentes e preencher os `<textarea>` em prévia antes de o professor gravar/replicar.
 - **Impacto técnico / Riscos:** Requer extensão do detector (`form#formLista[action*="lista_topicos.jsf"]`), novo adaptador `src/sigeduc/filler-conteudo.ts` e fixture sanitizada para E2E.
 
-### 5. Adaptação Mobile da Landing Page (`360×800` e `375×667`)
+### 5. Adaptação Mobile da Landing Page (`360×800` e `375×667`) — `[Concluído]`
 - **Prioridade:** P1 — Alta
 - **Dificuldade:** Baixa
+- **Status:** Concluído (revisão CSS responsiva em `docs/index.html` com `@media (max-width: 720px)`, `@media (max-width: 640px)` e `@media (max-width: 420px)`: remoção do atraso de transição de fundo no tema escuro com alto contraste em `.pill-btn.ghost`, navbar fixa com gradiente superior sem fresta ou overflow, `h1` e CTAs ajustados para caber acima da dobra em `375×667`, alvos táteis `>= 44×44 px`, cabeçalho empilhável no painel demo com `Letra 112%/125%` e faixa `.mobile-scroll-hint` nas tabelas; validado por `trabalho/audit-landing.mjs` e aprovado em Modo Cego pelo Crítico Independente `0f44d827` com `0` grave e `0` médio).
 - **Contexto:** Em telas de celular mais estreitas ou baixas (`360×800` e `375×667`), o espaçamento, a altura do hero/navbar, o simulador ao vivo (`#demo`), a prévia da planilha (`#planilha`) e os cards de download/guias ficam apertados.
 - **Comportamento esperado:**
   - Revisão geral de CSS responsivo em `docs/index.html` para `@media (max-width: 420px)` (compactar paddings, ajustar tipografia do `h1`, garantir que a navbar, simulador, abas e botões caibam confortavelmente sem aperto ou scroll horizontal).
