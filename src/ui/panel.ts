@@ -1,6 +1,7 @@
 import {
   ABOUT_SECTIONS,
   APP_PORTAL_URL,
+  APP_PRIVACY_URL,
   APP_REPO_URL,
   getExtensionVersion,
 } from '../core/about';
@@ -757,6 +758,7 @@ export class PreenchePanelController {
         <div class="ps-about-meta">
           <div><strong>Preenche SIGEduc</strong> • Versão <strong>v${escapeHtml(version)}</strong></div>
           <div class="ps-about-links">
+            <a class="ps-about-link" href="${escapeHtml(APP_PRIVACY_URL)}" target="_blank" rel="noopener noreferrer">Política de Privacidade</a>
             <a class="ps-about-link" href="${escapeHtml(APP_REPO_URL)}" target="_blank" rel="noopener noreferrer">Repositório GitHub</a>
             <a class="ps-about-link" href="${escapeHtml(APP_PORTAL_URL)}" target="_blank" rel="noopener noreferrer">Portal de Downloads</a>
           </div>

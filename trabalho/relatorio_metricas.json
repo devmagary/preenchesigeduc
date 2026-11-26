@@ -1,40 +1,40 @@
 {
-  "generatedAt": "2026-11-26T12:31:09.549Z",
+  "generatedAt": "2026-11-26T12:35:33.654Z",
   "parse500x10_20runs": {
     "xlsx_ms": {
-      "avg": 13.7,
-      "p99": 29.82,
-      "max": 29.82
+      "avg": 13.73,
+      "p99": 29.72,
+      "max": 29.72
     },
     "csv_ms": {
-      "avg": 0.34,
-      "p99": 1.58,
-      "max": 1.58
+      "avg": 0.29,
+      "p99": 0.74,
+      "max": 0.74
     },
     "sla_limit_ms": 250,
     "passed": true
   },
-  "panelOpen_ms": 13.94,
+  "panelOpen_ms": 14.31,
   "panelOpen_sla_ms": 100,
   "sequentialFill_45x4": {
     "expectedAjax": 180,
     "receivedAjax": 180,
     "ajaxLossRatePct": 0,
-    "duration_ms": 5718.47,
+    "duration_ms": 5672.79,
     "exactMatched": 45,
     "falsePositives": 0,
     "passed": true
   },
   "bundleSizes_KB": {
-    "distChrome_KB": 585.9,
-    "distFirefox_KB": 586.1,
-    "chromeZip_KB": 187.9,
-    "firefoxZip_KB": 188,
-    "edgeCrx_KB": 188.5,
+    "distChrome_KB": 586.2,
+    "distFirefox_KB": 586.4,
+    "chromeZip_KB": 188,
+    "firefoxZip_KB": 188.1,
+    "edgeCrx_KB": 188.6,
     "packages_sha256": {
-      "chromeZip": "9ce6343aa125770811513310f711dce346c72eebd53c051901bed3327251b961",
-      "firefoxZip": "fa9ec7ba358763716e0322ed90f79a0a8e55c285aa7921e6df741117c2a95557",
-      "edgeCrx": "0927c3369bc4d36c0f39e979323453bee971c4b14b9a611733202aa7bb97c1c2"
+      "chromeZip": "53dde1564cd479f41cb1cbc3d5a34780044cac80c6145a921b31565fd60b3370",
+      "firefoxZip": "188c2ba6368608ab671889bcd4ac2692cac04d7476d39e1e205c255c2922df60",
+      "edgeCrx": "6b7537c3b7996e2d14b25b947c86fadaa12a3989c05152715a7e74ace6534c21"
     },
     "sla_uncompressed_limit_KB": 1536,
     "sla_package_limit_KB": 512,

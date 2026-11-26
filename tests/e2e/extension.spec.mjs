@@ -1073,6 +1073,7 @@ async function runTests() {
     assert.match(aboutCheck.text, /100% local/i);
     assert.match(aboutCheck.text, /responsabilidade exclusiva do docente/i);
     assert.match(aboutCheck.text, /v\d+\.\d+\.\d+/);
+    assert.equal(aboutCheck.links.includes('https://devmagary.github.io/preenchesigeduc/privacidade.html'), true);
     assert.equal(aboutCheck.links.includes('https://github.com/devmagary/preenchesigeduc'), true);
     assert.equal(aboutCheck.links.includes('https://is.gd/sigeduc'), true);
     await page.screenshot({ path: path.join(evidenciasDir, 'sobre_privacidade_mobile.png') });

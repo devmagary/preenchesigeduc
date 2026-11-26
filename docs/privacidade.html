@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Política de Privacidade — Preenche SIGEduc</title>
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --text: #0f172a;
+      --muted: #475569;
+      --border: #cbd5e1;
+      --primary: #404e82;
+      --primary-hover: #313d68;
+      --ok-bg: #ecfdf5;
+      --ok-bd: #a7f3d0;
+      --ok-tx: #065f46;
+      --link: #1d4ed8;
+      --code-bg: #f1f5f9;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0f172a;
+        --card: #1e293b;
+        --text: #f1f5f9;
+        --muted: #cbd5e1;
+        --border: #334155;
+        --primary: #334155;
+        --primary-hover: #475569;
+        --ok-bg: #064e3b;
+        --ok-bd: #059669;
+        --ok-tx: #d1fae5;
+        --link: #93c5fd;
+        --code-bg: #0f172a;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 24px 16px 48px;
+    }
+    .wrap {
+      max-width: 820px;
+      margin: 0 auto;
+    }
+    header {
+      background: var(--primary);
+      color: #fff;
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 18px;
+    }
+    header h1 {
+      margin: 0 0 8px;
+      font-size: 1.55rem;
+    }
+    header p {
+      margin: 0;
+      opacity: 0.94;
+    }
+    .highlight {
+      background: var(--ok-bg);
+      border: 1px solid var(--ok-bd);
+      color: var(--ok-tx);
+      border-radius: 12px;
+      padding: 16px 18px;
+      margin-bottom: 16px;
+      font-size: 0.96rem;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px 20px;
+      margin-bottom: 14px;
+    }
+    .card h2 {
+      margin: 0 0 10px;
+      font-size: 1.08rem;
+    }
+    .card p {
+      margin: 0 0 8px;
+      color: var(--muted);
+      font-size: 0.94rem;
+    }
+    .card p:last-child {
+      margin-bottom: 0;
+    }
+    .card ul {
+      margin: 0;
+      padding-left: 20px;
+      color: var(--muted);
+      font-size: 0.94rem;
+    }
+    .card li + li {
+      margin-top: 6px;
+    }
+    code {
+      background: var(--code-bg);
+      color: var(--text);
+      padding: 2px 6px;
+      border-radius: 6px;
+      font-size: 0.88em;
+      word-break: break-word;
+    }
+    a {
+      color: var(--link);
+      font-weight: 600;
+    }
+    .back-bar {
+      margin-top: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      min-height: 44px;
+      padding: 10px 16px;
+      border-radius: 10px;
+      background: var(--primary);
+      color: #fff;
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .btn:hover {
+      background: var(--primary-hover);
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <h1>Política de Privacidade — Preenche SIGEduc</h1>
+      <p>Extensão de navegador Manifest V3 de código aberto • Processamento 100% local</p>
+    </header>
+
+    <div class="highlight">
+      <strong>Declaração objetiva:</strong> a extensão <strong>Preenche SIGEduc</strong> <strong>não coleta, não armazena em servidores externos e não transmite</strong> nenhum dado pessoal, nome ou matrícula de estudante, nota, frequência, planilha importada ou credencial/senha para terceiros. Todo o processamento ocorre <strong>100% localmente no navegador</strong> do usuário.
+    </div>
+
+    <section class="card">
+      <h2>1. Ausência de coleta, servidor próprio e telemetria</h2>
+      <ul>
+        <li>A extensão não possui backend, banco de dados remoto ou serviço externo próprio.</li>
+        <li>Não utiliza cookies de rastreamento, Google Analytics, telemetria, anúncios ou scripts remotos via CDN.</li>
+        <li>As únicas requisições de rede originadas na página são as interações diretas e locais do próprio portal oficial <code>https://sigeduc.educacao.ba.gov.br/sigeduc/*</code> iniciadas durante o uso assistido pelo docente.</li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2>2. Dados tratados localmente e armazenamento no navegador</h2>
+      <ul>
+        <li><strong>Planilhas e colagem (<code>.xlsx</code>, <code>.xls</code>, <code>.csv</code>):</strong> lidas exclusivamente na memória RAM da aba enquanto o painel está aberto, sem upload para nenhum servidor.</li>
+        <li><strong>Credenciais e senhas:</strong> a extensão nunca salva senhas em <code>chrome.storage</code>, <code>localStorage</code>, <code>sessionStorage</code>, cookies ou logs. Caso o modo opcional de auto-gravação seja ativado pelo usuário, a senha permanece apenas em memória RAM da instância atual e é zerada automaticamente ao término ou fechamento do painel.</li>
+        <li><strong>Preferências visuais (<code>localStorage</code>):</strong> armazena localmente apenas escolhas de interface do próprio usuário — tema claro/escuro (<code>preenche_sigeduc_theme</code>) e escala de fonte (<code>preenche_sigeduc_font_scale</code>).</li>
+        <li><strong>Estado temporário de fluxo (<code>sessionStorage</code>):</strong> armazena apenas fila transitória de trabalho na aba ativa (<code>preenche_sigeduc_batch_extract_v1</code> e <code>preenche_sigeduc_pending_nr</code>), sem senhas, sendo removida ao concluir a operação ou encerrar a sessão do navegador.</li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2>3. Permissões solicitadas</h2>
+      <ul>
+        <li><code>activeTab</code>: usada somente quando o usuário interage com a extensão para verificar se a aba ativa pertence ao SIGEduc e abrir/fechar o painel flutuante.</li>
+        <li><strong>Escopo de página (<code>https://sigeduc.educacao.ba.gov.br/sigeduc/*</code>):</strong> restringe a injeção do painel de interface (Shadow DOM) exclusivamente ao portal SIGEduc-BA, sem acesso a nenhum outro site visitado pelo usuário.</li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2>4. Independência e conformidade com a LGPD (Lei nº 13.709/2018)</h2>
+      <p>O <strong>Preenche SIGEduc</strong> é um projeto independente, gratuito e de código aberto, sem qualquer vínculo, patrocínio ou homologação da Secretaria da Educação do Estado da Bahia (<strong>SEC-BA</strong>) ou do Governo do Estado da Bahia.</p>
+      <p>Os dados escolares exibidos no SIGEduc ou em planilhas locais permanecem sob controle exclusivo do docente utilizador e da rede de ensino oficial. Cabe ao docente conferir integralmente as notas, frequências e pré-visualizações antes da gravação definitiva no diário de classe.</p>
+    </section>
+
+    <section class="card">
+      <h2>5. Código aberto, atualizações e contato</h2>
+      <p>Todo o código-fonte desta extensão é público para auditoria independente em <a href="https://github.com/devmagary/preenchesigeduc" target="_blank" rel="noopener noreferrer">github.com/devmagary/preenchesigeduc</a>.</p>
+      <p>Dúvidas ou solicitações relacionadas a esta Política de Privacidade podem ser registradas diretamente em <a href="https://github.com/devmagary/preenchesigeduc/issues" target="_blank" rel="noopener noreferrer">GitHub Issues</a>.</p>
+    </section>
+
+    <div class="back-bar">
+      <a class="btn" href="index.html">← Voltar para Downloads</a>
+      <span>Última atualização: novembro de 2026</span>
+    </div>
+  </main>
+</body>
+</html>

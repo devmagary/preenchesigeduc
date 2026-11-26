@@ -1,6 +1,7 @@
 import {
   ABOUT_SECTIONS,
   APP_PORTAL_URL,
+  APP_PRIVACY_URL,
   APP_REPO_URL,
   getExtensionVersion,
 } from '../core/about';
@@ -31,6 +32,7 @@ function renderPopupAbout(): void {
   const linksWrap = document.createElement('div');
   linksWrap.className = 'about-links';
   const links: Array<{ label: string; url: string }> = [
+    { label: 'Política de Privacidade', url: APP_PRIVACY_URL },
     { label: 'Repositório GitHub', url: APP_REPO_URL },
     { label: 'Portal de Downloads', url: APP_PORTAL_URL },
   ];

@@ -1,6 +1,7 @@
 export const APP_NAME = 'Preenche SIGEduc';
 export const APP_REPO_URL = 'https://github.com/devmagary/preenchesigeduc';
 export const APP_PORTAL_URL = 'https://is.gd/sigeduc';
+export const APP_PRIVACY_URL = 'https://devmagary.github.io/preenchesigeduc/privacidade.html';
 
 export interface AboutSectionItem {
   id: string;
