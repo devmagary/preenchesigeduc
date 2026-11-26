@@ -28,9 +28,10 @@ As sugestões são organizadas sob a ótica de engenharia sênior, equilibrando 
 - **Comportamento esperado:** Garantir que a extração/coleta de matrículas e notas obedeça exatamente a unidade selecionada no seletor da UI (ex.: 1ª, 2ª ou 3ª unidade) antes de ler a tabela.
 - **Impacto técnico / Riscos:** Ajuste na máquina de estados/coleta em `src/sigeduc/batch-extract.ts` e `src/sigeduc/scraper.ts`, com cobertura de teste E2E.
 
-### 2. Extração de Notas na Aba "Resultado Final" (`Res. Final`)
+### 2. Extração de Notas na Aba "Resultado Final" (`Res. Final`) — `[Concluído]`
 - **Prioridade:** P0 — Crítico
 - **Dificuldade:** Média
+- **Status:** Concluído (`scrapeResultadoFinalPanel` e `scrapeLancarNotasAllUnits` em `src/sigeduc/scraper.ts` extraem as unidades regulares (`1ª Un.`, `2ª Un.`, `3ª Un.`) junto às colunas reais de `#formulario:resultadoFinal` (`Média Anual`, `Rec. Final`, `Média Final`, `Total de Faltas`, `%Frequência Componente`, `Res. Parcial Componente`), lendo tanto `<input>` quanto `<span>`/`<td>`; `src/core/cetep.ts` gera abas com sufixo `RF`, cabeçalhos limpos e fórmula `Nota Geral` baseada em `Média Final` com fallback para `Média Anual`; `src/sigeduc/batch-extract.ts` e `src/ui/panel.ts` adicionam a opção `Res. Final` mantendo `'active'` restrita às unidades regulares; validado em testes unitários e E2E).
 - **Contexto:** Ao exportar ou coletar em lote a aba/unidade **Resultado Final** (`Res. Final`), a planilha sai apenas com `Avaliação 1 (10.0)` vazia (`Sem Nota`), sem capturar as notas reais da tela do SIGEduc.
 - **Comportamento esperado:**
   - Extrair todas as colunas visíveis na aba **Resultado Final** do SIGEduc (ex.: 1ª/2ª/3ª Unidade, Média, Recuperação Final e Resultado Final), tanto na exportação individual quanto na extração em lote.

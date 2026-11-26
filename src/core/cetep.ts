@@ -16,6 +16,7 @@ export interface CetepActivityCol {
   idAvaliacao: string;
   nome: string;
   valorMax: number;
+  colType?: 'grade' | 'integer' | 'percent' | 'text';
 }
 
 export interface CetepStudentRow {
@@ -23,6 +24,7 @@ export interface CetepStudentRow {
   nome: string;
   matricula: string;
   notas: Record<string, number | null>;
+  textValues?: Record<string, string>;
   notaUnidadeFallback?: number | null;
   observacoes?: string;
 }
@@ -33,6 +35,7 @@ export interface CetepTurmaData {
   docente: string;
   ano: string;
   unidade: string;
+  isResultadoFinal?: boolean;
   identity: TurmaIdentity;
   atividades: CetepActivityCol[];
   alunos: CetepStudentRow[];
@@ -215,7 +218,32 @@ function makeUniqueSheetName(base: string, usedNames: Set<string>): string {
   return fallback;
 }
 
-export function computeStudentNotaGeral(student: CetepStudentRow, atividades: CetepActivityCol[]): number | null {
+function isResultadoFinalData(
+  atividades: CetepActivityCol[],
+  isResultadoFinal?: boolean
+): boolean {
+  return (
+    Boolean(isResultadoFinal) ||
+    atividades.some((a) => a.idAvaliacao === 'rf_media_final' || a.idAvaliacao === 'rf_media_anual')
+  );
+}
+
+export function computeStudentNotaGeral(
+  student: CetepStudentRow,
+  atividades: CetepActivityCol[],
+  isResultadoFinal = false
+): number | null {
+  if (isResultadoFinalData(atividades, isResultadoFinal)) {
+    const mf = student.notas['rf_media_final'];
+    if (typeof mf === 'number' && Number.isFinite(mf)) return Math.round(mf * 100) / 100;
+    const ma = student.notas['rf_media_anual'];
+    if (typeof ma === 'number' && Number.isFinite(ma)) return Math.round(ma * 100) / 100;
+    if (typeof student.notaUnidadeFallback === 'number' && Number.isFinite(student.notaUnidadeFallback)) {
+      return Math.round(student.notaUnidadeFallback * 100) / 100;
+    }
+    return null;
+  }
+
   let hasAny = false;
   let sum = 0;
   for (const av of atividades) {
@@ -240,7 +268,7 @@ export function computeCetepTurmaStats(turma: CetepTurmaData, minPassingGrade = 
   let countNotas = 0;
 
   for (const st of turma.alunos) {
-    const nota = computeStudentNotaGeral(st, turma.atividades);
+    const nota = computeStudentNotaGeral(st, turma.atividades, turma.isResultadoFinal);
     if (nota === null) {
       semNota++;
     } else {
@@ -665,6 +693,7 @@ function appendTurmaBlockToBuilder(
   sheetName: string,
   showBannerHeader: boolean
 ): { nextRow: number; rangeRef: TurmaRangeRef } {
+  const isRF = isResultadoFinalData(turma.atividades, turma.isResultadoFinal);
   const atividades =
     turma.atividades.length > 0
       ? turma.atividades
@@ -684,7 +713,8 @@ function appendTurmaBlockToBuilder(
   sb.setColWidth(colNome, 36);
   sb.setColWidth(colMat, 16);
   for (let i = 0; i < avCount; i++) {
-    sb.setColWidth(firstAvCol + i, Math.min(26, Math.max(15, atividades[i].nome.length + 7)));
+    const widthHint = isRF ? atividades[i].nome.length + 3 : atividades[i].nome.length + 7;
+    sb.setColWidth(firstAvCol + i, Math.min(26, Math.max(isRF ? 13 : 15, widthHint)));
   }
   sb.setColWidth(colNotaGeral, 14);
   sb.setColWidth(colSituacao, 16);
@@ -717,7 +747,7 @@ function appendTurmaBlockToBuilder(
       col: firstAvCol + idx,
       style: 4,
       kind: 'str' as const,
-      val: `${av.nome} (${av.valorMax.toFixed(1)})`,
+      val: isRF ? av.nome : `${av.nome} (${av.valorMax.toFixed(1)})`,
     })),
     { col: colNotaGeral, style: 4, kind: 'str', val: 'Nota Geral' },
     { col: colSituacao, style: 4, kind: 'str', val: 'Situação' },
@@ -730,6 +760,8 @@ function appendTurmaBlockToBuilder(
   const firstAvLetter = colToLetter(firstAvCol);
   const lastAvLetter = colToLetter(lastAvCol);
   const notaGeralLetter = colToLetter(colNotaGeral);
+  const rfMediaFinalIdx = isRF ? atividades.findIndex((a) => a.idAvaliacao === 'rf_media_final') : -1;
+  const rfMediaAnualIdx = isRF ? atividades.findIndex((a) => a.idAvaliacao === 'rf_media_anual') : -1;
 
   const avSums = new Array<number>(avCount).fill(0);
   const avCounts = new Array<number>(avCount).fill(0);
@@ -741,10 +773,11 @@ function appendTurmaBlockToBuilder(
     const st = alunos[i];
     const zebra = i % 2 === 1;
     const textLeftStyle = zebra ? 6 : 5;
+    const textCenterStyle = zebra ? 8 : 7;
     const numCenterStyle = zebra ? 21 : 20;
     const gradeStyle = zebra ? 10 : 9;
 
-    const notaGeral = computeStudentNotaGeral(st, turma.atividades);
+    const notaGeral = computeStudentNotaGeral(st, turma.atividades, isRF);
     const situacao =
       notaGeral === null
         ? 'Sem Nota'
@@ -761,22 +794,64 @@ function appendTurmaBlockToBuilder(
     const rowCells: CellSpec[] = [
       { col: colNum, style: numCenterStyle, kind: 'num', val: st.numero || i + 1 },
       { col: colNome, style: textLeftStyle, kind: 'str', val: st.nome },
-      { col: colMat, style: zebra ? 8 : 7, kind: 'str', val: st.matricula || '' },
+      { col: colMat, style: textCenterStyle, kind: 'str', val: st.matricula || '' },
     ];
 
     for (let aIdx = 0; aIdx < avCount; aIdx++) {
       const av = atividades[aIdx];
+      if (av.colType === 'text') {
+        const txt = st.textValues?.[av.idAvaliacao] ?? '';
+        rowCells.push({ col: firstAvCol + aIdx, style: textCenterStyle, kind: 'str', val: txt });
+        continue;
+      }
       const rawVal = av.idAvaliacao === '__placeholder__' ? null : st.notas[av.idAvaliacao];
       if (typeof rawVal === 'number' && Number.isFinite(rawVal)) {
         avSums[aIdx] += rawVal;
         avCounts[aIdx]++;
-        rowCells.push({ col: firstAvCol + aIdx, style: gradeStyle, kind: 'num', val: rawVal });
+        const cellStyle = av.colType === 'integer' ? numCenterStyle : gradeStyle;
+        const cellVal = av.colType === 'integer' ? Math.round(rawVal) : rawVal;
+        rowCells.push({ col: firstAvCol + aIdx, style: cellStyle, kind: 'num', val: cellVal });
       } else {
-        rowCells.push({ col: firstAvCol + aIdx, style: gradeStyle, kind: 'empty' });
+        const cellStyle = av.colType === 'integer' ? numCenterStyle : gradeStyle;
+        rowCells.push({ col: firstAvCol + aIdx, style: cellStyle, kind: 'empty' });
       }
     }
 
-    if (turma.atividades.length > 0) {
+    if (isRF) {
+      if (rfMediaFinalIdx >= 0 && rfMediaAnualIdx >= 0) {
+        const mfRef = `${colToLetter(firstAvCol + rfMediaFinalIdx)}${r}`;
+        const maRef = `${colToLetter(firstAvCol + rfMediaAnualIdx)}${r}`;
+        rowCells.push({
+          col: colNotaGeral,
+          style: gradeStyle,
+          kind: 'formula_num',
+          formula: `IF(${mfRef}<>"",${mfRef},IF(${maRef}<>"",${maRef},""))`,
+          val: notaGeral,
+        });
+      } else if (rfMediaFinalIdx >= 0) {
+        const mfRef = `${colToLetter(firstAvCol + rfMediaFinalIdx)}${r}`;
+        rowCells.push({
+          col: colNotaGeral,
+          style: gradeStyle,
+          kind: 'formula_num',
+          formula: `IF(${mfRef}<>"",${mfRef},"")`,
+          val: notaGeral,
+        });
+      } else if (rfMediaAnualIdx >= 0) {
+        const maRef = `${colToLetter(firstAvCol + rfMediaAnualIdx)}${r}`;
+        rowCells.push({
+          col: colNotaGeral,
+          style: gradeStyle,
+          kind: 'formula_num',
+          formula: `IF(${maRef}<>"",${maRef},"")`,
+          val: notaGeral,
+        });
+      } else if (notaGeral !== null) {
+        rowCells.push({ col: colNotaGeral, style: gradeStyle, kind: 'num', val: notaGeral });
+      } else {
+        rowCells.push({ col: colNotaGeral, style: gradeStyle, kind: 'empty' });
+      }
+    } else if (turma.atividades.length > 0) {
       rowCells.push({
         col: colNotaGeral,
         style: gradeStyle,
@@ -815,6 +890,10 @@ function appendTurmaBlockToBuilder(
       { col: colMat, style: 16, kind: 'empty' },
     ];
     for (let aIdx = 0; aIdx < avCount; aIdx++) {
+      if (atividades[aIdx].colType === 'text') {
+        avgCells.push({ col: firstAvCol + aIdx, style: 16, kind: 'empty' });
+        continue;
+      }
       const colL = colToLetter(firstAvCol + aIdx);
       const cached = avCounts[aIdx] > 0 ? Math.round((avSums[aIdx] / avCounts[aIdx]) * 100) / 100 : null;
       avgCells.push({
@@ -855,6 +934,7 @@ function appendTurmaBlockToBuilder(
 }
 
 function shortUnitTag(unidade: string): string {
+  if (/res\.?\s*final|resultado\s*final/i.test(String(unidade ?? ''))) return 'RF';
   const m = String(unidade ?? '').match(/(\d+)/);
   if (m?.[1]) return `${m[1]}U`;
   return '';

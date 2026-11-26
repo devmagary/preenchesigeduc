@@ -38,6 +38,7 @@ const EXPECTED_EVIDENCES = [
   'export_avaliacoes.json',
   'consolidado_cetep_lote.xlsx',
   'consolidado_cetep_ativo_mat.xlsx',
+  'consolidado_cetep_res_final.xlsx',
   'modelo_notas_semestral.xlsx',
   'modelo_frequencia.xlsx',
   'relatorio_execucao_notas_completo.json',

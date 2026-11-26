@@ -1,4 +1,4 @@
-import { cleanDisplayName } from '../core/normalize';
+import { cleanDisplayName, normalizeName } from '../core/normalize';
 import type { ExportSheetSpec } from '../core/spreadsheet';
 
 export interface ScrapedTurma {
@@ -19,6 +19,7 @@ export interface ScrapedAtividadeNota {
   valorMax: number;
   disabled: boolean;
   colIndex: number;
+  colType?: 'grade' | 'integer' | 'percent' | 'text';
 }
 
 export interface ScrapedAlunoNota {
@@ -41,6 +42,7 @@ export interface ScrapedNotasScreen {
   totalAulas: string;
   unidadeAtiva: string;
   unidadesDisponiveis: string[];
+  isResultadoFinal?: boolean;
   atividades: ScrapedAtividadeNota[];
   alunos: ScrapedAlunoNota[];
 }
@@ -222,12 +224,228 @@ function getActiveTabPanel(doc: Document): { activeLabel: string; allLabels: str
   return { activeLabel, allLabels, panel };
 }
 
-function scrapeNotasPanel(
+export function isResultadoFinalLabel(label: string): boolean {
+  return /res\.?\s*final|resultado\s*final/i.test(String(label ?? ''));
+}
+
+function readCellValue(cell: Element | undefined): string {
+  if (!cell) return '';
+  const inp = cell.querySelector('input, textarea, select') as
+    | HTMLInputElement
+    | HTMLTextAreaElement
+    | HTMLSelectElement
+    | null;
+  if (inp) return (inp.value ?? '').trim();
+  return textOf(cell);
+}
+
+function inferResFinalColMeta(
+  headerText: string,
+  colIdx: number
+): { idAvaliacao: string; nome: string; colType: 'grade' | 'integer' | 'percent' | 'text' } {
+  if (/m[eé]dia\s*anual/i.test(headerText)) {
+    return { idAvaliacao: 'rf_media_anual', nome: 'Média Anual', colType: 'grade' };
+  }
+  if (/rec\.?\s*final/i.test(headerText)) {
+    return { idAvaliacao: 'rf_rec_final', nome: 'Rec. Final', colType: 'grade' };
+  }
+  if (/m[eé]dia\s*final/i.test(headerText)) {
+    return { idAvaliacao: 'rf_media_final', nome: 'Média Final', colType: 'grade' };
+  }
+  if (/faltas/i.test(headerText)) {
+    return { idAvaliacao: 'rf_total_faltas', nome: 'Total de Faltas', colType: 'integer' };
+  }
+  if (/frequ[eê]ncia|%/i.test(headerText)) {
+    return { idAvaliacao: 'rf_freq_pct', nome: '%Frequência Componente', colType: 'percent' };
+  }
+  if (/res\.?\s*parcial|situa[cç][aã]o|resultado/i.test(headerText)) {
+    return { idAvaliacao: 'rf_res_parcial', nome: 'Res. Parcial Componente', colType: 'text' };
+  }
+  return {
+    idAvaliacao: `rf_col_${colIdx}`,
+    nome: headerText || `Coluna ${colIdx + 1}`,
+    colType: 'text',
+  };
+}
+
+function computeUnitGradeForStudent(st: ScrapedAlunoNota): string {
+  const nu = st.notaUnidade.trim();
+  if (nu) return nu;
+  let hasAny = false;
+  let sum = 0;
+  for (const val of Object.values(st.notasAtividades)) {
+    const cleaned = String(val ?? '').trim();
+    if (!cleaned) continue;
+    const num = Number(cleaned.replace(',', '.'));
+    if (Number.isFinite(num)) {
+      hasAny = true;
+      sum += num;
+    }
+  }
+  return hasAny ? (Math.round(sum * 100) / 100).toFixed(1) : '';
+}
+
+function scrapeRegularUnitTabsSummary(
+  doc: Document | null,
+  allLabels: string[],
+  meta: Record<string, string>
+): Array<{ idAvaliacao: string; nome: string; gradesByNormName: Map<string, string> }> {
+  if (!doc) return [];
+  const navItems = Array.from(doc.querySelectorAll('#formulario\\:tabViewId .ui-tabs-nav li'));
+  const panels = Array.from(doc.querySelectorAll('#formulario\\:tabViewId .ui-tabs-panel'));
+  const summaries: Array<{ idAvaliacao: string; nome: string; gradesByNormName: Map<string, string> }> = [];
+
+  for (let idx = 0; idx < navItems.length; idx++) {
+    const li = navItems[idx];
+    const label = textOf(li);
+    if (!label || isResultadoFinalLabel(label)) continue;
+    const href = li.querySelector('a')?.getAttribute('href') ?? '';
+    const targetId = href.startsWith('#') ? href.slice(1) : '';
+    const unitPanel = targetId ? panels.find((p) => p.id === targetId) ?? null : null;
+    if (!unitPanel) continue;
+
+    const unitScr = scrapeNotasPanel(unitPanel, label, allLabels, meta, doc);
+    const numMatch = label.match(/(\d+)/);
+    const unitNum = numMatch?.[1] ?? String(idx + 1);
+    const shortName = numMatch?.[1] ? `${numMatch[1]}ª Un.` : label;
+    const gradesByNormName = new Map<string, string>();
+    for (const st of unitScr.alunos) {
+      const norm = normalizeName(st.nome);
+      if (norm) gradesByNormName.set(norm, computeUnitGradeForStudent(st));
+    }
+    summaries.push({
+      idAvaliacao: `rf_unit_${unitNum}`,
+      nome: shortName,
+      gradesByNormName,
+    });
+  }
+
+  return summaries;
+}
+
+function scrapeResultadoFinalPanel(
+  doc: Document | null,
   panel: Element | null,
   unitLabel: string,
   allLabels: string[],
   meta: Record<string, string>
 ): ScrapedNotasScreen {
+  const atividades: ScrapedAtividadeNota[] = [];
+  const alunos: ScrapedAlunoNota[] = [];
+  const unitSummaries = scrapeRegularUnitTabsSummary(doc ?? panel?.ownerDocument ?? null, allLabels, meta);
+
+  let colCounter = 0;
+  for (const u of unitSummaries) {
+    atividades.push({
+      idAvaliacao: u.idAvaliacao,
+      nome: u.nome,
+      valorMax: 10,
+      disabled: true,
+      colIndex: colCounter++,
+      colType: 'grade',
+    });
+  }
+
+  const resCols: Array<{
+    tdIndex: number;
+    idAvaliacao: string;
+    nome: string;
+    colType: 'grade' | 'integer' | 'percent' | 'text';
+  }> = [];
+
+  const table =
+    (panel?.querySelector('table[id*="resultadoFinal"]') as HTMLTableElement | null) ??
+    (panel?.querySelector('table') as HTMLTableElement | null);
+
+  if (table) {
+    const headerCells = Array.from(table.querySelectorAll('thead th, thead tr:first-child th'));
+    const ths = headerCells.length > 0 ? headerCells : Array.from(table.querySelectorAll('tr:first-child th'));
+    ths.forEach((th, tdIndex) => {
+      const txt = textOf(th);
+      if (!txt || /^Estudante$/i.test(txt)) return;
+      const inferred = inferResFinalColMeta(txt, resCols.length);
+      resCols.push({ tdIndex, ...inferred });
+      atividades.push({
+        idAvaliacao: inferred.idAvaliacao,
+        nome: inferred.nome,
+        valorMax: inferred.colType === 'percent' ? 100 : 10,
+        disabled: true,
+        colIndex: colCounter++,
+        colType: inferred.colType,
+      });
+    });
+
+    const dataRows = Array.from(table.querySelectorAll('tbody tr'));
+    dataRows.forEach((row, idx) => {
+      const tds = Array.from(row.querySelectorAll('td'));
+      if (tds.length === 0) return;
+      const nome = textOf(tds[0]);
+      if (!nome) return;
+
+      const normNome = normalizeName(nome);
+      const notasAtividades: Record<string, string> = {};
+      const inputIds: Record<string, string> = {};
+      const disabledMap: Record<string, boolean> = {};
+
+      for (const u of unitSummaries) {
+        notasAtividades[u.idAvaliacao] = u.gradesByNormName.get(normNome) ?? '';
+        disabledMap[u.idAvaliacao] = true;
+      }
+
+      for (const col of resCols) {
+        const cell = tds[col.tdIndex];
+        notasAtividades[col.idAvaliacao] = readCellValue(cell);
+        const inp = cell?.querySelector('input') as HTMLInputElement | null;
+        if (inp?.id) inputIds[col.idAvaliacao] = inp.id;
+        disabledMap[col.idAvaliacao] = inp ? inp.disabled : true;
+      }
+
+      const recFinal = notasAtividades['rf_rec_final'] ?? '';
+      const mediaFinal = (notasAtividades['rf_media_final'] ?? '').trim();
+      const mediaAnual = (notasAtividades['rf_media_anual'] ?? '').trim();
+
+      alunos.push({
+        index: idx,
+        nome,
+        notasAtividades,
+        inputIds,
+        disabledMap,
+        recUnidade: recFinal,
+        recInputId: inputIds['rf_rec_final'] ?? null,
+        recDisabled: disabledMap['rf_rec_final'] ?? true,
+        notaUnidade: mediaFinal || mediaAnual,
+      });
+    });
+  }
+
+  return {
+    kind: 'lancar_notas',
+    escola: meta['Escola'] ?? '',
+    turma: meta['Turma'] ?? '',
+    componente: meta['Componente'] ?? '',
+    totalAulas: meta['Total Aulas'] ?? '',
+    unidadeAtiva: unitLabel,
+    unidadesDisponiveis: allLabels,
+    isResultadoFinal: true,
+    atividades,
+    alunos,
+  };
+}
+
+function scrapeNotasPanel(
+  panel: Element | null,
+  unitLabel: string,
+  allLabels: string[],
+  meta: Record<string, string>,
+  doc: Document | null = null
+): ScrapedNotasScreen {
+  if (
+    isResultadoFinalLabel(unitLabel) ||
+    panel?.id === 'formulario:resF' ||
+    Boolean(panel?.querySelector('table[id*="resultadoFinal"]'))
+  ) {
+    return scrapeResultadoFinalPanel(doc ?? panel?.ownerDocument ?? null, panel, unitLabel, allLabels, meta);
+  }
   const atividades: ScrapedAtividadeNota[] = [];
   const alunos: ScrapedAlunoNota[] = [];
 
@@ -321,7 +539,7 @@ export function scrapeLancarNotas(doc: Document): ScrapedNotasScreen {
   const metaTable = findTableByCaption(doc, 'Lançar Notas');
   const meta = parseTableKeyValues(metaTable);
   const { activeLabel, allLabels, panel } = getActiveTabPanel(doc);
-  return scrapeNotasPanel(panel, activeLabel, allLabels, meta);
+  return scrapeNotasPanel(panel, activeLabel, allLabels, meta, doc);
 }
 
 export function scrapeLancarNotasAllUnits(doc: Document): ScrapedNotasScreen[] {
@@ -334,12 +552,12 @@ export function scrapeLancarNotasAllUnits(doc: Document): ScrapedNotasScreen[] {
   const unitScreens: ScrapedNotasScreen[] = [];
   for (const li of navItems) {
     const label = textOf(li);
-    if (!label || /res\.\s*final/i.test(label)) continue;
+    if (!label) continue;
     const href = li.querySelector('a')?.getAttribute('href') ?? '';
     const targetId = href.startsWith('#') ? href.slice(1) : '';
     const panel = targetId ? panels.find((p) => p.id === targetId) ?? null : null;
     if (!panel) continue;
-    unitScreens.push(scrapeNotasPanel(panel, label, allLabels, meta));
+    unitScreens.push(scrapeNotasPanel(panel, label, allLabels, meta, doc));
   }
 
   return unitScreens.length > 0 ? unitScreens : [scrapeLancarNotas(doc)];
@@ -347,21 +565,32 @@ export function scrapeLancarNotasAllUnits(doc: Document): ScrapedNotasScreen[] {
 
 export function pickUnitFromScrapedList(
   units: ScrapedNotasScreen[],
-  preferred: 'active' | '1' | '2' | '3',
+  preferred: 'active' | '1' | '2' | '3' | 'final',
   activeLabel: string
 ): ScrapedNotasScreen | null {
   if (units.length === 0) return null;
 
-  const activeUnit = units.find((u) => u.unidadeAtiva === activeLabel) ?? units[0];
+  if (preferred === 'final') {
+    const finalUnit = units.find((u) => u.isResultadoFinal || isResultadoFinalLabel(u.unidadeAtiva));
+    if (finalUnit) return finalUnit;
+  }
+
+  const regularUnits = units.filter((u) => !u.isResultadoFinal && !isResultadoFinalLabel(u.unidadeAtiva));
+  const candidates = regularUnits.length > 0 ? regularUnits : units;
+  const activeUnit =
+    candidates.find((u) => u.unidadeAtiva === activeLabel) ??
+    candidates[0] ??
+    units[0];
+
   if (preferred === 'active') {
     // No SIGEduc, a aba da 1ª Unidade costuma vir selecionada no HTML inicial mesmo quando
-    // a 2ª ou 3ª Unidade já está aberta; priorizar a última unidade com atividades abertas.
-    const withOpenActivities = units.filter((u) => u.atividades.some((a) => !a.disabled));
+    // a 2ª ou 3ª Unidade já está aberta; priorizar a última unidade regular com atividades abertas.
+    const withOpenActivities = candidates.filter((u) => u.atividades.some((a) => !a.disabled));
     if (withOpenActivities.length > 0) {
       return withOpenActivities[withOpenActivities.length - 1];
     }
 
-    const withContent = units.filter(
+    const withContent = candidates.filter(
       (u) =>
         u.atividades.length > 0 ||
         u.alunos.some(
@@ -378,10 +607,14 @@ export function pickUnitFromScrapedList(
     return activeUnit;
   }
 
-  const byNumber = units.find((u) => new RegExp(`(?:^|\\b)${preferred}(?:[ªaºo]|\\b)`, 'i').test(u.unidadeAtiva));
+  if (preferred === 'final') {
+    return activeUnit;
+  }
+
+  const byNumber = candidates.find((u) => new RegExp(`(?:^|\\b)${preferred}(?:[ªaºo]|\\b)`, 'i').test(u.unidadeAtiva));
   if (byNumber) return byNumber;
   const idx = Number(preferred) - 1;
-  if (idx >= 0 && idx < units.length) return units[idx];
+  if (idx >= 0 && idx < candidates.length) return candidates[idx];
   return activeUnit;
 }
 
@@ -642,6 +875,20 @@ export function buildExportBundle(data: ScrapedScreenData): {
   }
 
   if (data.kind === 'lancar_notas') {
+    if (data.isResultadoFinal) {
+      const headers = ['Nome', ...data.atividades.map((a) => a.nome)];
+      const rows = data.alunos.map((st) => [
+        st.nome,
+        ...data.atividades.map((a) => st.notasAtividades[a.idAvaliacao] ?? ''),
+      ]);
+      return {
+        baseFileName: 'resultado_final_sigeduc',
+        headers,
+        rows,
+        sheets: [{ name: 'Resultado Final', headers, rows }],
+      };
+    }
+
     const avHeaders = data.atividades.map((a) => `${a.nome} (Valor ${a.valorMax.toFixed(1)})`);
     const headers = ['Nome', ...avHeaders, 'Rec. da Unidade', 'Nota da Unidade'];
     const rows = data.alunos.map((st) => [

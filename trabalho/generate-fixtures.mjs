@@ -194,6 +194,58 @@ function buildNotasHtml({ semestral = false } = {}) {
     }).join('');
   }
 
+  function renderResFinalRows() {
+    return FICTIONAL_STUDENTS.map((st, idx) => {
+      const pcdIcon = st.pcd ? ' <span aria-hidden="true">\uF193</span>' : '';
+      let ma = '';
+      let ef = '';
+      let mf = '';
+      let faltas = '0';
+      let freq = '100.0';
+      let resParcial = '-';
+      if (idx < 30) {
+        ma = '8.0';
+        ef = '';
+        mf = '8.0';
+        faltas = String((idx % 3) * 2);
+        freq = '95.0';
+        resParcial = 'APROVADO';
+      } else if (idx < 35) {
+        ma = '4.0';
+        ef = '6.5';
+        mf = '5.3';
+        faltas = '4';
+        freq = '90.0';
+        resParcial = 'APROVADO';
+      } else if (idx < 38) {
+        ma = '4.0';
+        ef = '';
+        mf = '';
+        faltas = '6';
+        freq = '85.0';
+        resParcial = 'RECUPERAÇÃO';
+      } else if (idx < 40) {
+        ma = '4.0';
+        ef = '4.5';
+        mf = '4.3';
+        faltas = '6';
+        freq = '85.0';
+        resParcial = 'RECUPERAÇÃO';
+      }
+      return `
+        <tr>
+          <td>${st.nome}${pcdIcon}</td>
+          <td><input id="formulario:resultadoFinal:${idx}:ma_" name="formulario:resultadoFinal:${idx}:ma_" type="text" value="${ma}" class="ma noEdit" size="4" disabled="disabled" /></td>
+          <td><input id="formulario:resultadoFinal:${idx}:ef_" name="formulario:resultadoFinal:${idx}:ef_" type="text" value="${ef}" class="ef noEdit" size="4" disabled="disabled" /></td>
+          <td><input id="formulario:resultadoFinal:${idx}:mf_" name="formulario:resultadoFinal:${idx}:mf_" type="text" value="${mf}" class="mf noEdit" size="4" disabled="disabled" /></td>
+          <td><input id="formulario:resultadoFinal:${idx}:fal_" name="formulario:resultadoFinal:${idx}:fal_" type="text" value="${faltas}" class="fal" size="3" disabled="disabled" /></td>
+          <td><input id="formulario:resultadoFinal:${idx}:falP_" name="formulario:resultadoFinal:${idx}:falP_" type="text" value="${freq}" class="falPercent noEdit" size="4" disabled="disabled" /></td>
+          <td><span id="formulario:resultadoFinal:${idx}:rf_" class="rf">${resParcial}</span></td>
+        </tr>
+      `;
+    }).join('');
+  }
+
   const tabsNav = semestral
     ? `
       <li class="ui-state-default ui-corner-top ui-tabs-selected ui-state-active"><a href="#formulario:tab1"><em>1ª Unidade</em></a></li>
@@ -310,7 +362,20 @@ function buildNotasHtml({ semestral = false } = {}) {
       <ul class="ui-tabs-nav">${tabsNav}</ul>
       ${tabsPanels}
       <div id="formulario:resF" class="ui-tabs-panel ui-widget-content ui-tabs-hide">
-        <table><thead><tr><th>Estudante</th><th>Média</th><th>Res. Parcial</th></tr></thead><tbody></tbody></table>
+        <table id="formulario:resultadoFinal">
+          <thead>
+            <tr>
+              <th>Estudante</th>
+              <th>Média Anual</th>
+              <th>Rec. Final</th>
+              <th>Média Final</th>
+              <th>Total de Faltas</th>
+              <th>%Frequência Componente</th>
+              <th>Res. Parcial Componente</th>
+            </tr>
+          </thead>
+          <tbody>${renderResFinalRows()}</tbody>
+        </table>
       </div>
     </div>
 

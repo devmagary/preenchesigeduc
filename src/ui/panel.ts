@@ -1539,7 +1539,7 @@ export class PreenchePanelController {
     this.initPortalSelection(portal);
     const selectedCount = portal.turmas.filter((t) => this.batchSelectedTurmaKeys.has(this.turmaSelectionKey(t))).length;
 
-    const unitLabelShort = (u: BatchUnitChoice) => (u === 'active' ? 'Ativa' : `${u}ª Un.`);
+    const unitLabelShort = (u: BatchUnitChoice) => (u === 'active' ? 'Ativa' : u === 'final' ? 'Res. Final' : `${u}ª Un.`);
 
     const turmaChecks = portal.turmas
       .map((t) => {
@@ -1572,6 +1572,7 @@ export class PreenchePanelController {
               <option value="1" ${overrideVal === '1' ? 'selected' : ''}>1ª Un.</option>
               <option value="2" ${overrideVal === '2' ? 'selected' : ''}>2ª Un.</option>
               ${isSemestral ? '' : `<option value="3" ${overrideVal === '3' ? 'selected' : ''}>3ª Un.</option>`}
+              <option value="final" ${overrideVal === 'final' ? 'selected' : ''}>Res. Final</option>
             </select>
           </div>
         `;
@@ -1590,6 +1591,7 @@ export class PreenchePanelController {
               <option value="1" ${this.batchUnitMedio === '1' ? 'selected' : ''}>1ª Unidade</option>
               <option value="2" ${this.batchUnitMedio === '2' ? 'selected' : ''}>2ª Unidade</option>
               <option value="3" ${this.batchUnitMedio === '3' ? 'selected' : ''}>3ª Unidade</option>
+              <option value="final" ${this.batchUnitMedio === 'final' ? 'selected' : ''}>Res. Final</option>
             </select>
           </div>
           <div class="ps-field">
@@ -1598,6 +1600,7 @@ export class PreenchePanelController {
               <option value="active" ${this.batchUnitTecnico === 'active' ? 'selected' : ''}>Ativa / mais recente</option>
               <option value="1" ${this.batchUnitTecnico === '1' ? 'selected' : ''}>1ª Unidade</option>
               <option value="2" ${this.batchUnitTecnico === '2' ? 'selected' : ''}>2ª Unidade</option>
+              <option value="final" ${this.batchUnitTecnico === 'final' ? 'selected' : ''}>Res. Final</option>
             </select>
           </div>
         </div>
@@ -1980,7 +1983,14 @@ export class PreenchePanelController {
     });
 
     // --- EXTRAIR (SCRAPING) EVENTS ---
+    const syncFreshNotasOnExport = () => {
+      if (this.scraped?.kind === 'lancar_notas') {
+        this.scraped = scrapeLancarNotas(this.doc);
+      }
+    };
+
     q<HTMLButtonElement>('ps-exp-xlsx')?.addEventListener('click', () => {
+      syncFreshNotasOnExport();
       if (!this.scraped) return;
       const bundle = buildExportBundle(this.scraped);
       const buf = exportToXlsxBuffer(bundle.sheets);
@@ -1991,6 +2001,7 @@ export class PreenchePanelController {
     });
 
     q<HTMLButtonElement>('ps-exp-csv')?.addEventListener('click', () => {
+      syncFreshNotasOnExport();
       if (!this.scraped) return;
       const bundle = buildExportBundle(this.scraped);
       const csv = exportToCsv(bundle.headers, bundle.rows);
@@ -1998,6 +2009,7 @@ export class PreenchePanelController {
     });
 
     q<HTMLButtonElement>('ps-exp-json')?.addEventListener('click', () => {
+      syncFreshNotasOnExport();
       if (!this.scraped) return;
       const bundle = buildExportBundle(this.scraped);
       downloadBlob(

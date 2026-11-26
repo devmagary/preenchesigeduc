@@ -824,6 +824,106 @@ async function runTests() {
     });
     await page.screenshot({ path: path.join(evidenciasDir, 'cards_turmas_longos_desktop.png') });
 
+    // 3E. P0 #2: Extração individual e em lote da aba "Res. Final" (Resultado Final)
+    console.log('[E2E] 3E. Testando P0 #2 (Extração individual e em lote da aba Res. Final)...');
+    await page.goto(`${srv.baseUrl}/sigeduc/diario_classe/lancar_notas/form_estudantes_notas_avaliacoes_unidade.jsf`);
+    await page.evaluate(() => {
+      const links = Array.from(document.querySelectorAll('#formulario\\:tabViewId .ui-tabs-nav a'));
+      const rfLink = links.find((a) => /res\.?\s*final/i.test(a.textContent || ''));
+      rfLink?.click();
+    });
+    await openPanel(page);
+    await page.evaluate(() => {
+      document.getElementById('preenche-sigeduc-host').shadowRoot.querySelector('[data-tab="extrair"]').click();
+    });
+    const singleRfPath = path.join(os.tmpdir(), 'resultado_final_single_e2e.xlsx');
+    await captureDownload(
+      page,
+      () => page.evaluate(() => document.getElementById('preenche-sigeduc-host').shadowRoot.getElementById('ps-exp-xlsx').click()),
+      singleRfPath
+    );
+    const singleRfWb = XLSX.read(fs.readFileSync(singleRfPath));
+    assert.equal(singleRfWb.SheetNames[0], 'Resultado Final');
+    const singleRfRows = XLSX.utils.sheet_to_json(singleRfWb.Sheets['Resultado Final'], { header: 1 });
+    assert.deepEqual(singleRfRows[0], [
+      'Nome',
+      '1ª Un.',
+      '2ª Un.',
+      '3ª Un.',
+      'Média Anual',
+      'Rec. Final',
+      'Média Final',
+      'Total de Faltas',
+      '%Frequência Componente',
+      'Res. Parcial Componente',
+    ]);
+    assert.equal(singleRfRows[1][1], '8.0');
+    assert.equal(singleRfRows[31][5], '6.5');
+    assert.equal(singleRfRows[31][6], '5.3');
+    assert.equal(singleRfRows[31][9], 'APROVADO');
+
+    // Extração em Lote configurada para Res. Final nas duas modalidades
+    await page.goto(`${srv.baseUrl}/sigeduc/portais/docente/docente.jsf`);
+    await openPanel(page);
+    await page.evaluate(() => {
+      const sr = document.getElementById('preenche-sigeduc-host').shadowRoot;
+      const resetBtn = sr.getElementById('ps-batch-reset');
+      if (resetBtn) resetBtn.click();
+    });
+    await page.evaluate(() => {
+      const sr = document.getElementById('preenche-sigeduc-host').shadowRoot;
+      const medioSel = sr.getElementById('ps-batch-unit-medio');
+      const tecSel = sr.getElementById('ps-batch-unit-tecnico');
+      const matCb = sr.getElementById('ps-batch-include-mat');
+      medioSel.value = 'final';
+      medioSel.dispatchEvent(new Event('change', { bubbles: true }));
+      tecSel.value = 'final';
+      tecSel.dispatchEvent(new Event('change', { bubbles: true }));
+      if (matCb.checked) {
+        matCb.checked = false;
+        matCb.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+      sr.getElementById('ps-batch-start').click();
+    });
+
+    await page.waitForFunction(() => {
+      const sr = document.getElementById('preenche-sigeduc-host')?.shadowRoot;
+      const raw = window.sessionStorage.getItem('preenche_sigeduc_batch_extract_v1');
+      if (!sr || !raw) return false;
+      try {
+        const st = JSON.parse(raw);
+        return Boolean(sr.getElementById('ps-batch-summary')) && st.phase === 'completed' && st.autoDownloaded === true;
+      } catch {
+        return false;
+      }
+    }, null, { timeout: 45000 });
+
+    const batchRfPath = path.join(evidenciasDir, 'consolidado_cetep_res_final.xlsx');
+    await captureDownload(
+      page,
+      () => page.evaluate(() => document.getElementById('preenche-sigeduc-host').shadowRoot.getElementById('ps-batch-dl-cetep').click()),
+      batchRfPath
+    );
+    const batchRfWb = XLSX.read(fs.readFileSync(batchRfPath));
+    assert.ok(batchRfWb.SheetNames[1].includes('RF'), 'Aba de turma em Res. Final deve conter sufixo RF');
+    const batchRfPanel = XLSX.utils.sheet_to_json(batchRfWb.Sheets['Painel Consolidado'], { header: 1 });
+    const rfTotalRow = batchRfPanel.find((r) => r[0] === 'TOTAL GERAL');
+    assert.ok(rfTotalRow, 'Painel Res. Final deve conter TOTAL GERAL');
+    assert.equal(rfTotalRow[5], 70, 'Total geral de aprovados em Res. Final deve ser 70 (35 por turma)');
+    assert.equal(rfTotalRow[6], 10, 'Total geral em recuperação em Res. Final deve ser 10 (5 por turma)');
+
+    const rfTurmaSheet = batchRfWb.Sheets[batchRfWb.SheetNames[1]];
+    const rfTurmaRows = XLSX.utils.sheet_to_json(rfTurmaSheet, { header: 1 });
+    const rfHeaders = rfTurmaRows[3].map((v) => String(v));
+    assert.equal(rfHeaders.includes('Avaliação 1 (10.0)'), false, 'Res. Final não deve gerar coluna fallback Avaliação 1 (10.0)');
+    assert.equal(rfHeaders.includes('Res. Parcial Componente'), true);
+    const ngIdx = rfHeaders.indexOf('Nota Geral');
+    assert.equal(rfTurmaRows[39][ngIdx], 4, 'Quando Média Final estiver vazia, Nota Geral deve usar Média Anual (4.0)');
+
+    await page.evaluate(() => {
+      document.getElementById('preenche-sigeduc-host').shadowRoot.getElementById('ps-batch-reset').click();
+    });
+
     // 4. Mobile Android viewport (390x844) verificando responsividade e ausência de overflow horizontal
     console.log('[E2E] 4. Testando Viewport Mobile Android (390x844)...');
     await page.setViewportSize({ width: 390, height: 844 });

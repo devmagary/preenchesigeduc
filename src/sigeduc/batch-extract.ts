@@ -4,7 +4,7 @@ import { scrapeLancarFrequencia, type ScrapedNotasScreen, type ScrapedTurma } fr
 
 export const BATCH_EXTRACT_STORAGE_KEY = 'preenche_sigeduc_batch_extract_v1';
 
-export type BatchUnitChoice = 'active' | '1' | '2' | '3';
+export type BatchUnitChoice = 'active' | '1' | '2' | '3' | 'final';
 export type BatchPhase =
   | 'going_notas'
   | 'collecting_notas'
@@ -94,7 +94,7 @@ export function clearBatchExtractState(): void {
 }
 
 function parseNumericGrade(raw: string | undefined): number | null {
-  const txt = String(raw ?? '').trim();
+  const txt = String(raw ?? '').replace(/%/g, '').trim();
   if (!txt) return null;
   const num = Number(txt.replace(',', '.'));
   return Number.isFinite(num) ? Math.round(num * 100) / 100 : null;
@@ -115,16 +115,27 @@ export function scrapedNotasToCetepTurma(
 
   const alunos: CetepStudentRow[] = scr.alunos.map((st, idx) => {
     const notas: Record<string, number | null> = {};
+    const textValues: Record<string, string> = {};
     for (const av of scr.atividades) {
-      notas[av.idAvaliacao] = parseNumericGrade(st.notasAtividades[av.idAvaliacao]);
+      const rawCell = st.notasAtividades[av.idAvaliacao];
+      if (av.colType === 'text') {
+        textValues[av.idAvaliacao] = String(rawCell ?? '').trim();
+      } else {
+        notas[av.idAvaliacao] = parseNumericGrade(rawCell);
+      }
     }
     return {
       numero: idx + 1,
       nome: cleanDisplayName(st.nome),
       matricula: '',
       notas,
+      ...(Object.keys(textValues).length > 0 ? { textValues } : {}),
       notaUnidadeFallback: parseNumericGrade(st.notaUnidade),
-      observacoes: st.recUnidade.trim() ? `Rec. Unidade: ${st.recUnidade.trim()}` : '',
+      observacoes: scr.isResultadoFinal
+        ? ''
+        : st.recUnidade.trim()
+          ? `Rec. Unidade: ${st.recUnidade.trim()}`
+          : '',
     };
   });
 
@@ -134,11 +145,13 @@ export function scrapedNotasToCetepTurma(
     docente,
     ano: portalMeta?.ano || String(new Date().getFullYear()),
     unidade: scr.unidadeAtiva || '1ª Unidade',
+    ...(scr.isResultadoFinal ? { isResultadoFinal: true } : {}),
     identity,
     atividades: scr.atividades.map((a) => ({
       idAvaliacao: a.idAvaliacao,
       nome: a.nome,
       valorMax: a.valorMax,
+      ...(a.colType ? { colType: a.colType } : {}),
     })),
     alunos,
   };
