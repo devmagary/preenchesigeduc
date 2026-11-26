@@ -7,9 +7,8 @@ dist/
 *.crx
 *.xpi
 
-# Artefatos temporários e evidências de teste/harness
-trabalho/dist-e2e/
-trabalho/evidencias/
+# Artefatos temporários, auditorias, fixtures e evidências locais
+trabalho/
 test-results/
 playwright-report/
 blob-report/
@@ -45,8 +44,7 @@ desktop.ini
 *.swo
 *~
 
-# Documentação interna e relatórios locais (mantidos fora do repositório público)
+# Documentação interna privada (mantida fora do repositório público)
 AGENTS.md
 SPEC.md
 HARNESS.md
-trabalho/*.md

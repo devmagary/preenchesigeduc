@@ -17,7 +17,7 @@ import {
 } from '../../src/sigeduc/scraper';
 
 function loadNotasFixtureDoc(): Document {
-  const fixturePath = path.resolve(__dirname, '../../trabalho/fixtures/lancar_notas_anual.html');
+  const fixturePath = path.resolve(__dirname, '../fixtures/lancar_notas_anual.html');
   const html = fs.readFileSync(fixturePath, 'utf8');
   return new DOMParser().parseFromString(html, 'text/html');
 }
