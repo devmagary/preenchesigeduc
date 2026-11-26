@@ -1024,6 +1024,69 @@ async function runTests() {
     assert.equal(darkMobileLayout.hasOuterHScroll, false);
     await page.screenshot({ path: path.join(evidenciasDir, 'notas_dark_mode_mobile.png') });
 
+    // 5B. P2 #8: Botão Sobre / Aviso Legal e Privacidade no cabeçalho (mobile 390x844 com 125% + Dark Mode)
+    console.log('[E2E] 5B. Testando P2 #8 (Seção Sobre / Aviso Legal e Privacidade no mobile 390x844)...');
+    const headerButtonsCheck = await page.evaluate(() => {
+      const sr = document.getElementById('preenche-sigeduc-host').shadowRoot;
+      const ids = ['ps-about-btn', 'ps-font-btn', 'ps-theme-btn', 'ps-close-btn'];
+      const rects = ids.map((id) => {
+        const el = sr.getElementById(id);
+        const r = el.getBoundingClientRect();
+        return { id, left: r.left, right: r.right, width: r.width, height: r.height };
+      });
+      let maxOverlap = 0;
+      for (let i = 0; i + 1 < rects.length; i++) {
+        const ov = rects[i].right - rects[i + 1].left;
+        if (ov > maxOverlap) maxOverlap = ov;
+      }
+      return {
+        rects,
+        minW: Math.min(...rects.map((r) => r.width)),
+        minH: Math.min(...rects.map((r) => r.height)),
+        maxRight: Math.max(...rects.map((r) => r.right)),
+        viewportWidth: window.innerWidth,
+        maxOverlap,
+      };
+    });
+    assert.ok(headerButtonsCheck.minW >= 43.5 && headerButtonsCheck.minH >= 43.5, 'Botões do cabeçalho mobile devem manter alvo >= 44x44 px');
+    assert.ok(headerButtonsCheck.maxRight <= headerButtonsCheck.viewportWidth + 1, 'Botões do cabeçalho não podem estourar viewport 390px');
+    assert.ok(headerButtonsCheck.maxOverlap <= 1, 'Botões do cabeçalho não podem se sobrepor');
+
+    await page.evaluate(() => {
+      document.getElementById('preenche-sigeduc-host').shadowRoot.getElementById('ps-about-btn').click();
+    });
+    const aboutCheck = await page.evaluate(() => {
+      const sr = document.getElementById('preenche-sigeduc-host').shadowRoot;
+      const view = sr.getElementById('ps-about-view');
+      const body = sr.getElementById('ps-body');
+      const links = Array.from(view?.querySelectorAll('a.ps-about-link') ?? []).map((a) => a.getAttribute('href'));
+      return {
+        hasView: Boolean(view),
+        text: view?.textContent ?? '',
+        links,
+        bodyOverflowX: body.scrollWidth > body.clientWidth + 1,
+      };
+    });
+    assert.equal(aboutCheck.hasView, true, 'Tela Sobre deve abrir ao clicar no botão i');
+    assert.equal(aboutCheck.bodyOverflowX, false, 'Tela Sobre não pode gerar overflow horizontal no mobile');
+    assert.match(aboutCheck.text, /SEC-BA/);
+    assert.match(aboutCheck.text, /100% local/i);
+    assert.match(aboutCheck.text, /responsabilidade exclusiva do docente/i);
+    assert.match(aboutCheck.text, /v\d+\.\d+\.\d+/);
+    assert.equal(aboutCheck.links.includes('https://github.com/devmagary/preenchesigeduc'), true);
+    assert.equal(aboutCheck.links.includes('https://is.gd/sigeduc'), true);
+    await page.screenshot({ path: path.join(evidenciasDir, 'sobre_privacidade_mobile.png') });
+
+    // Confirmar que Voltar fecha Sobre e preserva o estado da aba Notas
+    await page.evaluate(() => {
+      document.getElementById('preenche-sigeduc-host').shadowRoot.getElementById('ps-about-back').click();
+    });
+    const backRestored = await page.evaluate(() => {
+      const sr = document.getElementById('preenche-sigeduc-host').shadowRoot;
+      return !sr.getElementById('ps-about-view') && Boolean(sr.getElementById('ps-notas-run'));
+    });
+    assert.equal(backRestored, true, 'Botão Voltar da tela Sobre deve restaurar a aba Notas com planilha carregada');
+
     console.log('[E2E] Todos os cenários E2E passaram com sucesso!');
   } finally {
     if (context) await context.close();

@@ -170,9 +170,10 @@ As sugestões são organizadas sob a ótica de engenharia sênior, equilibrando 
   - Permitir importar/colar um plano estruturado (planilha/JSON/texto delimitado) e preencher os 5 campos da unidade selecionada ou do relatório parcial com prévia antes do envio.
 - **Impacto técnico / Riscos:** Atenção aos acordeões por unidade no `plano_trabalho_professor/form.jsf` e preservação de `ViewState`.
 
-### 8. Seção "Sobre / Aviso Legal e Privacidade" na Interface da Extensão
+### 8. Seção "Sobre / Aviso Legal e Privacidade" na Interface da Extensão — `[Concluído]`
 - **Prioridade:** P2 — Média
 - **Dificuldade:** Baixa
+- **Status:** Concluído (`src/core/about.ts` centraliza os 3 blocos de aviso, links e leitura dinâmica da versão via `runtime.getManifest()`; `src/ui/panel.ts` e `src/ui/styles.ts` adicionam botão `i` `#ps-about-btn` no cabeçalho com vista sobreposta `#ps-about-view` e retorno `#ps-about-back` acessível em desktop e mobile inclusive com sessão expirada; `src/popup/popup.html`, `src/popup/popup.css` e `src/popup/popup.ts` adicionam bloco expansível `<details>` com versão e links no rodapé do popup; validado por `tests/unit/about.test.ts` e cenário `[E2E] 5B` / `sobre_privacidade_mobile.png`).
 - **Contexto:** Reforçar diretamente dentro do aplicativo (sem depender apenas do `README.md`) a transparência jurídica, de privacidade e de uso gratuito da ferramenta.
 - **Comportamento esperado:**
   - Adicionar um botão/aba discreto **Sobre** no cabeçalho ou rodapé do painel Shadow DOM (`src/ui/panel.ts`) e no popup (`src/popup/popup.html`) exibindo: (1) aviso de ferramenta independente e gratuita, sem vínculo com a SEC-BA/Governo da Bahia; (2) garantia de processamento 100% local sem coleta de dados de alunos ou senhas; (3) lembrete de conferência pelo docente antes da gravação definitiva; e (4) versão atual da extensão + link para o repositório.
@@ -203,7 +204,8 @@ As sugestões são organizadas sob a ótica de engenharia sênior, equilibrando 
 Para evitar que apontamentos `menor` do Crítico Cego se percam entre rodadas sem testes correspondentes:
 - Todo achado `menor` é catalogado com ID sequencial (`CR-NNN`) em [`trabalho/critico_backlog.json`](trabalho/critico_backlog.json) e espelhado em [`trabalho/critico_backlog.md`](trabalho/critico_backlog.md).
 - O [`trabalho/harness.mjs`](trabalho/harness.mjs) impõe teto máximo de `5` itens em `aberto`/`agendado` e valida que todo item `resolvido` possua um teste real verificado (`testFile` + `testPattern`).
-- **Histórico Rodadas 1–13 (`CR-001` a `CR-013`):** `8` itens `resolvido`, `2` `aceito_design` e `3` `agendado` (dentro do teto `5`):
+- **Histórico Rodadas 1–15 (`CR-001` a `CR-014`):** `8` itens `resolvido`, `2` `aceito_design` e `4` `agendado` (dentro do teto `5`):
   - **`CR-011`:** Captura complementar opcional de `frequencia_dia_unico_desktop.png` com painel fechado/rolado para exibir visualmente os checkboxes marcados sob a gaveta de 440px.
   - **`CR-012`:** Exibir os hashes SHA-256 dos pacotes `.zip`/`.crx` também na tabela Markdown de `trabalho/relatorio_metricas.md` (já gravados e auditados em `trabalho/relatorio_metricas.json`).
   - **`CR-013`:** Habilitar `wrapText="1"` (ou largura dinâmica) nos estilos `xf[22]`/`xf[23]` da coluna `A` no `Painel Consolidado` CETEP para exibir rótulos longos de turma sem truncamento visual.
+  - **`CR-014`:** Compactar levemente o espaçamento vertical de `.ps-about-panel` em mobile `390x844` na escala `125%` para que os links `Repositório GitHub` e `Portal de Downloads` também apareçam acima da dobra inicial em `sobre_privacidade_mobile.png`.

@@ -91,9 +91,10 @@ Qualidade e acabamento:
 - Botão flutuante discreto e arrastável/ancorável no canto da tela do SIGEduc (com badge indicando a tela detectada: Notas, Não Realiz., Frequência, Turmas, Avaliações).
 - Gaveta lateral (desktop) / tela cheia deslizante (mobile `<= 640px`), tipografia legível, alto contraste, feedback visual de status por cor e ícone (sucesso, aviso, erro, bloqueado).
 - Controles de acessibilidade e conforto visual diretamente no cabeçalho do painel (`min-width: 44px; min-height: 44px`):
+  - **Botão Sobre (`i`) / Aviso Legal e Privacidade (P2.8):** abre vista sobreposta dentro do painel (acessível mesmo na tela de login/sessão expirada) exibindo aviso de ferramenta independente e gratuita sem vínculo com a SEC-BA/Governo da Bahia, garantia LGPD 100% local (sem coleta de dados ou senhas), termo de conferência exclusiva pelo docente (*as is*), versão dinâmica do `manifest.json` e links para o repositório GitHub e portal `is.gd/sigeduc`.
   - **Tamanho do texto (P2.1):** alternância entre `100%` (Normal), `112%` (Grande) e `125%` (Extra Grande) via CSS variables isoladas no Shadow DOM, persistida em `localStorage` (`preenche_sigeduc_font_scale`).
   - **Visual Noturno / Dark Mode (P2.2):** alternância entre tema claro e escuro via tokens CSS no Shadow DOM (respeitando `prefers-color-scheme` como fallback inicial e garantindo contraste WCAG AA `>= 4.5:1`), persistida em `localStorage` (`preenche_sigeduc_theme`).
-- Popup da extensão (`action.default_popup`) minimalista com status da aba ativa, botão "Abrir/Fechar Painel no SIGEduc" e link rápido para o portal.
+- Popup da extensão (`action.default_popup`) minimalista com status da aba ativa, botão "Abrir/Fechar Painel no SIGEduc", link rápido para o portal e bloco expansível (`<details>`) **Sobre / Aviso Legal e Privacidade** com versão e links.
 
 Robustez e casos de borda:
 - Planilha vazia, cabeçalho deslocado, arquivo corrompido, colunas duplicadas, separador `;` vs `,` em CSV brasileiro, BOM UTF-8 e ISO-8859-1.

@@ -28,6 +28,7 @@ const EXPECTED_EVIDENCES = [
   'nao_realizadas_desktop.png',
   'notas_previa_mobile.png',
   'notas_dark_mode_mobile.png',
+  'sobre_privacidade_mobile.png',
   'frequencia_dia_unico_desktop.png',
   'frequencia_multiplas_datas_desktop.png',
   'frequencia_mobile.png',

@@ -190,6 +190,19 @@ export const SHADOW_STYLES = `
     border-radius: 0;
     box-shadow: none;
   }
+
+  .ps-header {
+    padding: 8px 10px;
+    gap: 6px;
+  }
+
+  .ps-header-actions {
+    gap: 4px;
+  }
+
+  .ps-icon-btn {
+    padding: 0 6px;
+  }
 }
 
 .ps-header {
@@ -263,6 +276,11 @@ export const SHADOW_STYLES = `
 
 .ps-icon-btn:hover {
   background: rgba(255, 255, 255, 0.28);
+}
+
+.ps-icon-btn.active {
+  background: rgba(255, 255, 255, 0.34);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.72);
 }
 
 .ps-tabs {
@@ -718,6 +736,91 @@ export const SHADOW_STYLES = `
 .ps-muted {
   font-size: calc(12px * var(--ps-scale));
   color: var(--ps-muted);
+}
+
+.ps-about-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ps-about-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.ps-about-back {
+  min-height: 44px;
+  padding: 6px 12px;
+  border: 1px solid var(--ps-border);
+  border-radius: 9px;
+  background: var(--ps-sec-btn-bg);
+  color: var(--ps-sec-btn-text);
+  font-family: inherit;
+  font-size: calc(13px * var(--ps-scale));
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ps-about-item {
+  background: var(--ps-card-bg);
+  border: 1px solid var(--ps-border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ps-about-item strong {
+  font-size: calc(13px * var(--ps-scale));
+  color: var(--ps-text);
+}
+
+.ps-about-item p {
+  margin: 0;
+  font-size: calc(12px * var(--ps-scale));
+  line-height: 1.45;
+  color: var(--ps-label);
+}
+
+.ps-about-meta {
+  background: var(--ps-info-bg);
+  border: 1px solid var(--ps-info-bd);
+  color: var(--ps-info-tx);
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: calc(12px * var(--ps-scale));
+}
+
+.ps-about-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ps-about-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--ps-info-bd);
+  background: var(--ps-card-bg);
+  color: #1d4ed8;
+  font-weight: 600;
+  font-size: calc(12px * var(--ps-scale));
+  text-decoration: underline;
+  word-break: break-word;
+}
+
+.ps-drawer.ps-dark .ps-about-link {
+  color: #93c5fd;
 }
 
 .ps-hidden {

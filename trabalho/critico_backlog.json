@@ -150,6 +150,15 @@
       "description": "Os estilos de hiperlink xf[22]/xf[23] na coluna A do Painel Consolidado (largura 42) não possuem wrapText=\"1\", cortando visualmente rótulos longos sem tooltip.",
       "status": "agendado",
       "resolutionNote": "Agendado no Roadmap.md para habilitar wrapText=\"1\" nos estilos de link da coluna A."
+    },
+    {
+      "id": "CR-014",
+      "round": 15,
+      "severity": "menor",
+      "title": "Links de Sobre/Privacidade abaixo da dobra em 390x844 com escala 125%",
+      "description": "Em sobre_privacidade_mobile.png (390x844, escala 125%, scrollTop=0), o bloco de versão v1.0.0 aparece completo, mas os links Repositório GitHub e Portal de Downloads ficam logo abaixo da dobra inicial de rolagem.",
+      "status": "agendado",
+      "resolutionNote": "Agendado no Roadmap.md para compactar levemente o espaçamento vertical de .ps-about-panel em escala 125% ou rolar a captura complementar na auditoria."
     }
   ]
 }

@@ -1,3 +1,9 @@
+import {
+  ABOUT_SECTIONS,
+  APP_PORTAL_URL,
+  APP_REPO_URL,
+  getExtensionVersion,
+} from '../core/about';
 import { parseDateHeader } from '../core/attendance';
 import {
   computeCetepTurmaStats,
@@ -122,6 +128,7 @@ export class PreenchePanelController {
 
   private theme: ThemeMode = 'light';
   private fontScale: FontScale = '100';
+  private aboutOpen = false;
 
   private detection: ScreenDetection;
   private scraped: ScrapedScreenData | null = null;
@@ -709,6 +716,7 @@ export class PreenchePanelController {
             <span class="ps-header-sub">${escapeHtml(det.label)}</span>
           </div>
           <div class="ps-header-actions">
+            <button class="ps-icon-btn ${this.aboutOpen ? 'active' : ''}" id="ps-about-btn" type="button" title="Sobre / Aviso Legal e Privacidade" aria-label="Sobre, aviso legal e privacidade" aria-pressed="${this.aboutOpen ? 'true' : 'false'}">i</button>
             <button class="ps-icon-btn" id="ps-font-btn" type="button" title="Alterar tamanho do texto" aria-label="Alterar tamanho do texto">A ${this.fontScale}%</button>
             <button class="ps-icon-btn" id="ps-theme-btn" type="button" title="Alternar tema claro/escuro" aria-label="Alternar tema claro/escuro">${this.theme === 'dark' ? '☀️' : '🌙'}</button>
             <button class="ps-icon-btn close-glyph" id="ps-close-btn" type="button" aria-label="Fechar painel">&times;</button>
@@ -728,7 +736,39 @@ export class PreenchePanelController {
     this.bindEvents();
   }
 
+  private renderAboutView(): string {
+    const version = getExtensionVersion('1.0.0');
+    const itemsHtml = ABOUT_SECTIONS.map(
+      (sec) => `
+        <article class="ps-about-item">
+          <strong>${escapeHtml(sec.title)}</strong>
+          <p>${escapeHtml(sec.body)}</p>
+        </article>
+      `
+    ).join('');
+
+    return `
+      <section class="ps-about-panel" id="ps-about-view" aria-label="Sobre, aviso legal e privacidade">
+        <div class="ps-about-head">
+          <h3 class="ps-card-title" style="margin:0;">Sobre / Aviso Legal e Privacidade</h3>
+          <button class="ps-about-back" id="ps-about-back" type="button">← Voltar</button>
+        </div>
+        ${itemsHtml}
+        <div class="ps-about-meta">
+          <div><strong>Preenche SIGEduc</strong> • Versão <strong>v${escapeHtml(version)}</strong></div>
+          <div class="ps-about-links">
+            <a class="ps-about-link" href="${escapeHtml(APP_REPO_URL)}" target="_blank" rel="noopener noreferrer">Repositório GitHub</a>
+            <a class="ps-about-link" href="${escapeHtml(APP_PORTAL_URL)}" target="_blank" rel="noopener noreferrer">Portal de Downloads</a>
+          </div>
+        </div>
+      </section>
+    `;
+  }
+
   private renderTabBody(): string {
+    if (this.aboutOpen) {
+      return this.renderAboutView();
+    }
     if (this.detection.sessionExpired) {
       return `
         <div class="ps-banner error">
@@ -1631,6 +1671,14 @@ export class PreenchePanelController {
     q<HTMLButtonElement>('ps-fab-btn')?.addEventListener('click', () => this.toggle());
     q<HTMLButtonElement>('ps-close-btn')?.addEventListener('click', () => this.close());
     q<HTMLDivElement>('ps-backdrop')?.addEventListener('click', () => this.close());
+    q<HTMLButtonElement>('ps-about-btn')?.addEventListener('click', () => {
+      this.aboutOpen = !this.aboutOpen;
+      this.render();
+    });
+    q<HTMLButtonElement>('ps-about-back')?.addEventListener('click', () => {
+      this.aboutOpen = false;
+      this.render();
+    });
 
     q<HTMLButtonElement>('ps-font-btn')?.addEventListener('click', () => {
       const order: FontScale[] = ['100', '112', '125'];
@@ -1670,6 +1718,7 @@ export class PreenchePanelController {
     for (const tabBtn of Array.from(this.shadow.querySelectorAll('.ps-tab'))) {
       tabBtn.addEventListener('click', () => {
         const key = (tabBtn as HTMLElement).dataset.tab as TabKey;
+        this.aboutOpen = false;
         this.activeTab = key;
         this.refreshContext();
         this.render();
