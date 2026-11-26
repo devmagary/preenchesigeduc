@@ -67,6 +67,9 @@ function createManifest({ firefox = false, e2e = false, version = readPackageVer
       gecko: {
         id: 'preenche-sigeduc@local.dev',
         strict_min_version: '113.0',
+        data_collection_permissions: {
+          required: ['none'],
+        },
       },
       gecko_android: {
         strict_min_version: '120.0',
