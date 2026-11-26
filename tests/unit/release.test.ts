@@ -1,6 +1,8 @@
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { hasCwsCredentials, publishToChromeWebStore } from '../../scripts/cws-publish.mjs';
 import { computeNextVersion } from '../../scripts/release.mjs';
 
 const rootDir = path.resolve(__dirname, '../..');
@@ -23,6 +25,47 @@ describe('release script & manifest version sync', () => {
         const manifest = JSON.parse(fs.readFileSync(mPath, 'utf8'));
         expect(manifest.version).toBe(pkg.version);
       }
+    }
+  });
+
+  it('pula envio à Chrome Web Store com segurança quando secrets CWS_* não estão configurados', async () => {
+    expect(hasCwsCredentials({})).toBe(false);
+    const res = await publishToChromeWebStore({ env: {} });
+    expect(res).toEqual({ skipped: true, reason: 'missing_credentials' });
+  });
+
+  it('executa fluxo OAuth2 + upload + publish da Chrome Web Store quando credenciais estão presentes', async () => {
+    const tmpZip = path.join(os.tmpdir(), 'preenche-cws-test.zip');
+    fs.writeFileSync(tmpZip, Buffer.from('PKTEST'));
+    const calls: string[] = [];
+    const fakeFetch = async (url: string) => {
+      calls.push(url);
+      if (url.includes('oauth2.googleapis.com')) {
+        return new Response(JSON.stringify({ access_token: 'tok-123' }), { status: 200 });
+      }
+      if (url.includes('/upload/chromewebstore/')) {
+        return new Response(JSON.stringify({ uploadState: 'SUCCESS' }), { status: 200 });
+      }
+      return new Response(JSON.stringify({ status: ['OK'] }), { status: 200 });
+    };
+
+    try {
+      const res = await publishToChromeWebStore({
+        zipPath: tmpZip,
+        env: {
+          CWS_CLIENT_ID: 'cid',
+          CWS_CLIENT_SECRET: 'csec',
+          CWS_REFRESH_TOKEN: 'rtok',
+          CWS_EXTENSION_ID: 'mdckmbhobjcoaamkcfloofpdmciidjjg',
+        },
+        fetchImpl: fakeFetch as typeof fetch,
+      });
+      expect(res.skipped).toBe(false);
+      expect(calls).toHaveLength(3);
+      expect(calls[1]).toContain('mdckmbhobjcoaamkcfloofpdmciidjjg');
+      expect(calls[2]).toContain('/publish');
+    } finally {
+      fs.rmSync(tmpZip, { force: true });
     }
   });
 });

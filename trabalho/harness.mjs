@@ -176,7 +176,6 @@ function validateSlasAndManifest() {
   const items = Array.isArray(backlog.items) ? backlog.items : [];
   const maxOpenAllowed = Number.isFinite(backlog.maxOpenMinorAllowed) ? backlog.maxOpenMinorAllowed : 5;
   const seenIds = new Set();
-  const roadmapTxt = fs.readFileSync(path.join(rootDir, 'Roadmap.md'), 'utf8');
 
   let resolvedCount = 0;
   let acceptedDesignCount = 0;
@@ -214,8 +213,8 @@ function validateSlasAndManifest() {
       }
     } else if (item.status === 'aberto' || item.status === 'agendado') {
       openCount++;
-      if (item.status === 'agendado' && !roadmapTxt.includes(item.id)) {
-        throw new Error(`Item ${item.id} está agendado mas não referenciado no Roadmap.md.`);
+      if (item.status === 'agendado' && !item.resolutionNote) {
+        throw new Error(`Item ${item.id} está agendado sem resolutionNote em critico_backlog.json.`);
       }
     } else {
       throw new Error(`Status inválido em critico_backlog.json (${item.id}): ${item.status}`);

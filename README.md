@@ -67,10 +67,11 @@ npm run build && npm run package
 npm run harness
 ```
 
-### Assinatura `.crx` e GitHub Releases
+### Assinatura `.crx`, Releases Automáticos e Chrome Web Store
 - O comando `npm run package` gera automaticamente `dist/preenche-sigeduc-edge-mobile.crx` no formato **CRX3** usando a chave privada RSA em `.keys/preenche-sigeduc.pem` (criada localmente na primeira execução e ignorada pelo `.gitignore`, mantendo o ID `mdckmbhobjcoaamkcfloofpdmciidjjg` estável entre versões).
-- Em pipelines de CI (`.github/workflows/release.yml`), o secret **`CRX_PRIVATE_KEY_PEM`** já deve conter o conteúdo da chave `.pem` para manter o mesmo Extension ID nas releases publicadas por tag (`v*`) ou disparo manual (`gh workflow run`).
-- Para publicar uma nova versão com segurança (rodando `npm run harness`, atualizando `package.json` + `manifest.json`, criando tag `vX.Y.Z` e enviando ao GitHub), utilize:
+- Em pipelines de CI (`.github/workflows/release.yml`), alterações enviadas para `main` (ou tags `v*`) publicam automaticamente uma nova release no GitHub Releases com os 3 artefatos fixos (`preenche-sigeduc-chrome.zip`, `preenche-sigeduc-firefox.zip` e `preenche-sigeduc-edge-mobile.crx`), usando o secret **`CRX_PRIVATE_KEY_PEM`** para preservar o ID da extensão.
+- Para publicação automática também na **Chrome Web Store**, configure no repositório GitHub os secrets `CWS_CLIENT_ID`, `CWS_CLIENT_SECRET`, `CWS_REFRESH_TOKEN` e `CWS_EXTENSION_ID`.
+- Para disparar manualmente uma release local com bump de versão (`patch`, `minor`, `major` ou `X.Y.Z`), utilize:
   ```bash
   # Simular sem alterar arquivos
   npm run release -- patch --dry-run
@@ -85,10 +86,3 @@ npm run harness
 - **Distribuição gratuita:** Esta extensão é disponibilizada **100% gratuitamente**, sem fins lucrativos e sem cobrança de licenças, assinaturas ou acesso.
 - **Privacidade e LGPD (processamento 100% local):** Todo o processamento ocorre localmente no navegador do próprio usuário. A extensão não possui servidor próprio, não realiza telemetria e não coleta, armazena ou transmite dados de estudantes, notas, frequências ou credenciais/senhas para terceiros. Consulte também a [Política de Privacidade pública](https://devmagary.github.io/preenchesigeduc/privacidade.html).
 - **Isenção de garantia e responsabilidade do usuário:** O software é fornecido **"no estado em que se encontra" (*as is*)**, sem garantias expressas ou implícitas quanto à disponibilidade contínua diante de alterações no portal oficial do SIGEduc. A ferramenta atua apenas como auxílio de preenchimento local; **a conferência integral das notas, frequências e registros antes da confirmação/gravação definitiva no diário de classe é de exclusiva responsabilidade do docente utilizador.**
-
-## Documentação Adicional
-
-- [AGENTS.md](AGENTS.md) — Arquitetura, invariantes e regras de verificação.
-- [SPEC.md](SPEC.md) — Especificação técnica detalhada.
-- [Roadmap.md](Roadmap.md) — Planejamento de melhorias e prioridades.
-- [HARNESS.md](HARNESS.md) — Guia da suíte de verificação automatizada.

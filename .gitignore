@@ -44,3 +44,9 @@ desktop.ini
 *.swp
 *.swo
 *~
+
+# Documentação interna e relatórios locais (mantidos fora do repositório público)
+AGENTS.md
+SPEC.md
+HARNESS.md
+trabalho/*.md
