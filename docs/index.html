@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Preenche SIGEduc — Notas, Frequência e Planilhas CETEP sem Retrabalho</title>
-  <meta name="description" content="Extensão Manifest V3 100% local para automação de notas, não realização, frequência e extração consolidada no padrão CETEP para o portal SIGEduc-BA." />
+  <title>Preenche SIGEduc — Lance notas, faltas e planilhas em poucos segundos</title>
+  <meta name="description" content="Ferramenta gratuita para professores lançarem notas, não realizações, frequências e gerarem o consolidado CETEP no SIGEduc-BA sem sair do navegador." />
   <meta name="theme-color" content="#404E82" />
-  <meta property="og:title" content="Preenche SIGEduc — Automação Local para o SIGEduc-BA" />
-  <meta property="og:description" content="Preencha notas com fila sequencial AJAX, registre não realizações, lance frequências e extraia todas as turmas no padrão CETEP em segundos — 100% local no navegador." />
+  <meta property="og:title" content="Preenche SIGEduc — Para professores do SIGEduc-BA" />
+  <meta property="og:description" content="Traga suas notas e faltas da planilha direto para o SIGEduc-BA em poucos cliques, com conferência antes de salvar e planilha consolidada pronta." />
   <meta property="og:type" content="website" />
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0%25' stop-color='%23404E82'/%3E%3Cstop offset='100%25' stop-color='%2327325B'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='14' fill='url(%23g)'/%3E%3Crect x='13' y='12' width='33' height='40' rx='3' fill='%23ffffff'/%3E%3Crect x='13' y='12' width='33' height='9' rx='2' fill='%23dbe4ff'/%3E%3Cline x1='28' y1='21' x2='28' y2='52' stroke='%23b4c2e4' stroke-width='2'/%3E%3Cline x1='13' y1='31' x2='46' y2='31' stroke='%23b4c2e4' stroke-width='2'/%3E%3Cline x1='13' y1='41' x2='46' y2='41' stroke='%23b4c2e4' stroke-width='2'/%3E%3Ccircle cx='46' cy='46' r='13' fill='%2310b981'/%3E%3Cpath d='M40 46.5l4 4 8.5-8.5' fill='none' stroke='%23ffffff' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
   <style>
@@ -99,8 +99,6 @@
 
     html {
       scroll-behavior: smooth;
-      background: var(--bg);
-      color: var(--text);
     }
 
     body {
@@ -111,6 +109,7 @@
       line-height: 1.55;
       -webkit-font-smoothing: antialiased;
       overflow-x: hidden;
+      transition: background-color 0.22s ease, color 0.22s ease;
     }
 
     a { color: inherit; }
@@ -124,14 +123,13 @@
       padding: 0 20px;
     }
 
-    /* Navbar fixa estilo Badgey */
+    /* Navbar fixa */
     .nav-wrap {
       position: sticky;
-      top: 0;
+      top: 12px;
       z-index: 100;
-      padding: 10px 16px 6px;
-      margin-top: 0;
-      background: linear-gradient(to bottom, var(--bg) 76%, transparent);
+      padding: 0 16px;
+      margin-top: 12px;
     }
 
     .nav {
@@ -231,7 +229,7 @@
       font-weight: 600;
       text-decoration: none;
       cursor: pointer;
-      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      transition: transform 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
       white-space: nowrap;
     }
 
@@ -263,12 +261,6 @@
       border-color: var(--border-strong);
     }
 
-    html[data-theme="dark"] .pill-btn.ghost {
-      background: #1e293b;
-      color: #f8fafc;
-      border-color: rgba(255, 255, 255, 0.28);
-    }
-
     .pill-btn.ghost:hover {
       background: var(--surface-soft);
       transform: translateY(-1px);
@@ -280,7 +272,7 @@
       font-size: 0.86rem;
     }
 
-    /* Hero centralizado com cards flutuantes de profundidade */
+    /* Hero centralizado com cards flutuantes */
     .hero {
       position: relative;
       padding: 68px 0 56px;
@@ -330,7 +322,7 @@
 
     .hero-sub {
       margin: 0 auto 30px;
-      max-width: 580px;
+      max-width: 590px;
       font-size: clamp(1.02rem, 1.8vw, 1.18rem);
       color: var(--muted);
       line-height: 1.6;
@@ -373,7 +365,7 @@
       font-size: 0.78rem;
     }
 
-    /* Cards flutuantes decorativos estilo Badgey */
+    /* Cards flutuantes decorativos */
     .float-layer {
       position: absolute;
       inset: 0;
@@ -383,7 +375,7 @@
 
     .float-card {
       position: absolute;
-      width: 210px;
+      width: 215px;
       padding: 14px 16px;
       border-radius: 18px;
       background: var(--surface);
@@ -396,7 +388,7 @@
     }
 
     .float-card.bg-blur {
-      width: 185px;
+      width: 190px;
       opacity: 0.68;
       filter: blur(2.2px);
     }
@@ -478,7 +470,7 @@
       font-size: 1rem;
     }
 
-    /* Palco Interativo Sunstill + SIGEduc Mock */
+    /* Palco Interativo */
     .stage {
       background: var(--stage-bg);
       border: 1px solid var(--border);
@@ -526,9 +518,9 @@
     }
 
     .url-pill {
-      font-family: var(--font-mono);
-      font-size: 0.74rem;
-      padding: 3px 10px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 3px 11px;
       border-radius: 999px;
       background: var(--surface);
       border: 1px solid var(--border);
@@ -568,12 +560,7 @@
     .mock-table-wrap {
       padding: 14px 16px;
       overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
       flex: 1;
-    }
-
-    .mobile-scroll-hint {
-      display: none;
     }
 
     table.mock-tbl {
@@ -598,10 +585,6 @@
       padding: 8px 8px;
       border-bottom: 1px solid var(--border);
       vertical-align: middle;
-    }
-
-    table.mock-tbl td:first-child {
-      white-space: nowrap;
     }
 
     table.mock-tbl tr:last-child td {
@@ -700,7 +683,7 @@
     .badge-bad { background: var(--bad-bg); color: var(--bad-tx); }
     .badge-muted { background: var(--bg-alt); color: var(--muted); }
 
-    /* Mini-painel flutuante estilo Preenche SIGEduc */
+    /* Mini-painel flutuante */
     .demo-panel {
       --demo-scale: 1;
       background: var(--surface);
@@ -734,11 +717,11 @@
     .dp-pill {
       background: #10b981;
       color: #052e16;
-      font-size: 0.68em;
+      font-size: 0.65em;
       font-weight: 800;
       padding: 2px 7px;
       border-radius: 999px;
-      letter-spacing: 0.03em;
+      letter-spacing: 0.02em;
     }
 
     .dp-tools {
@@ -1216,7 +1199,7 @@
       margin-top: 8px;
     }
 
-    /* FAQ estilo Badgey ("Good to know.") */
+    /* FAQ */
     .faq-list {
       max-width: 780px;
       margin: 0 auto;
@@ -1348,12 +1331,6 @@
     }
 
     @media (max-width: 720px) {
-      .nav-wrap {
-        top: 0;
-        margin-top: 0;
-        padding: 8px 10px 6px;
-        background: linear-gradient(to bottom, var(--bg) 78%, transparent);
-      }
       .nav-links {
         display: none;
       }
@@ -1361,7 +1338,7 @@
         grid-template-columns: 1fr;
       }
       .hero {
-        padding: 36px 0 32px;
+        padding: 44px 0 36px;
       }
       section.block {
         padding: 40px 0;
@@ -1369,103 +1346,6 @@
       .stage {
         padding: 14px;
         border-radius: 20px;
-      }
-    }
-
-    @media (max-width: 640px) {
-      .nav {
-        padding: 6px 10px;
-        gap: 6px;
-      }
-      .brand {
-        font-size: 0.86rem;
-        gap: 7px;
-        min-height: 44px;
-        min-width: 0;
-      }
-      .brand svg {
-        width: 24px;
-        height: 24px;
-      }
-      .nav-actions {
-        gap: 6px;
-        flex-shrink: 0;
-      }
-      .icon-btn {
-        min-width: 44px;
-        min-height: 44px;
-      }
-      .nav-cta {
-        min-height: 44px;
-        padding: 8px 12px;
-        font-size: 0.8rem;
-      }
-      .eyebrow {
-        font-size: 0.75rem;
-        padding: 6px 12px;
-        gap: 6px;
-        max-width: 100%;
-      }
-      .mobile-scroll-hint {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 8px;
-        padding: 7px 12px;
-        font-size: 0.74rem;
-        font-weight: 600;
-        color: var(--indigo-link);
-        background: var(--bg-alt);
-        border-bottom: 1px solid var(--border);
-      }
-      table.mock-tbl {
-        min-width: 440px;
-      }
-      .dp-tool-btn {
-        min-width: 44px;
-        min-height: 44px;
-        padding: 0 10px;
-      }
-      .dp-tab {
-        min-height: 44px;
-        padding: 8px 4px;
-        font-size: 0.8rem;
-      }
-      .dp-actions .pill-btn {
-        min-height: 44px;
-      }
-      .sheet-topbar {
-        padding: 10px 12px;
-        font-size: 0.82rem;
-      }
-      .sheet-banner {
-        padding: 10px 12px;
-      }
-      table.excel-tbl th:first-child,
-      table.excel-tbl td:first-child {
-        min-width: 195px;
-      }
-      .sheet-tab-btn {
-        min-height: 44px;
-        padding: 8px 12px;
-      }
-      .sheet-back-link,
-      .sheet-link-btn {
-        min-height: 44px;
-        display: inline-flex;
-        align-items: center;
-        padding: 6px 10px;
-      }
-      .guide-tab {
-        min-height: 44px;
-        padding: 8px 12px;
-      }
-      .dl-short a,
-      .footer-links a {
-        display: inline-flex;
-        align-items: center;
-        min-height: 44px;
-        padding: 6px 4px;
       }
     }
 
@@ -1500,9 +1380,9 @@
       </a>
 
       <div class="nav-links">
-        <a href="#demo">Demo ao vivo</a>
-        <a href="#planilha">Planilha CETEP</a>
-        <a href="#download">Download</a>
+        <a href="#demo">Testar agora</a>
+        <a href="#planilha">Planilha pronta</a>
+        <a href="#download">Baixar</a>
         <a href="#duvidas">Dúvidas</a>
       </div>
 
@@ -1516,92 +1396,89 @@
   <header id="topo" class="hero">
     <div class="float-layer" aria-hidden="true">
       <div class="float-card fc-1">
-        <span class="fc-tag">Segurança</span>
-        <strong>Match 100% exato</strong>
-        <span>Homônimos bloqueados ou desambiguados por matrícula.</span>
+        <span class="fc-tag">Conferência segura</span>
+        <strong>Não troca nota de aluno</strong>
+        <span>Só preenche quando o nome bate certinho, sem adivinhar.</span>
       </div>
       <div class="float-card bg-blur fc-2">
         <span class="fc-tag">Frequência</span>
-        <strong>Lógica invertida</strong>
-        <span>Falta na planilha → checkbox marcado no SIGEduc.</span>
+        <strong>Sem confundir falta</strong>
+        <span>Entende P e F da planilha e marca só quem faltou.</span>
       </div>
       <div class="float-card fc-3">
-        <span class="fc-tag">Exportação</span>
-        <strong>Painel CETEP .xlsx</strong>
-        <span>Fórmulas reais, subtotais e hiperlinks entre abas.</span>
+        <span class="fc-tag">Relatórios</span>
+        <strong>Resumo pronto das turmas</strong>
+        <span>Gera planilha do Excel organizada para o conselho de classe.</span>
       </div>
       <div class="float-card bg-blur fc-4">
         <span class="fc-tag">Privacidade</span>
-        <strong>Zero servidores</strong>
-        <span>Tudo roda localmente na memória do seu navegador.</span>
+        <strong>Fica só no seu aparelho</strong>
+        <span>Nenhuma nota ou nome de aluno sai do seu navegador.</span>
       </div>
     </div>
 
     <div class="container hero-inner">
       <div class="eyebrow">
         <span class="eyebrow-dot" aria-hidden="true"></span>
-        <span>Extensão Manifest V3 · 100% Local · <span style="white-space:nowrap;">SIGEduc-BA</span></span>
+        <span>Gratuito para professores · Funciona direto no SIGEduc-BA</span>
       </div>
       <h1>Notas e frequência no SIGEduc, sem retrabalho.</h1>
       <p class="hero-sub">
-        Importe sua planilha ou cole os dados do diário, confira a prévia exata dos estudantes e deixe o painel lançar notas, marcar não realizações, registrar faltas e gerar o consolidado CETEP em segundos.
+        Traga sua planilha do Excel ou cole os dados da sua tabela, confira tudo na tela e deixe a ferramenta lançar as notas, marcar quem não fez atividade, registrar faltas e montar o resumo das turmas em poucos segundos.
       </p>
       <div class="hero-ctas">
-        <a class="pill-btn primary" href="#download">Baixar extensão</a>
-        <a class="pill-btn ghost" href="#demo">Testar painel ao vivo</a>
+        <a class="pill-btn primary" href="#download">Baixar agora</a>
+        <a class="pill-btn ghost" href="#demo">Testar sem instalar</a>
       </div>
       <div class="hero-meta">
-        <span class="cws-badge">Em revisão na Chrome Web Store</span>
-        <span>Downloads diretos para Chrome, Edge Mobile e Firefox abaixo</span>
+        <span class="cws-badge">Em breve na loja do Chrome</span>
+        <span>Você já pode baixar e usar gratuitamente no computador e no celular logo abaixo</span>
       </div>
     </div>
   </header>
 
   <main>
-    <!-- Playground Interativo ao Vivo (Sunstill + SIGEduc Mock) -->
+    <!-- Playground Interativo ao Vivo -->
     <section id="demo" class="block">
       <div class="container">
         <div class="sec-head">
-          <span class="sec-kicker">Experimente antes de instalar</span>
-          <h2>Veja o painel flutuante trabalhando ao vivo</h2>
-          <p>Alterne entre os três fluxos reais da extensão e teste o preenchimento passo a passo em uma turma fictícia.</p>
+          <span class="sec-kicker">Teste antes de baixar</span>
+          <h2>Veja como funciona na prática</h2>
+          <p>Clique nos três botões abaixo para simular como o painel preenche o SIGEduc usando uma turma de exemplo.</p>
         </div>
 
         <div class="stage">
-          <!-- Esquerda: Mock do SIGEduc -->
+          <!-- Esquerda: Tela simulada do SIGEduc -->
           <div class="sigeduc-mock" aria-label="Simulação da tela do SIGEduc-BA">
             <div class="browser-bar">
               <span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>
-              <span id="mock-url" class="url-pill">https://sigeduc.educacao.ba.gov.br/sigeduc/avaliacao/lancarNotas.jsf</span>
-              <span>Simulação</span>
+              <span id="mock-url" class="url-pill">SIGEduc-BA • Lançar Notas</span>
+              <span>Exemplo</span>
             </div>
             <div class="sig-context">
-              <strong id="mock-context-title">ADMVES1SA • 3ª Unidade — Lançar Resultados</strong>
-              <span id="mock-context-badge" class="sig-tag">Fila AJAX RichFaces: pronta</span>
-            </div>
-            <div class="mobile-scroll-hint" aria-hidden="true">
-              <span>↔ Arraste a tabela para o lado para ver todas as colunas</span>
+              <strong id="mock-context-title">1ª Série A (Vespertino) — 3ª Unidade</strong>
+              <span id="mock-context-badge" class="sig-tag">Pronto para preencher</span>
             </div>
             <div id="mock-screen-body" class="mock-table-wrap"></div>
           </div>
 
-          <!-- Direita: Mini-painel flutuante da extensão -->
-          <aside id="demo-panel" class="demo-panel" aria-label="Painel interativo Preenche SIGEduc">
+          <!-- Direita: Painel flutuante -->
+          <aside id="demo-panel" class="demo-panel" aria-label="Painel de demonstração Preenche SIGEduc">
             <div class="dp-header">
               <div class="dp-title">
                 <span>Preenche SIGEduc</span>
-                <span class="dp-pill">100% LOCAL</span>
+                <span class="dp-pill">NO SEU APARELHO</span>
               </div>
               <div class="dp-tools">
-                <button id="demo-font-btn" class="dp-tool-btn" type="button" title="Alterar tamanho do texto">A+ 100%</button>
-                <button id="demo-theme-btn" class="dp-tool-btn" type="button" title="Alternar tema">☾</button>
+                <button id="demo-font-btn" class="dp-tool-btn" type="button" title="Aumentar ou diminuir o tamanho da letra">Letra 100%</button>
+                <button id="demo-theme-btn" class="dp-tool-btn" type="button" title="Alternar tema claro ou escuro">☾</button>
               </div>
             </div>
 
             <div class="dp-tabs" role="tablist" aria-label="Modos do simulador">
               <button class="dp-tab" type="button" role="tab" aria-selected="true" data-demo-tab="notas">Notas</button>
               <button class="dp-tab" type="button" role="tab" aria-selected="false" data-demo-tab="frequencia">Frequência</button>
-              <button class="dp-tab" type="button" role="tab" aria-selected="false" data-demo-tab="extrair">Extrair CETEP</button>
+              <button class="dp-tab" type="button" role="tab" aria-selected="false" data-demo-tab="extrair">Baixar Turmas</button>
             </div>
 
             <div class="dp-body">
@@ -1609,7 +1486,7 @@
               <div id="dp-note" class="dp-note"></div>
               <div class="dp-progress-wrap">
                 <div class="dp-progress-head">
-                  <span id="dp-progress-label">Aguardando comando</span>
+                  <span id="dp-progress-label">Aguardando você clicar abaixo</span>
                   <span id="dp-progress-pct">0%</span>
                 </div>
                 <div class="dp-progress-bar">
@@ -1617,8 +1494,8 @@
                 </div>
               </div>
               <div class="dp-actions">
-                <button id="demo-run-btn" class="pill-btn emerald" type="button">Simular preenchimento</button>
-                <button id="demo-reset-btn" class="pill-btn ghost dp-reset" type="button">Resetar</button>
+                <button id="demo-run-btn" class="pill-btn emerald" type="button">Testar preenchimento</button>
+                <button id="demo-reset-btn" class="pill-btn ghost dp-reset" type="button">Recomeçar</button>
               </div>
             </div>
           </aside>
@@ -1630,22 +1507,19 @@
     <section id="planilha" class="block">
       <div class="container">
         <div class="sec-head">
-          <span class="sec-kicker">Modelo Padrão CETEP (.xlsx)</span>
-          <h2>Planilha consolidada pronta para o conselho de classe</h2>
-          <p>Navegue pelas abas reais abaixo, clique nos hiperlinks das turmas para abrir a unidade regular ou o Resultado Final, ou baixe a amostra completa em Excel.</p>
+          <span class="sec-kicker">Planilha pronta no Excel</span>
+          <h2>Resumo organizado para o conselho de classe</h2>
+          <p>Clique nas abas lá embaixo ou diretamente no nome das turmas para ver como a planilha já sai com médias, aprovados, recuperação e Resultado Final. Se quiser, baixe o arquivo real para abrir no seu computador.</p>
         </div>
 
-        <div class="sheet-shell" aria-label="Prévia interativa da planilha consolidada CETEP">
+        <div class="sheet-shell" aria-label="Prévia da planilha de exemplo no padrão CETEP">
           <div class="sheet-topbar">
-            <strong>amostra-cetep.xlsx — Padrão CETEP (Fórmulas + Hiperlinks)</strong>
-            <span>Dados 100% fictícios • Critério: Nota Geral &ge; 5,0</span>
+            <strong>amostra-cetep.xlsx — Modelo CETEP</strong>
+            <span>Exemplo fictício • Média para aprovação: 5,0</span>
           </div>
           <div id="sheet-banner" class="sheet-banner"></div>
-          <div class="mobile-scroll-hint" aria-hidden="true">
-            <span>↔ Arraste a planilha para o lado para ver notas, aprovação e hiperlinks</span>
-          </div>
           <div id="sheet-table-wrap" class="sheet-scroll"></div>
-          <div class="sheet-tabs-bar" role="tablist" aria-label="Abas da amostra CETEP">
+          <div class="sheet-tabs-bar" role="tablist" aria-label="Abas da planilha de exemplo">
             <button class="sheet-tab-btn" type="button" role="tab" aria-selected="true" data-sheet-tab="painel">Painel Consolidado</button>
             <button class="sheet-tab-btn" type="button" role="tab" aria-selected="false" data-sheet-tab="adm">ADMVES1SA Ves 3U</button>
             <button class="sheet-tab-btn" type="button" role="tab" aria-selected="false" data-sheet-tab="inf">INFNOTM1A2 Not RF</button>
@@ -1653,41 +1527,41 @@
         </div>
 
         <div class="sheet-footer-cta">
-          <p>Arquivo <code>amostra-cetep.xlsx</code> gerado pelo mesmo motor OOXML da extensão (fórmulas <code>SUM</code>, <code>AVERAGE</code>, <code>IF</code>, <code>COUNTIF</code> e hiperlinks internos).</p>
-          <a class="pill-btn emerald" href="amostra-cetep.xlsx" download="amostra-cetep.xlsx">Baixar amostra real (.xlsx)</a>
+          <p>Arquivo pronto para abrir no Excel, LibreOffice ou Planilhas Google, já com cálculos automáticos e links entre as abas.</p>
+          <a class="pill-btn emerald" href="amostra-cetep.xlsx" download="amostra-cetep.xlsx">Baixar planilha de exemplo (.xlsx)</a>
         </div>
       </div>
     </section>
 
-    <!-- 4 Pilares Técnicos -->
+    <!-- 4 Pilares em linguagem simples -->
     <section class="block">
       <div class="container">
         <div class="sec-head">
-          <span class="sec-kicker">Engenharia pensada para o dia a dia</span>
-          <h2>Rápido no uso, rígido na segurança</h2>
-          <p>Cada detalhe respeita o funcionamento interno do JSF/RichFaces do SIGEduc e protege os dados da sua turma.</p>
+          <span class="sec-kicker">Feito para evitar dor de cabeça</span>
+          <h2>Simples de usar e cuidadoso com seus dados</h2>
+          <p>Pensado para a rotina real de fechamento de unidade e conselho de classe no SIGEduc-BA.</p>
         </div>
 
         <div class="pillars-grid">
           <article class="pillar-card">
-            <div class="pillar-icon" aria-hidden="true">=</div>
-            <h3>Correspondência 100% exata</h3>
-            <p>Nomes são normalizados sem acentos e comparados de forma exata. Homônimos permanecem bloqueados até desambiguação por matrícula única.</p>
+            <div class="pillar-icon" aria-hidden="true">✓</div>
+            <h3>Não mistura nomes de alunos</h3>
+            <p>A ferramenta confere os nomes sem se perder com acentos. Se houver dois alunos com nome igual na turma, ela avisa e bloqueia para não lançar nota no aluno errado.</p>
           </article>
           <article class="pillar-card">
             <div class="pillar-icon" aria-hidden="true">↻</div>
-            <h3>Fila sequencial AJAX</h3>
-            <p>As notas são enviadas uma por vez aguardando a resposta de cada requisição <code>A4J.AJAX.Submit</code>, evitando perda de notas ou conflito de <code>ViewState</code>.</p>
+            <h3>Preenche com calma, sem perder nota</h3>
+            <p>As notas são digitadas uma a uma esperando o SIGEduc confirmar cada campo, evitando aquele problema clássico de o site apagar ou pular notas ao salvar.</p>
           </article>
           <article class="pillar-card">
             <div class="pillar-icon" aria-hidden="true">🔒</div>
-            <h3>Privacidade local e LGPD</h3>
-            <p>Sem servidor próprio, sem Google Analytics e sem envio de planilhas para fora. Se usar auto-gravação opcional, a senha fica apenas na RAM e é zerada ao concluir.</p>
+            <h3>Seus dados ficam só com você</h3>
+            <p>Não existe cadastro, login paralelo nem envio de arquivos para fora. Tudo acontece dentro do seu próprio navegador enquanto o SIGEduc está aberto.</p>
           </article>
           <article class="pillar-card">
             <div class="pillar-icon" aria-hidden="true">📱</div>
-            <h3>Desktop e Android</h3>
-            <p>Interface isolada em Shadow DOM responsiva tanto para telas largas no Windows quanto para navegadores com extensões no celular Android.</p>
+            <h3>Funciona no computador e no celular</h3>
+            <p>O painel se adapta sozinho à tela do notebook no Windows ou do celular Android, com opção de tema escuro e botão para aumentar a letra.</p>
           </article>
         </div>
       </div>
@@ -1697,150 +1571,151 @@
     <section id="download" class="block">
       <div class="container">
         <div class="sec-head">
-          <span class="sec-kicker">Instalação gratuita</span>
-          <h2>Baixe para seu navegador</h2>
-          <p>Escolha o pacote compatível com seu computador ou celular Android e siga o passo a passo abaixo.</p>
+          <span class="sec-kicker">Download gratuito</span>
+          <h2>Escolha onde você quer instalar</h2>
+          <p>Baixe o arquivo do seu navegador e siga os passos simples logo abaixo.</p>
         </div>
 
         <div class="dl-notice">
-          <span class="cws-badge">Chrome Web Store: em revisão · Instale agora pelos pacotes oficiais abaixo</span>
+          <span class="cws-badge">Em breve na loja oficial do Chrome · Enquanto isso, você já pode baixar e instalar gratuitamente aqui</span>
         </div>
 
         <div class="dl-grid">
           <article class="dl-card">
-            <h3>Chrome / Mises / Lemur</h3>
-            <p>Pacote <code>.zip</code> para Google Chrome / Edge no PC e navegadores Chromium Android (Mises e Lemur).</p>
-            <a class="pill-btn primary" href="https://github.com/devmagary/preenchesigeduc/releases/latest/download/preenche-sigeduc-chrome.zip">Baixar .zip (Chrome / Android)</a>
+            <h3>Computador (Chrome ou Edge)</h3>
+            <p>Também serve para os navegadores <strong>Mises</strong> e <strong>Lemur</strong> no celular Android.</p>
+            <a class="pill-btn primary" href="https://github.com/devmagary/preenchesigeduc/releases/latest/download/preenche-sigeduc-chrome.zip">Baixar para PC / Mises / Lemur</a>
             <span class="dl-short">Link curto: <a href="https://is.gd/sige_navegador"><code>is.gd/sige_navegador</code></a></span>
           </article>
 
           <article class="dl-card featured">
-            <h3>Edge Mobile (Canary Android)</h3>
-            <p>Pacote assinado <code>.crx</code> pronto para instalação direta nas opções de desenvolvedor do Edge Canary no Android.</p>
-            <a class="pill-btn emerald" href="https://github.com/devmagary/preenchesigeduc/releases/latest/download/preenche-sigeduc-edge-mobile.crx">Baixar .crx (Edge Mobile)</a>
+            <h3>Celular Android (Edge Canary)</h3>
+            <p>Arquivo direto para instalar no navegador Microsoft Edge Canary no seu celular Android.</p>
+            <a class="pill-btn emerald" href="https://github.com/devmagary/preenchesigeduc/releases/latest/download/preenche-sigeduc-edge-mobile.crx">Baixar para Edge no Celular</a>
             <span class="dl-short">Link curto: <a href="https://is.gd/sige_mobile"><code>is.gd/sige_mobile</code></a></span>
           </article>
 
           <article class="dl-card">
-            <h3>Firefox / Firefox Android</h3>
-            <p>Pacote WebExtension MV3 (<code>.zip</code>) para Firefox Desktop e Firefox Nightly/Beta no Android.</p>
-            <a class="pill-btn primary" href="https://github.com/devmagary/preenchesigeduc/releases/latest/download/preenche-sigeduc-firefox.zip">Baixar .zip (Firefox)</a>
+            <h3>Firefox (Computador ou Android)</h3>
+            <p>Versão própria para quem usa o navegador Firefox no computador ou no celular Android.</p>
+            <a class="pill-btn primary" href="https://github.com/devmagary/preenchesigeduc/releases/latest/download/preenche-sigeduc-firefox.zip">Baixar para Firefox</a>
             <span class="dl-short">Link curto: <a href="https://is.gd/sige_firefox"><code>is.gd/sige_firefox</code></a></span>
           </article>
         </div>
 
         <div class="guide-box">
-          <div class="guide-tabs" role="tablist" aria-label="Guias de instalação por navegador">
-            <button class="guide-tab" type="button" role="tab" aria-selected="true" data-guide-tab="pc">Chrome / Edge (PC)</button>
-            <button class="guide-tab" type="button" role="tab" aria-selected="false" data-guide-tab="edge-android">Edge Canary (Android .crx)</button>
-            <button class="guide-tab" type="button" role="tab" aria-selected="false" data-guide-tab="mises">Mises / Lemur (Android)</button>
-            <button class="guide-tab" type="button" role="tab" aria-selected="false" data-guide-tab="firefox">Firefox (PC / Android)</button>
+          <div class="guide-tabs" role="tablist" aria-label="Como instalar em cada aparelho">
+            <button class="guide-tab" type="button" role="tab" aria-selected="true" data-guide-tab="pc">No Computador (Chrome / Edge)</button>
+            <button class="guide-tab" type="button" role="tab" aria-selected="false" data-guide-tab="edge-android">No Celular (Edge Canary)</button>
+            <button class="guide-tab" type="button" role="tab" aria-selected="false" data-guide-tab="mises">No Celular (Mises / Lemur)</button>
+            <button class="guide-tab" type="button" role="tab" aria-selected="false" data-guide-tab="firefox">No Firefox</button>
           </div>
 
           <div id="guide-pc" class="guide-panel active">
             <ol>
-              <li>Baixe <code>preenche-sigeduc-chrome.zip</code> e extraia a pasta em um local fixo no seu computador.</li>
-              <li>Abra <code>chrome://extensions</code> (ou <code>edge://extensions</code>) e ative o <strong>Modo do desenvolvedor</strong>.</li>
-              <li>Clique em <strong>Carregar sem compactação</strong> e selecione a pasta extraída.</li>
-              <li>Entre no portal <code>sigeduc.educacao.ba.gov.br</code> e clique no botão flutuante <strong>Preenche SIGEduc</strong>.</li>
+              <li>Clique em <strong>Baixar para PC</strong> acima e extraia a pasta do arquivo baixado (clique com o botão direito e escolha <em>Extrair tudo</em>) em um lugar fixo, como na sua pasta <em>Documentos</em>.</li>
+              <li>Abra o navegador, digite <code>chrome://extensions</code> (ou <code>edge://extensions</code>) na barra de endereço e aperte Enter.</li>
+              <li>No canto da tela, ligue a chave <strong>Modo do desenvolvedor</strong>.</li>
+              <li>Clique em <strong>Carregar sem compactação</strong> e escolha a pasta que você extraiu.</li>
+              <li>Pronto! Entre no portal do SIGEduc-BA e o botão azul <strong>Preenche SIGEduc</strong> aparecerá no canto da tela.</li>
             </ol>
           </div>
 
           <div id="guide-edge-android" class="guide-panel">
             <ol>
-              <li>Baixe <code>preenche-sigeduc-edge-mobile.crx</code> no botão verde acima.</li>
-              <li>No Edge Canary Android, abra <strong>Configurações → Sobre o Microsoft Edge</strong> e toque 5 vezes na versão para ativar as <strong>Opções do desenvolvedor</strong>.</li>
-              <li>Entre em <strong>Opções do desenvolvedor → Extension install by crx</strong> e selecione o arquivo <code>.crx</code> baixado.</li>
-              <li>Acesse o SIGEduc-BA normalmente e toque no botão flutuante para abrir o painel.</li>
+              <li>Toque no botão verde <strong>Baixar para Edge no Celular</strong> acima para salvar o arquivo no aparelho.</li>
+              <li>Abra o Edge Canary no celular, toque no menu, entre em <strong>Configurações → Sobre o Microsoft Edge</strong> e toque 5 vezes seguidas no número da versão até liberar as <strong>Opções do desenvolvedor</strong>.</li>
+              <li>Volte em Configurações, abra <strong>Opções do desenvolvedor → Extension install by crx</strong> e escolha o arquivo que você acabou de baixar.</li>
+              <li>Entre normalmente no SIGEduc-BA e toque no botão flutuante para abrir o painel.</li>
             </ol>
           </div>
 
           <div id="guide-mises" class="guide-panel">
             <ol>
-              <li>Baixe <code>preenche-sigeduc-chrome.zip</code> pelo celular.</li>
-              <li>Abra o menu de <strong>Extensões</strong> do Mises ou Lemur Browser e ative o modo desenvolvedor.</li>
-              <li>Toque em <strong>+(from .zip)</strong> / <strong>Carregar .zip</strong> e selecione o arquivo baixado.</li>
+              <li>Baixe o arquivo clicando em <strong>Baixar para PC / Mises / Lemur</strong> pelo seu celular.</li>
+              <li>Abra o menu de <strong>Extensões</strong> do Mises ou do Lemur e ative o <strong>Modo desenvolvedor</strong>.</li>
+              <li>Toque em <strong>+(from .zip)</strong> e selecione o arquivo que você baixou (não precisa nem descompactar).</li>
             </ol>
           </div>
 
           <div id="guide-firefox" class="guide-panel">
             <ol>
-              <li>Baixe <code>preenche-sigeduc-firefox.zip</code>.</li>
-              <li>No Desktop, acesse <code>about:debugging#/runtime/this-firefox</code> e clique em <strong>Carregar extensão temporária</strong> selecionando o arquivo <code>manifest.json</code> (ou o <code>.zip</code>).</li>
-              <li>No Firefox Nightly/Beta Android, habilite extensões personalizadas nas configurações de desenvolvedor para instalar o pacote.</li>
+              <li>Baixe o arquivo clicando em <strong>Baixar para Firefox</strong> e extraia a pasta no seu computador.</li>
+              <li>No Firefox do computador, acesse <code>about:debugging#/runtime/this-firefox</code>, clique em <strong>Carregar extensão temporária</strong> e escolha o arquivo <code>manifest.json</code> dentro da pasta extraída.</li>
+              <li>No celular (Firefox Nightly ou Beta), ative as extensões personalizadas nas configurações de desenvolvedor para instalar o pacote.</li>
             </ol>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- FAQ estilo Badgey -->
+    <!-- FAQ -->
     <section id="duvidas" class="block">
       <div class="container">
         <div class="sec-head">
-          <span class="sec-kicker">Bom saber</span>
-          <h2>Dúvidas frequentes</h2>
-          <p>Respostas diretas sobre segurança, correspondência de alunos e funcionamento no portal.</p>
+          <span class="sec-kicker">Tire suas dúvidas</span>
+          <h2>Perguntas frequentes</h2>
+          <p>Respostas diretas sobre segurança, conferência de alunos e como a ferramenta trata suas notas e faltas.</p>
         </div>
 
         <div class="faq-list">
           <details class="faq-item">
             <summary>
-              <span>A extensão envia notas ou dados dos alunos para algum servidor?</span>
+              <span>Minhas planilhas, notas ou senha do SIGEduc são enviadas para algum lugar?</span>
               <span class="faq-plus" aria-hidden="true">+</span>
             </summary>
             <div class="faq-ans">
-              Não. Todo o processamento — leitura de planilhas, normalização de nomes, preenchimento de notas/frequências e geração do arquivo <code>.xlsx</code> — acontece 100% localmente no seu navegador, sem servidor externo ou telemetria. Veja os detalhes na <a href="privacidade.html">Política de Privacidade</a>.
+              Não. Tudo funciona exclusivamente dentro do seu próprio navegador, sem enviar notas, nomes de alunos ou planilhas para nenhum site externo. E sua senha nunca é gravada. Veja todos os detalhes na <a href="privacidade.html">Política de Privacidade</a>.
             </div>
           </details>
 
           <details class="faq-item">
             <summary>
-              <span>Como funciona a diferença entre nota 0,0 e Não Realização?</span>
+              <span>Qual a diferença entre nota zero (0,0) e aluno que não fez a atividade?</span>
               <span class="faq-plus" aria-hidden="true">+</span>
             </summary>
             <div class="faq-ans">
-              O valor numérico <code>0</code> ou <code>0,0</code> é tratado como nota zero real e lançado no campo da atividade. Já células em branco ou marcadas como <code>NF</code>, <code>Não Fez</code>, <code>FV</code> ou <code>NR</code> ficam vazias no lançamento e entram automaticamente na fila da tela de <em>Não Realização</em> para marcar os checkboxes correspondentes.
+              Quando sua planilha tem <code>0</code> ou <code>0,0</code>, o painel lança a nota zero normalmente no SIGEduc. Já quando a célula está vazia ou escrita como <code>NF</code>, <code>Não Fez</code>, <code>FV</code> ou <code>NR</code>, o campo de nota fica livre e a ferramenta marca automaticamente a caixinha correspondente na etapa de <em>Não Realização</em>.
             </div>
           </details>
 
           <details class="faq-item">
             <summary>
-              <span>E se houver dois alunos com o mesmo nome na turma ou na planilha?</span>
+              <span>E se houver dois alunos com o mesmo nome na turma?</span>
               <span class="faq-plus" aria-hidden="true">+</span>
             </summary>
             <div class="faq-ans">
-              Por segurança, a extensão nunca faz "chute" por aproximação. Homônimos ficam bloqueados na prévia para evitar troca acidental de notas entre estudantes, exceto quando há desambiguação exata por número de matrícula único.
+              A ferramenta nunca tenta adivinhar nomes parecidos. Se existir qualquer aluno repetido na turma ou na planilha, ela bloqueia aqueles nomes na prévia para evitar que a nota de um estudante vá para o outro — a menos que você também informe a matrícula para diferenciar cada um.
             </div>
           </details>
 
           <details class="faq-item">
             <summary>
-              <span>Por que os checkboxes de frequência funcionam invertidos no SIGEduc?</span>
+              <span>Por que no SIGEduc a caixinha marcada na frequência significa falta?</span>
               <span class="faq-plus" aria-hidden="true">+</span>
             </summary>
             <div class="faq-ans">
-              No diário do SIGEduc-BA, caixa marcada significa <strong>FALTA</strong> e desmarcada significa <strong>PRESENTE</strong>. Quando você importa <code>P</code>, <code>F</code> ou múltiplos horários (<code>2F</code>), o painel já realiza essa inversão automaticamente e exibe a prévia antes de aplicar.
+              É assim que o próprio diário do SIGEduc-BA funciona: caixa marcada = <strong>FALTA</strong>, caixa desmarcada = <strong>PRESENTE</strong>. Você não precisa se confundir com isso — na sua planilha basta usar <code>P</code> (presente), <code>F</code> (falta) ou <code>2F</code> (duas faltas), e o painel já converte certinho antes de aplicar.
             </div>
           </details>
 
           <details class="faq-item">
             <summary>
-              <span>Consigo extrair todas as minhas turmas de uma só vez no modelo CETEP?</span>
+              <span>Consigo baixar as notas de todas as minhas turmas de uma vez?</span>
               <span class="faq-plus" aria-hidden="true">+</span>
             </summary>
             <div class="faq-ans">
-              Sim. Na tela inicial do Portal do Docente, o modo <strong>Extrair CETEP</strong> percorre sequencialmente as turmas selecionadas (separando Ensino Médio e Técnico, inclusive na aba <em>Resultado Final</em>), opcionalmente coleta matrículas via Frequência e exporta um único <code>.xlsx</code> com Painel Consolidado e hiperlinks.
+              Sim. Na tela inicial de professor no SIGEduc, você pode marcar suas turmas (separando Ensino Médio e Técnico, inclusive no <em>Resultado Final</em>) e pedir para gerar uma única planilha do Excel já organizada no modelo CETEP, com resumo geral e abas separadas por turma.
             </div>
           </details>
 
           <details class="faq-item">
             <summary>
-              <span>O projeto tem vínculo oficial com a SEC-BA ou com o Governo da Bahia?</span>
+              <span>Essa ferramenta é oficial da Secretaria da Educação (SEC-BA)?</span>
               <span class="faq-plus" aria-hidden="true">+</span>
             </summary>
             <div class="faq-ans">
-              Não. O Preenche SIGEduc é uma ferramenta independente, gratuita e de código aberto para apoiar a rotina docente. Recomenda-se sempre conferir a prévia e os valores preenchidos antes da gravação definitiva no diário oficial.
+              Não. O Preenche SIGEduc é um projeto independente, gratuito e aberto, criado para economizar tempo de professores no dia a dia. Mesmo com a prévia automática, lembre-se sempre de dar uma olhada rápida nos valores antes de clicar no botão final de salvar no SIGEduc.
             </div>
           </details>
         </div>
@@ -1851,11 +1726,11 @@
     <section class="block">
       <div class="container">
         <div class="final-cta">
-          <h2>Menos cliques no diário. Mais tempo para ensinar.</h2>
-          <p>Instale gratuitamente no seu computador ou celular Android e baixe a amostra CETEP para conhecer o resultado.</p>
+          <h2>Menos tempo digitando. Mais tempo para ensinar.</h2>
+          <p>Baixe gratuitamente para o seu computador ou celular e confira a planilha de exemplo pronta.</p>
           <div class="hero-ctas">
-            <a class="pill-btn primary" href="#download">Baixar extensão agora</a>
-            <a class="pill-btn ghost" href="amostra-cetep.xlsx" download="amostra-cetep.xlsx">Baixar amostra .xlsx</a>
+            <a class="pill-btn primary" href="#download">Baixar agora</a>
+            <a class="pill-btn ghost" href="amostra-cetep.xlsx" download="amostra-cetep.xlsx">Baixar planilha de exemplo</a>
           </div>
         </div>
       </div>
@@ -1867,10 +1742,10 @@
       <div class="footer-links">
         <span>Compartilhar esta página: <a href="https://is.gd/sigeduc"><code>https://is.gd/sigeduc</code></a></span>
         <a href="privacidade.html">Política de Privacidade</a>
-        <a href="https://github.com/devmagary/preenchesigeduc/releases/latest">GitHub Releases</a>
-        <a href="https://github.com/devmagary/preenchesigeduc">Código-fonte no GitHub</a>
+        <a href="https://github.com/devmagary/preenchesigeduc/releases/latest">Todas as versões</a>
+        <a href="https://github.com/devmagary/preenchesigeduc">Projeto aberto no GitHub</a>
       </div>
-      <div>100% local e sem telemetria • Projeto independente de código aberto sem vínculo com a SEC-BA.</div>
+      <div>Funciona 100% no seu aparelho • Ferramenta gratuita e independente, sem vínculo com a SEC-BA.</div>
     </div>
   </footer>
 
@@ -1912,7 +1787,7 @@
         scaleIdx = (scaleIdx + 1) % scales.length;
         const s = scales[scaleIdx];
         demoPanel?.style.setProperty('--demo-scale', String(s));
-        demoFontBtn.textContent = `A+ ${Math.round(s * 100)}%`;
+        demoFontBtn.textContent = `Letra ${Math.round(s * 100)}%`;
       });
 
       // --- Simulador ao Vivo ---
@@ -1973,19 +1848,19 @@
           btn.setAttribute('aria-selected', String(btn.dataset.demoTab === tab));
         });
 
-        setProgress(0, 'Aguardando comando');
+        setProgress(0, 'Aguardando você clicar abaixo');
 
         if (tab === 'notas') {
-          mockUrl.textContent = 'https://sigeduc.educacao.ba.gov.br/sigeduc/avaliacao/lancarNotas.jsf';
-          mockCtxTitle.textContent = 'ADMVES1SA • 3ª Unidade — Lançar Resultados';
-          mockCtxBadge.textContent = 'Fila AJAX RichFaces: pronta';
+          mockUrl.textContent = 'SIGEduc-BA • Lançar Notas';
+          mockCtxTitle.textContent = '1ª Série A (Vespertino) — 3ª Unidade';
+          mockCtxBadge.textContent = 'Pronto para preencher';
           dpKpis.innerHTML = `
-            <div class="dp-kpi"><strong>5</strong><span>Casados</span></div>
-            <div class="dp-kpi"><strong>2</strong><span>Não realiz.</span></div>
-            <div class="dp-kpi"><strong>0</strong><span>Bloqueados</span></div>
+            <div class="dp-kpi"><strong>5</strong><span>Encontrados</span></div>
+            <div class="dp-kpi"><strong>2</strong><span>Não fizeram</span></div>
+            <div class="dp-kpi"><strong>0</strong><span>Em dúvida</span></div>
           `;
-          dpNote.innerHTML = '<strong>Nota 0,0 vs Não Realização:</strong> <code>0.0</code> (Diego) é lançado como nota real. <code>NF</code>/vazio (Camila e Eduarda) fica livre e marca os checkboxes na etapa de Não Realização.';
-          demoRunBtn.textContent = 'Simular preenchimento';
+          dpNote.innerHTML = '<strong>Nota zero ou Não Fez:</strong> o <code>0.0</code> do Diego é lançado como nota real. Já <code>NF</code> ou célula vazia (Camila e Eduarda) marca a opção de <em>Não Realização</em>.';
+          demoRunBtn.textContent = 'Testar preenchimento';
           demoRunBtn.disabled = false;
 
           mockScreenBody.innerHTML = `
@@ -2010,7 +1885,7 @@
               </tbody>
             </table>
             <div id="demo-nr-modal" class="nr-modal" aria-live="polite">
-              <strong>SIGEduc → Não Realização de Atividades:</strong> modal confirmado automaticamente para 2 ocorrências.
+              <strong>Etapa de Não Realização:</strong> o painel respondeu à pergunta do SIGEduc e marcou as 2 atividades não feitas.
               <div class="nr-checks">
                 <label class="nr-chip"><input type="checkbox" checked disabled /> CAMILA DIAS (Simulado)</label>
                 <label class="nr-chip"><input type="checkbox" checked disabled /> EDUARDA GOMES (Feira)</label>
@@ -2018,16 +1893,16 @@
             </div>
           `;
         } else if (tab === 'frequencia') {
-          mockUrl.textContent = 'https://sigeduc.educacao.ba.gov.br/sigeduc/diario/frequencia.jsf';
-          mockCtxTitle.textContent = 'ADMVES1SA • Lista de Frequência — 26/11/2026';
-          mockCtxBadge.textContent = 'Regra SIGEduc: ✓ marcado = FALTA';
+          mockUrl.textContent = 'SIGEduc-BA • Frequência';
+          mockCtxTitle.textContent = '1ª Série A • Chamada do dia 26/11/2026';
+          mockCtxBadge.textContent = 'No SIGEduc, caixinha marcada = FALTA';
           dpKpis.innerHTML = `
-            <div class="dp-kpi"><strong>2</strong><span>Presentes (P)</span></div>
-            <div class="dp-kpi"><strong>3</strong><span>Faltosos (F/2F)</span></div>
-            <div class="dp-kpi"><strong>100%</strong><span>Inversão</span></div>
+            <div class="dp-kpi"><strong>2</strong><span>Presentes</span></div>
+            <div class="dp-kpi"><strong>3</strong><span>Com falta</span></div>
+            <div class="dp-kpi"><strong>100%</strong><span>Conferido</span></div>
           `;
-          dpNote.innerHTML = '<strong>Lógica invertida protegida:</strong> no SIGEduc, marcar a caixa registra <strong>FALTA</strong>. O painel converte <code>P</code> / <code>F</code> / <code>2F</code> e sanitiza quebras de linha nas observações.';
-          demoRunBtn.textContent = 'Simular frequência';
+          dpNote.innerHTML = '<strong>Sem confundir P e F:</strong> na sua planilha você usa <code>P</code>, <code>F</code> ou <code>2F</code>. Aqui no SIGEduc a ferramenta já marca a caixinha apenas de quem faltou e limpa o texto da observação.';
+          demoRunBtn.textContent = 'Testar frequência';
           demoRunBtn.disabled = false;
 
           mockScreenBody.innerHTML = `
@@ -2035,9 +1910,9 @@
               <thead>
                 <tr>
                   <th>Estudante</th>
-                  <th>Planilha</th>
-                  <th>1º Hor. (Falta?)</th>
-                  <th>2º Hor. (Falta?)</th>
+                  <th>Na planilha</th>
+                  <th>1º Hor. (Falta)</th>
+                  <th>2º Hor. (Falta)</th>
                   <th>Observação</th>
                 </tr>
               </thead>
@@ -2055,16 +1930,16 @@
             </table>
           `;
         } else {
-          mockUrl.textContent = 'https://sigeduc.educacao.ba.gov.br/sigeduc/portal/docente/docente.jsf';
-          mockCtxTitle.textContent = 'Portal do Docente — 3 Turmas Selecionadas';
-          mockCtxBadge.textContent = 'Coleta sequencial JSF + CETEP';
+          mockUrl.textContent = 'SIGEduc-BA • Minhas Turmas';
+          mockCtxTitle.textContent = 'Portal do Professor — 3 Turmas Selecionadas';
+          mockCtxBadge.textContent = 'Pronto para juntar turmas';
           dpKpis.innerHTML = `
             <div class="dp-kpi"><strong>2</strong><span>Ens. Médio</span></div>
-            <div class="dp-kpi"><strong>1</strong><span>Técnico (RF)</span></div>
+            <div class="dp-kpi"><strong>1</strong><span>Técnico</span></div>
             <div class="dp-kpi"><strong>20</strong><span>Estudantes</span></div>
           `;
-          dpNote.innerHTML = '<strong>Varredura multi-turma:</strong> percorre cada turma selecionada preservando o <code>ViewState</code>, separa Ensino Médio e Técnico (inclusive <em>Resultado Final</em>) e gera o consolidado CETEP.';
-          demoRunBtn.textContent = 'Simular extração em lote';
+          dpNote.innerHTML = '<strong>Tudo em um arquivo só:</strong> o painel entra em cada turma marcada, recolhe notas e médias (inclusive do <em>Resultado Final</em>) e monta a planilha no padrão CETEP.';
+          demoRunBtn.textContent = 'Testar coleta das turmas';
           demoRunBtn.disabled = false;
 
           mockScreenBody.innerHTML = `
@@ -2072,9 +1947,9 @@
               <thead>
                 <tr>
                   <th>Turma</th>
-                  <th>Identificação</th>
+                  <th>Curso e turno</th>
                   <th>Alunos</th>
-                  <th>Status</th>
+                  <th>Situação</th>
                 </tr>
               </thead>
               <tbody>
@@ -2089,9 +1964,9 @@
               </tbody>
             </table>
             <div id="demo-extract-done" class="nr-modal">
-              <strong>Consolidado CETEP pronto!</strong> 3 turmas reunidas com Painel Consolidado, médias e hiperlinks.
+              <strong>Planilha CETEP pronta!</strong> As 3 turmas foram reunidas com painel de resumo, médias e atalhos entre abas.
               <div style="margin-top:8px;">
-                <a class="pill-btn emerald" style="min-height:44px;padding:8px 16px;font-size:0.84rem;" href="#planilha">Ver planilha gerada ↓</a>
+                <a class="pill-btn emerald" style="min-height:36px;padding:6px 14px;font-size:0.8rem;" href="#planilha">Ver planilha pronta ↓</a>
               </div>
             </div>
           `;
@@ -2106,7 +1981,7 @@
           const cells = Array.from(mockScreenBody.querySelectorAll('[data-note-cell]'));
           const numericCells = cells.filter((c) => c.dataset.nr !== 'true');
           let idx = 0;
-          setProgress(5, 'Iniciando fila sequencial...');
+          setProgress(5, 'Começando a preencher...');
           simTimer = setInterval(() => {
             if (idx >= numericCells.length) {
               clearSimTimer();
@@ -2116,8 +1991,8 @@
               });
               const modal = document.getElementById('demo-nr-modal');
               if (modal) modal.classList.add('visible');
-              mockCtxBadge.textContent = 'Concluído: 13 notas + 2 Não Realizações';
-              setProgress(100, 'Notas + Não Realização concluídos');
+              mockCtxBadge.textContent = 'Pronto: 13 notas + 2 não realizadas';
+              setProgress(100, 'Notas e não realizações preenchidas');
               demoRunBtn.disabled = false;
               return;
             }
@@ -2127,17 +2002,17 @@
             cell.classList.add(val === '0.0' ? 'zero' : 'filled');
             idx++;
             const pct = Math.round((idx / numericCells.length) * 88);
-            mockCtxBadge.textContent = `Fila AJAX RichFaces: ${idx}/${numericCells.length}`;
-            setProgress(pct, `Preenchendo campo ${idx} de ${numericCells.length}`);
+            mockCtxBadge.textContent = `Preenchendo nota ${idx} de ${numericCells.length}...`;
+            setProgress(pct, `Lançando nota ${idx} de ${numericCells.length}`);
           }, 120);
         } else if (activeDemoTab === 'frequencia') {
           let row = 0;
-          setProgress(10, 'Invertendo P/F para checkboxes...');
+          setProgress(10, 'Conferindo quem faltou...');
           simTimer = setInterval(() => {
             if (row >= DEMO_FREQ_ROWS.length) {
               clearSimTimer();
-              mockCtxBadge.textContent = '3 faltosos marcados (✓ = FALTA)';
-              setProgress(100, 'Frequência aplicada na prévia');
+              mockCtxBadge.textContent = '3 faltas marcadas corretamente';
+              setProgress(100, 'Frequência pronta na tela');
               demoRunBtn.disabled = false;
               return;
             }
@@ -2150,30 +2025,30 @@
             if (obs) obs.textContent = data.obs;
             row++;
             const pct = Math.round((row / DEMO_FREQ_ROWS.length) * 100);
-            setProgress(pct, `Aplicando estudante ${row} de ${DEMO_FREQ_ROWS.length}`);
+            setProgress(pct, `Conferindo aluno ${row} de ${DEMO_FREQ_ROWS.length}`);
           }, 140);
         } else {
           let ti = 0;
-          setProgress(10, 'Acessando Portal Docente...');
+          setProgress(10, 'Abrindo as turmas...');
           simTimer = setInterval(() => {
             if (ti >= DEMO_TURMAS.length) {
               clearSimTimer();
               const done = document.getElementById('demo-extract-done');
               if (done) done.classList.add('visible');
-              mockCtxBadge.textContent = 'Exportado: amostra-cetep.xlsx';
-              setProgress(100, '3 turmas consolidadas');
+              mockCtxBadge.textContent = 'Planilha pronta: amostra-cetep.xlsx';
+              setProgress(100, '3 turmas reunidas na planilha');
               demoRunBtn.disabled = false;
               return;
             }
             const badge = mockScreenBody.querySelector(`[data-turma-status="${ti}"]`);
             if (badge) {
               badge.className = 'badge-status badge-ok';
-              badge.textContent = 'Coletada';
+              badge.textContent = 'Recolhida';
             }
             ti++;
             const pct = Math.round((ti / DEMO_TURMAS.length) * 100);
-            mockCtxBadge.textContent = `Coletando turma ${ti}/${DEMO_TURMAS.length}...`;
-            setProgress(pct, `Turma ${ti} de ${DEMO_TURMAS.length} extraída`);
+            mockCtxBadge.textContent = `Recolhendo turma ${ti} de ${DEMO_TURMAS.length}...`;
+            setProgress(pct, `Turma ${ti} de ${DEMO_TURMAS.length} concluída`);
           }, 260);
         }
       });
@@ -2217,8 +2092,8 @@
 
         if (tab === 'painel') {
           sheetBanner.innerHTML = `
-            <div><strong>PAINEL CONSOLIDADO DE DESEMPENHO POR TURMA</strong> • Clique em uma turma para navegar até sua aba</div>
-            <span class="sig-tag">Hiperlinks internos ativos</span>
+            <div><strong>PAINEL CONSOLIDADO DE DESEMPENHO POR TURMA</strong> • Clique em uma turma abaixo para abrir a lista dela</div>
+            <span class="sig-tag">Atalhos ativos</span>
           `;
           sheetWrap.innerHTML = `
             <table class="excel-tbl">
