@@ -28,6 +28,15 @@ As sugestões são organizadas sob a ótica de engenharia sênior, equilibrando 
 - **Comportamento esperado:** Garantir que a extração/coleta de matrículas e notas obedeça exatamente a unidade selecionada no seletor da UI (ex.: 1ª, 2ª ou 3ª unidade) antes de ler a tabela.
 - **Impacto técnico / Riscos:** Ajuste na máquina de estados/coleta em `src/sigeduc/batch-extract.ts` e `src/sigeduc/scraper.ts`, com cobertura de teste E2E.
 
+### 2. Extração de Notas na Aba "Resultado Final" (`Res. Final`)
+- **Prioridade:** P0 — Crítico
+- **Dificuldade:** Média
+- **Contexto:** Ao exportar ou coletar em lote a aba/unidade **Resultado Final** (`Res. Final`), a planilha sai apenas com `Avaliação 1 (10.0)` vazia (`Sem Nota`), sem capturar as notas reais da tela do SIGEduc.
+- **Comportamento esperado:**
+  - Extrair todas as colunas visíveis na aba **Resultado Final** do SIGEduc (ex.: 1ª/2ª/3ª Unidade, Média, Recuperação Final e Resultado Final), tanto na exportação individual quanto na extração em lote.
+  - Garantir leitura correta seja em `<input>` editável ou em células de texto (`<td>`/`<span>`) da tabela JSF.
+- **Impacto técnico / Riscos:** Ajuste em `src/sigeduc/scraper.ts`, `src/sigeduc/batch-extract.ts` e `src/core/cetep.ts`, além de cobertura no `mock-server.mjs` + testes E2E.
+
 ## P1 — Alta Prioridade
 
 ### 1. Registro de "Não Realização" de Atividades após Lançamento de Notas — `[Concluído]`
