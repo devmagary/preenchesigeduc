@@ -160,6 +160,14 @@ As sugestões são organizadas sob a ótica de engenharia sênior, equilibrando 
   - Permitir importar/colar um plano estruturado (planilha/JSON/texto delimitado) e preencher os 5 campos da unidade selecionada ou do relatório parcial com prévia antes do envio.
 - **Impacto técnico / Riscos:** Atenção aos acordeões por unidade no `plano_trabalho_professor/form.jsf` e preservação de `ViewState`.
 
+### 8. Seção "Sobre / Aviso Legal e Privacidade" na Interface da Extensão
+- **Prioridade:** P2 — Média
+- **Dificuldade:** Baixa
+- **Contexto:** Reforçar diretamente dentro do aplicativo (sem depender apenas do `README.md`) a transparência jurídica, de privacidade e de uso gratuito da ferramenta.
+- **Comportamento esperado:**
+  - Adicionar um botão/aba discreto **Sobre** no cabeçalho ou rodapé do painel Shadow DOM (`src/ui/panel.ts`) e no popup (`src/popup/popup.html`) exibindo: (1) aviso de ferramenta independente e gratuita, sem vínculo com a SEC-BA/Governo da Bahia; (2) garantia de processamento 100% local sem coleta de dados de alunos ou senhas; (3) lembrete de conferência pelo docente antes da gravação definitiva; e (4) versão atual da extensão + link para o repositório.
+- **Impacto técnico / Riscos:** Baixo risco (alteração localizada de UI em `src/ui/panel.ts` e `src/popup/popup.html`).
+
 ## P3 — Baixa Prioridade / Futuro
 
 ### 1. Assistente de Relatório Final para Estudante PCD e Consulta de Turmas Consolidadas (`Relatórios`)

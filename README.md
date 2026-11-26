@@ -79,6 +79,13 @@ npm run harness
   npm run release -- patch
   ```
 
+## Aviso Legal, Uso Gratuito e Isenção de Responsabilidade
+
+- **Ferramenta independente e não oficial:** O **Preenche SIGEduc** é um projeto independente de código aberto, **sem qualquer vínculo, patrocínio, homologação ou endosso** da Secretaria da Educação do Estado da Bahia (SEC-BA) ou do Governo do Estado da Bahia. A menção ao nome SIGEduc tem caráter exclusivamente descritivo de compatibilidade; marcas e sistemas citados pertencem aos seus respectivos titulares.
+- **Distribuição gratuita:** Esta extensão é disponibilizada **100% gratuitamente**, sem fins lucrativos e sem cobrança de licenças, assinaturas ou acesso.
+- **Privacidade e LGPD (processamento 100% local):** Todo o processamento ocorre localmente no navegador do próprio usuário. A extensão não possui servidor próprio, não realiza telemetria e não coleta, armazena ou transmite dados de estudantes, notas, frequências ou credenciais/senhas para terceiros.
+- **Isenção de garantia e responsabilidade do usuário:** O software é fornecido **"no estado em que se encontra" (*as is*)**, sem garantias expressas ou implícitas quanto à disponibilidade contínua diante de alterações no portal oficial do SIGEduc. A ferramenta atua apenas como auxílio de preenchimento local; **a conferência integral das notas, frequências e registros antes da confirmação/gravação definitiva no diário de classe é de exclusiva responsabilidade do docente utilizador.**
+
 ## Documentação Adicional
 
 - [AGENTS.md](AGENTS.md) — Arquitetura, invariantes e regras de verificação.
