@@ -1,6 +1,6 @@
 # Backlog Auditado de Achados "Menor" — Crítico Independente
 
-Atualizado automaticamente pelo harness em: 2026-11-26T13:01:26.695Z
+Atualizado automaticamente pelo harness em: 2026-11-26T13:47:29.509Z
 
 - **Total catalogado:** 14
 - **Resolvidos (com teste verificado):** 8

@@ -1,37 +1,37 @@
 {
-  "startedAt": "2026-11-26T13:00:52.160Z",
-  "finishedAt": "2026-11-26T13:01:26.695Z",
+  "startedAt": "2026-11-26T13:46:53.085Z",
+  "finishedAt": "2026-11-26T13:47:29.509Z",
   "overallStatus": "PASSED",
   "steps": [
     {
       "name": "typecheck",
       "status": "passed",
-      "elapsedMs": 2619.1
+      "elapsedMs": 3144.8
     },
     {
       "name": "build",
       "status": "passed",
-      "elapsedMs": 2065.3
+      "elapsedMs": 2280.8
     },
     {
       "name": "package",
       "status": "passed",
-      "elapsedMs": 913.5
+      "elapsedMs": 1118.5
     },
     {
       "name": "unit_tests",
       "status": "passed",
-      "elapsedMs": 3676.9
+      "elapsedMs": 4157.2
     },
     {
       "name": "benchmark",
       "status": "passed",
-      "elapsedMs": 8137.5
+      "elapsedMs": 8183.5
     },
     {
       "name": "e2e_tests",
       "status": "passed",
-      "elapsedMs": 17084
+      "elapsedMs": 17502.4
     }
   ],
   "slaChecks": {

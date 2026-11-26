@@ -179,6 +179,14 @@ As sugestões são organizadas sob a ótica de engenharia sênior, equilibrando 
   - Adicionar um botão/aba discreto **Sobre** no cabeçalho ou rodapé do painel Shadow DOM (`src/ui/panel.ts`) e no popup (`src/popup/popup.html`) exibindo: (1) aviso de ferramenta independente e gratuita, sem vínculo com a SEC-BA/Governo da Bahia; (2) garantia de processamento 100% local sem coleta de dados de alunos ou senhas; (3) lembrete de conferência pelo docente antes da gravação definitiva; e (4) versão atual da extensão + link para o repositório.
 - **Impacto técnico / Riscos:** Baixo risco (alteração localizada de UI em `src/ui/panel.ts` e `src/popup/popup.html`).
 
+### 9. Landing Page Oficial com Simulador ao Vivo e Amostra Real CETEP — `[Concluído]`
+- **Prioridade:** P2 — Média
+- **Dificuldade:** Média
+- **Status:** Concluído (`docs/index.html` redesenhada em arquitetura híbrida inspirada em Sunstill [REA `ev_2b7e1e0587c6ce40235f64e9f0ce61147502eed751320a9e26bf1654d3b62329`] e Badgey [REA `ev_a8fb4a86032c50105b4604159458257c2c652c278b31f132df2d44f021537357`], 100% autocontida e sem CDNs/telemetria, com paleta oficial `#404E82` + `#10b981`, tema Claro/Escuro alternável, simulador interativo de 3 modos [Notas + Não Realização, Frequência invertida e Extrair CETEP] com controle de fonte `A+`, prévia navegável da planilha CETEP com hiperlinks internos e download real de `docs/amostra-cetep.xlsx` gerado por `scripts/generate-sample-cetep.mjs` com dados 100% fictícios, badge da Chrome Web Store em revisão, abas de instalação e FAQ em acordeão).
+- **Contexto:** Transformar `docs/index.html` em uma landing page de apresentação completa que permita ao docente testar o painel ao vivo e inspecionar/baixar uma amostra real da planilha consolidada antes de instalar.
+- **Comportamento esperado:** Página responsiva (desktop e mobile), zero requisições externas, simulador funcional dos 3 fluxos, amostra CETEP navegável + arquivo `.xlsx` real baixável, mantendo todos os links oficiais (`is.gd`, Releases e `privacidade.html`).
+- **Impacto técnico / Riscos:** Alterações isoladas em `docs/index.html`, `docs/amostra-cetep.xlsx` e `scripts/generate-sample-cetep.mjs`, sem impacto nos pacotes `dist/` da extensão.
+
 ## P3 — Baixa Prioridade / Futuro
 
 ### 1. Assistente de Relatório Final para Estudante PCD e Consulta de Turmas Consolidadas (`Relatórios`)

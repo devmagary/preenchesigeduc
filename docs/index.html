@@ -1,193 +1,2318 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-theme="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Preenche SIGEduc — Download e Instalação</title>
+  <title>Preenche SIGEduc — Notas, Frequência e Planilhas CETEP sem Retrabalho</title>
+  <meta name="description" content="Extensão Manifest V3 100% local para automação de notas, não realização, frequência e extração consolidada no padrão CETEP para o portal SIGEduc-BA." />
+  <meta name="theme-color" content="#404E82" />
+  <meta property="og:title" content="Preenche SIGEduc — Automação Local para o SIGEduc-BA" />
+  <meta property="og:description" content="Preencha notas com fila sequencial AJAX, registre não realizações, lance frequências e extraia todas as turmas no padrão CETEP em segundos — 100% local no navegador." />
+  <meta property="og:type" content="website" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0%25' stop-color='%23404E82'/%3E%3Cstop offset='100%25' stop-color='%2327325B'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='14' fill='url(%23g)'/%3E%3Crect x='13' y='12' width='33' height='40' rx='3' fill='%23ffffff'/%3E%3Crect x='13' y='12' width='33' height='9' rx='2' fill='%23dbe4ff'/%3E%3Cline x1='28' y1='21' x2='28' y2='52' stroke='%23b4c2e4' stroke-width='2'/%3E%3Cline x1='13' y1='31' x2='46' y2='31' stroke='%23b4c2e4' stroke-width='2'/%3E%3Cline x1='13' y1='41' x2='46' y2='41' stroke='%23b4c2e4' stroke-width='2'/%3E%3Ccircle cx='46' cy='46' r='13' fill='%2310b981'/%3E%3Cpath d='M40 46.5l4 4 8.5-8.5' fill='none' stroke='%23ffffff' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
   <style>
     :root {
+      --font-serif: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, sans-serif;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
       --bg: #f8fafc;
-      --card: #ffffff;
+      --bg-alt: #f1f5f9;
+      --surface: #ffffff;
+      --surface-soft: #f8fafc;
+      --surface-glass: rgba(248, 250, 252, 0.78);
       --text: #0f172a;
+      --text-secondary: #334155;
       --muted: #475569;
-      --border: #cbd5e1;
-      --primary: #404e82;
-      --primary-hover: #313d68;
-      --accent: #047857;
-      --accent-hover: #065f46;
-      --code-bg: #f1f5f9;
+      --border: rgba(15, 23, 42, 0.10);
+      --border-strong: rgba(15, 23, 42, 0.18);
+
+      --indigo: #404E82;
+      --indigo-dark: #27325B;
+      --indigo-hover: #313d68;
+      --indigo-soft: rgba(64, 78, 130, 0.10);
+      --indigo-link: #1d4ed8;
+
+      --emerald: #10b981;
+      --emerald-strong: #047857;
+      --emerald-hover: #065f46;
+      --emerald-soft: rgba(16, 185, 129, 0.14);
+      --emerald-text: #065f46;
+
+      --warn-bg: #fffbeb;
+      --warn-bd: #fde68a;
+      --warn-tx: #92400e;
+
+      --bad-bg: #fef2f2;
+      --bad-tx: #991b1b;
+
+      --code-bg: #e2e8f0;
+      --shadow-sm: 0 2px 10px rgba(15, 23, 42, 0.06);
+      --shadow-md: 0 14px 36px rgba(15, 23, 42, 0.10);
+      --shadow-lg: 0 24px 60px rgba(15, 23, 42, 0.16);
+      --stage-bg: radial-gradient(circle at 12% 18%, rgba(64, 78, 130, 0.12), transparent 52%),
+                  radial-gradient(circle at 88% 82%, rgba(16, 185, 129, 0.12), transparent 50%),
+                  #eef2f8;
     }
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg: #0f172a;
-        --card: #1e293b;
-        --text: #f1f5f9;
-        --muted: #cbd5e1;
-        --border: #334155;
-        --primary: #4f46e5;
-        --primary-hover: #4338ca;
-        --accent: #059669;
-        --accent-hover: #047857;
-        --code-bg: #0f172a;
-      }
+
+    html[data-theme="dark"] {
+      --bg: #0b1120;
+      --bg-alt: #0f172a;
+      --surface: #111827;
+      --surface-soft: #1e293b;
+      --surface-glass: rgba(11, 17, 32, 0.80);
+      --text: #f1f5f9;
+      --text-secondary: #e2e8f0;
+      --muted: #cbd5e1;
+      --border: rgba(255, 255, 255, 0.11);
+      --border-strong: rgba(255, 255, 255, 0.22);
+
+      --indigo: #5b6cb3;
+      --indigo-dark: #27325B;
+      --indigo-hover: #6d7ec4;
+      --indigo-soft: rgba(91, 108, 179, 0.18);
+      --indigo-link: #93c5fd;
+
+      --emerald: #10b981;
+      --emerald-strong: #059669;
+      --emerald-hover: #047857;
+      --emerald-soft: rgba(16, 185, 129, 0.16);
+      --emerald-text: #6ee7b7;
+
+      --warn-bg: rgba(180, 83, 9, 0.22);
+      --warn-bd: rgba(251, 191, 36, 0.35);
+      --warn-tx: #fde68a;
+
+      --bad-bg: rgba(153, 27, 27, 0.25);
+      --bad-tx: #fecaca;
+
+      --code-bg: #1e293b;
+      --shadow-sm: 0 4px 14px rgba(0, 0, 0, 0.30);
+      --shadow-md: 0 16px 40px rgba(0, 0, 0, 0.45);
+      --shadow-lg: 0 28px 68px rgba(0, 0, 0, 0.60);
+      --stage-bg: radial-gradient(circle at 12% 18%, rgba(64, 78, 130, 0.34), transparent 52%),
+                  radial-gradient(circle at 88% 82%, rgba(16, 185, 129, 0.18), transparent 50%),
+                  #0f172a;
     }
-    * { box-sizing: border-box; }
+
+    *, *::before, *::after { box-sizing: border-box; }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
     body {
       margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-family: var(--font-sans);
       background: var(--bg);
       color: var(--text);
       line-height: 1.55;
-      padding: 24px 16px 48px;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+      transition: background-color 0.22s ease, color 0.22s ease;
     }
-    .wrap {
-      max-width: 820px;
+
+    a { color: inherit; }
+
+    button { font-family: inherit; }
+
+    .container {
+      width: 100%;
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    /* Navbar fixa estilo Badgey */
+    .nav-wrap {
+      position: sticky;
+      top: 12px;
+      z-index: 100;
+      padding: 0 16px;
+      margin-top: 12px;
+    }
+
+    .nav {
+      max-width: 1120px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: var(--surface-glass);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 0.96rem;
+      letter-spacing: -0.01em;
+      white-space: nowrap;
+    }
+
+    .brand svg {
+      width: 28px;
+      height: 28px;
+      flex-shrink: 0;
+      border-radius: 7px;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      font-size: 0.88rem;
+      font-weight: 500;
+      color: var(--muted);
+      padding: 7px 12px;
+      border-radius: 999px;
+      transition: color 0.15s ease, background-color 0.15s ease;
+      white-space: nowrap;
+    }
+
+    .nav-links a:hover {
+      color: var(--text);
+      background: var(--indigo-soft);
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .icon-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 40px;
+      min-height: 40px;
+      padding: 0 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      transition: transform 0.15s ease, border-color 0.15s ease;
+    }
+
+    .icon-btn:hover {
+      border-color: var(--border-strong);
+      transform: translateY(-1px);
+    }
+
+    .pill-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 42px;
+      padding: 10px 18px;
+      border-radius: 999px;
+      border: 1px solid transparent;
+      font-size: 0.9rem;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      transition: transform 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+      white-space: nowrap;
+    }
+
+    .pill-btn.primary {
+      background: linear-gradient(135deg, #404E82 0%, #27325B 100%);
+      color: #ffffff;
+      box-shadow: 0 8px 20px rgba(39, 50, 91, 0.25);
+    }
+
+    .pill-btn.primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 12px 26px rgba(39, 50, 91, 0.35);
+    }
+
+    .pill-btn.emerald {
+      background: var(--emerald-strong);
+      color: #ffffff;
+      box-shadow: 0 8px 20px rgba(4, 120, 87, 0.22);
+    }
+
+    .pill-btn.emerald:hover {
+      background: var(--emerald-hover);
+      transform: translateY(-1px);
+    }
+
+    .pill-btn.ghost {
+      background: var(--surface);
+      color: var(--text);
+      border-color: var(--border-strong);
+    }
+
+    .pill-btn.ghost:hover {
+      background: var(--surface-soft);
+      transform: translateY(-1px);
+    }
+
+    .nav-cta {
+      min-height: 38px;
+      padding: 8px 15px;
+      font-size: 0.86rem;
+    }
+
+    /* Hero centralizado com cards flutuantes de profundidade */
+    .hero {
+      position: relative;
+      padding: 68px 0 56px;
+      text-align: center;
+      overflow: hidden;
+    }
+
+    .hero-inner {
+      position: relative;
+      z-index: 2;
+      max-width: 740px;
       margin: 0 auto;
     }
-    header {
-      background: var(--primary);
-      color: #fff;
-      border-radius: 16px;
-      padding: 24px;
-      margin-bottom: 20px;
-    }
-    header h1 {
-      margin: 0 0 8px;
-      font-size: 1.6rem;
-    }
-    header p {
-      margin: 0;
-      opacity: 0.94;
-    }
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-      gap: 14px;
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: 999px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--muted);
       margin-bottom: 22px;
     }
-    .card {
-      background: var(--card);
+
+    .eyebrow-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--emerald);
+      box-shadow: 0 0 0 4px var(--emerald-soft);
+    }
+
+    .hero h1 {
+      margin: 0 0 20px;
+      font-family: var(--font-serif);
+      font-weight: 600;
+      font-size: clamp(2.45rem, 5.6vw, 4.35rem);
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+      color: var(--text);
+    }
+
+    .hero-sub {
+      margin: 0 auto 30px;
+      max-width: 580px;
+      font-size: clamp(1.02rem, 1.8vw, 1.18rem);
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .hero-ctas {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .hero-ctas .pill-btn {
+      min-height: 46px;
+      padding: 12px 22px;
+      font-size: 0.95rem;
+    }
+
+    .hero-meta {
+      display: inline-flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      font-size: 0.84rem;
+      color: var(--muted);
+    }
+
+    .cws-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: var(--emerald-soft);
+      color: var(--emerald-text);
+      font-weight: 600;
+      font-size: 0.78rem;
+    }
+
+    /* Cards flutuantes decorativos estilo Badgey */
+    .float-layer {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .float-card {
+      position: absolute;
+      width: 210px;
+      padding: 14px 16px;
+      border-radius: 18px;
+      background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 18px;
+      box-shadow: var(--shadow-md);
+      text-align: left;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .float-card.bg-blur {
+      width: 185px;
+      opacity: 0.68;
+      filter: blur(2.2px);
+    }
+
+    .float-card .fc-tag {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--emerald-strong);
+    }
+
+    html[data-theme="dark"] .float-card .fc-tag {
+      color: var(--emerald);
+    }
+
+    .float-card strong {
+      font-size: 0.94rem;
+      line-height: 1.25;
+      color: var(--text);
+    }
+
+    .float-card span {
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .fc-1 { top: 64px; left: max(20px, calc(50% - 610px)); transform: rotate(-6deg); animation: floatA 7s ease-in-out infinite; }
+    .fc-2 { bottom: 38px; left: max(50px, calc(50% - 540px)); transform: rotate(5deg); animation: floatB 8.5s ease-in-out infinite; }
+    .fc-3 { top: 58px; right: max(20px, calc(50% - 610px)); transform: rotate(6deg); animation: floatB 7.5s ease-in-out infinite; }
+    .fc-4 { bottom: 40px; right: max(50px, calc(50% - 540px)); transform: rotate(-5deg); animation: floatA 8s ease-in-out infinite; }
+
+    @keyframes floatA {
+      0%, 100% { transform: translateY(0) rotate(-5deg); }
+      50% { transform: translateY(-8px) rotate(-3deg); }
+    }
+    @keyframes floatB {
+      0%, 100% { transform: translateY(0) rotate(5deg); }
+      50% { transform: translateY(8px) rotate(3deg); }
+    }
+
+    @media (max-width: 1160px) {
+      .float-layer { display: none; }
+    }
+
+    /* Seções padrão */
+    section.block {
+      padding: 56px 0;
+    }
+
+    .sec-head {
+      max-width: 660px;
+      margin: 0 auto 34px;
+      text-align: center;
+    }
+
+    .sec-kicker {
+      display: inline-block;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--indigo);
+      margin-bottom: 8px;
+    }
+
+    .sec-head h2 {
+      margin: 0 0 10px;
+      font-family: var(--font-serif);
+      font-weight: 600;
+      font-size: clamp(1.75rem, 3.4vw, 2.5rem);
+      line-height: 1.14;
+      letter-spacing: -0.02em;
+    }
+
+    .sec-head p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 1rem;
+    }
+
+    /* Palco Interativo Sunstill + SIGEduc Mock */
+    .stage {
+      background: var(--stage-bg);
+      border: 1px solid var(--border);
+      border-radius: 26px;
+      padding: 22px;
+      box-shadow: var(--shadow-lg);
+      display: grid;
+      grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.95fr);
+      gap: 20px;
+      align-items: stretch;
+    }
+
+    .sigeduc-mock {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .browser-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 14px;
+      background: var(--bg-alt);
+      border-bottom: 1px solid var(--border);
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+
+    .dots {
+      display: inline-flex;
+      gap: 6px;
+    }
+    .dots i {
+      width: 9px;
+      height: 9px;
+      border-radius: 999px;
+      background: var(--border-strong);
+      display: block;
+    }
+
+    .url-pill {
+      font-family: var(--font-mono);
+      font-size: 0.74rem;
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 100%;
+    }
+
+    .sig-context {
+      padding: 12px 16px;
+      background: var(--indigo-soft);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 0.84rem;
+    }
+
+    .sig-context strong {
+      color: var(--text);
+    }
+
+    .sig-tag {
+      font-size: 0.74rem;
+      font-weight: 700;
+      padding: 3px 9px;
+      border-radius: 999px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+    }
+
+    .mock-table-wrap {
+      padding: 14px 16px;
+      overflow-x: auto;
+      flex: 1;
+    }
+
+    table.mock-tbl {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.83rem;
+      font-variant-numeric: tabular-nums;
+    }
+
+    table.mock-tbl th {
+      text-align: left;
+      padding: 8px 8px;
+      border-bottom: 1px solid var(--border-strong);
+      color: var(--muted);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      white-space: nowrap;
+    }
+
+    table.mock-tbl td {
+      padding: 8px 8px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+
+    table.mock-tbl tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .cell-box {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 48px;
+      height: 28px;
+      padding: 0 8px;
+      border-radius: 7px;
+      border: 1px solid var(--border-strong);
+      background: var(--surface-soft);
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      font-weight: 600;
+      transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+    }
+
+    .cell-box.filled {
+      background: var(--emerald-soft);
+      border-color: var(--emerald);
+      color: var(--emerald-text);
+      transform: scale(1.03);
+    }
+
+    .cell-box.zero {
+      background: var(--indigo-soft);
+      border-color: var(--indigo);
+      color: var(--text);
+    }
+
+    .cell-box.nr-pending {
+      background: var(--warn-bg);
+      border-color: var(--warn-bd);
+      color: var(--warn-tx);
+    }
+
+    .nr-modal {
+      margin-top: 12px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: var(--warn-bg);
+      border: 1px solid var(--warn-bd);
+      color: var(--warn-tx);
+      font-size: 0.82rem;
+      display: none;
+    }
+
+    .nr-modal.visible {
+      display: block;
+    }
+
+    .nr-checks {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .nr-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 8px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+
+    .freq-chk {
+      width: 18px;
+      height: 18px;
+      accent-color: #dc2626;
+      pointer-events: none;
+    }
+
+    .badge-status {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-size: 0.74rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .badge-ok { background: var(--emerald-soft); color: var(--emerald-text); }
+    .badge-warn { background: var(--warn-bg); color: var(--warn-tx); }
+    .badge-bad { background: var(--bad-bg); color: var(--bad-tx); }
+    .badge-muted { background: var(--bg-alt); color: var(--muted); }
+
+    /* Mini-painel flutuante estilo Preenche SIGEduc */
+    .demo-panel {
+      --demo-scale: 1;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: var(--shadow-md);
+      font-size: calc(14px * var(--demo-scale));
+    }
+
+    .dp-header {
+      background: linear-gradient(135deg, #404E82 0%, #27325B 100%);
+      color: #ffffff;
+      padding: 13px 15px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .dp-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+      font-size: 0.96em;
+    }
+
+    .dp-pill {
+      background: #10b981;
+      color: #052e16;
+      font-size: 0.68em;
+      font-weight: 800;
+      padding: 2px 7px;
+      border-radius: 999px;
+      letter-spacing: 0.03em;
+    }
+
+    .dp-tools {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .dp-tool-btn {
+      min-width: 34px;
+      min-height: 32px;
+      padding: 0 8px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      background: rgba(255, 255, 255, 0.12);
+      color: #ffffff;
+      font-size: 0.78em;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .dp-tool-btn:hover {
+      background: rgba(255, 255, 255, 0.22);
+    }
+
+    .dp-tabs {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      padding: 10px 12px 0;
+      background: var(--surface-soft);
+    }
+
+    .dp-tab {
+      min-height: 38px;
+      border: 0;
+      border-radius: 10px 10px 0 0;
+      background: transparent;
+      color: var(--muted);
+      font-size: 0.84em;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 8px 6px;
+    }
+
+    .dp-tab[aria-selected="true"] {
+      background: var(--surface);
+      color: var(--text);
+      box-shadow: 0 -1px 0 var(--border), inset 0 2px 0 var(--indigo);
+    }
+
+    .dp-body {
+      padding: 14px 15px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      flex: 1;
+    }
+
+    .dp-kpis {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .dp-kpi {
+      padding: 9px 10px;
+      border-radius: 12px;
+      background: var(--surface-soft);
+      border: 1px solid var(--border);
+      text-align: center;
+    }
+
+    .dp-kpi strong {
+      display: block;
+      font-size: 1.15em;
+      font-variant-numeric: tabular-nums;
+      color: var(--text);
+    }
+
+    .dp-kpi span {
+      font-size: 0.74em;
+      color: var(--muted);
+    }
+
+    .dp-note {
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: var(--bg-alt);
+      border: 1px solid var(--border);
+      font-size: 0.84em;
+      color: var(--text-secondary);
+      line-height: 1.45;
+    }
+
+    .dp-progress-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .dp-progress-head {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.78em;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .dp-progress-bar {
+      width: 100%;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--bg-alt);
+      overflow: hidden;
+    }
+
+    .dp-progress-fill {
+      height: 100%;
+      width: 0%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #404E82, #10b981);
+      transition: width 0.25s ease;
+    }
+
+    .dp-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: auto;
+    }
+
+    .dp-actions .pill-btn {
+      flex: 1;
+      min-height: 42px;
+      font-size: 0.88em;
+    }
+
+    .dp-actions .dp-reset {
+      flex: 0 0 auto;
+      padding: 8px 14px;
+    }
+
+    /* Amostra Interativa da Planilha CETEP */
+    .sheet-shell {
+      background: var(--surface);
+      border: 1px solid var(--border-strong);
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: var(--shadow-md);
+    }
+
+    .sheet-topbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 12px 16px;
+      background: var(--indigo-dark);
+      color: #ffffff;
+      font-size: 0.86rem;
+    }
+
+    .sheet-topbar strong {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .sheet-banner {
+      padding: 12px 16px;
+      background: var(--bg-alt);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 0.84rem;
+    }
+
+    .sheet-back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 11px;
+      border-radius: 8px;
+      border: 1px solid var(--border-strong);
+      background: var(--surface);
+      color: var(--indigo-link);
+      font-weight: 700;
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
+
+    .sheet-back-link:hover {
+      background: var(--indigo-soft);
+    }
+
+    .sheet-scroll {
+      overflow-x: auto;
+      background: var(--surface);
+    }
+
+    table.excel-tbl {
+      width: 100%;
+      min-width: 720px;
+      border-collapse: collapse;
+      font-size: 0.83rem;
+      font-variant-numeric: tabular-nums;
+    }
+
+    table.excel-tbl th {
+      background: #1e3a5f;
+      color: #ffffff;
+      text-align: left;
+      padding: 9px 9px;
+      font-weight: 600;
+      font-size: 0.76rem;
+      border-right: 1px solid rgba(255, 255, 255, 0.14);
+      white-space: nowrap;
+    }
+
+    table.excel-tbl td {
+      padding: 8px 9px;
+      border-bottom: 1px solid var(--border);
+      border-right: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    table.excel-tbl th:first-child,
+    table.excel-tbl td:first-child {
+      white-space: normal;
+      min-width: 240px;
+    }
+
+    table.excel-tbl tbody tr:nth-child(even) {
+      background: var(--surface-soft);
+    }
+
+    table.excel-tbl tr.subtotal-row td {
+      background: var(--indigo-soft);
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    table.excel-tbl tr.total-row td {
+      background: var(--emerald-soft);
+      font-weight: 800;
+      color: var(--text);
+    }
+
+    .sheet-link-btn {
+      background: none;
+      border: 0;
+      padding: 0;
+      color: var(--indigo-link);
+      font-weight: 600;
+      text-align: left;
+      cursor: pointer;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+      font-size: inherit;
+    }
+
+    .sheet-link-btn:hover {
+      opacity: 0.82;
+    }
+
+    .sheet-tabs-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 14px;
+      background: var(--bg-alt);
+      border-top: 1px solid var(--border);
+    }
+
+    .sheet-tab-btn {
+      min-height: 36px;
+      padding: 6px 13px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface-soft);
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .sheet-tab-btn[aria-selected="true"] {
+      background: var(--surface);
+      color: var(--emerald-strong);
+      border-color: var(--emerald);
+      box-shadow: var(--shadow-sm);
+    }
+
+    html[data-theme="dark"] .sheet-tab-btn[aria-selected="true"] {
+      color: var(--emerald);
+    }
+
+    .sheet-footer-cta {
+      margin-top: 18px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 16px 20px;
+      border-radius: 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+    }
+
+    .sheet-footer-cta p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    /* Pilares 2x2 */
+    .pillars-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .pillar-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 22px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .pillar-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: var(--indigo-soft);
+      color: var(--indigo);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      margin-bottom: 12px;
+      font-size: 1rem;
+    }
+
+    .pillar-card h3 {
+      margin: 0 0 8px;
+      font-size: 1.06rem;
+    }
+
+    .pillar-card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.93rem;
+    }
+
+    /* Downloads */
+    .dl-notice {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 22px;
+    }
+
+    .dl-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+      margin-bottom: 22px;
+    }
+
+    .dl-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .dl-card.featured {
+      border-color: var(--emerald);
+      box-shadow: 0 12px 30px rgba(16, 185, 129, 0.12);
+    }
+
+    .dl-card h3 {
+      margin: 0;
+      font-size: 1.06rem;
+    }
+
+    .dl-card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+      flex: 1;
+    }
+
+    .dl-card .pill-btn {
+      width: 100%;
+    }
+
+    .dl-short {
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+
+    code {
+      font-family: var(--font-mono);
+      background: var(--code-bg);
+      padding: 2px 6px;
+      border-radius: 6px;
+      font-size: 0.86em;
+      word-break: break-word;
+    }
+
+    /* Abas de Instalação */
+    .guide-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 20px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .guide-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 12px;
+    }
+
+    .guide-tab {
+      min-height: 38px;
+      padding: 7px 14px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--surface-soft);
+      color: var(--muted);
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .guide-tab[aria-selected="true"] {
+      background: var(--indigo);
+      border-color: var(--indigo);
+      color: #ffffff;
+    }
+
+    .guide-panel {
+      display: none;
+    }
+
+    .guide-panel.active {
+      display: block;
+    }
+
+    .guide-panel ol {
+      margin: 0;
+      padding-left: 20px;
+      color: var(--text-secondary);
+      font-size: 0.94rem;
+    }
+
+    .guide-panel li + li {
+      margin-top: 8px;
+    }
+
+    /* FAQ estilo Badgey ("Good to know.") */
+    .faq-list {
+      max-width: 780px;
+      margin: 0 auto;
       display: flex;
       flex-direction: column;
       gap: 10px;
     }
-    .card h2 {
-      margin: 0;
-      font-size: 1.08rem;
+
+    details.faq-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 4px 18px;
+      transition: border-color 0.15s ease;
     }
-    .card p {
-      margin: 0;
-      color: var(--muted);
-      font-size: 0.92rem;
-      flex: 1;
+
+    details.faq-item[open] {
+      border-color: var(--border-strong);
+      box-shadow: var(--shadow-sm);
     }
-    .btn {
+
+    details.faq-item summary {
+      list-style: none;
+      cursor: pointer;
+      padding: 14px 0;
+      font-weight: 600;
+      font-size: 0.98rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      min-height: 48px;
+    }
+
+    details.faq-item summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .faq-plus {
+      width: 24px;
+      height: 24px;
+      border-radius: 999px;
+      background: var(--bg-alt);
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      min-height: 44px;
-      padding: 10px 14px;
-      border-radius: 10px;
-      text-decoration: none;
-      font-weight: 600;
-      color: #fff;
-      background: var(--primary);
+      font-weight: 700;
+      flex-shrink: 0;
+      transition: transform 0.2s ease;
+    }
+
+    details.faq-item[open] .faq-plus {
+      transform: rotate(45deg);
+    }
+
+    .faq-ans {
+      padding: 0 0 16px;
+      color: var(--muted);
+      font-size: 0.93rem;
+      line-height: 1.6;
+    }
+
+    /* CTA Final + Rodapé */
+    .final-cta {
+      background: linear-gradient(135deg, #27325B 0%, #404E82 100%);
+      color: #ffffff;
+      border-radius: 26px;
+      padding: 44px 24px;
       text-align: center;
+      box-shadow: var(--shadow-lg);
     }
-    .btn:hover { background: var(--primary-hover); }
-    .btn.edge { background: var(--accent); }
-    .btn.edge:hover { background: var(--accent-hover); }
-    .steps {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 20px;
-      margin-bottom: 16px;
-    }
-    .steps h3 {
+
+    .final-cta h2 {
       margin: 0 0 10px;
-      font-size: 1.05rem;
+      font-family: var(--font-serif);
+      font-size: clamp(1.8rem, 3.6vw, 2.5rem);
+      font-weight: 600;
     }
-    .steps ol {
-      margin: 0;
-      padding-left: 20px;
+
+    .final-cta p {
+      margin: 0 auto 24px;
+      max-width: 540px;
+      opacity: 0.92;
     }
-    .steps li + li {
-      margin-top: 6px;
+
+    .final-cta .hero-ctas {
+      margin-bottom: 0;
     }
-    code {
-      background: var(--code-bg);
-      padding: 2px 6px;
-      border-radius: 6px;
-      font-size: 0.88em;
-      word-break: break-all;
+
+    .final-cta .pill-btn.primary {
+      background: #ffffff;
+      color: #1e293b;
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
     }
+
+    .final-cta .pill-btn.ghost {
+      background: rgba(255, 255, 255, 0.12);
+      color: #ffffff;
+      border-color: rgba(255, 255, 255, 0.35);
+    }
+
     footer {
+      padding: 36px 0 48px;
       text-align: center;
       color: var(--muted);
-      font-size: 0.88rem;
-      margin-top: 24px;
+      font-size: 0.87rem;
     }
-    footer a { color: inherit; }
+
+    .footer-links {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 14px;
+      margin-bottom: 10px;
+    }
+
+    .footer-links a {
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    @media (max-width: 920px) {
+      .stage {
+        grid-template-columns: 1fr;
+      }
+      .dl-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .nav-links {
+        display: none;
+      }
+      .pillars-grid {
+        grid-template-columns: 1fr;
+      }
+      .hero {
+        padding: 44px 0 36px;
+      }
+      section.block {
+        padding: 40px 0;
+      }
+      .stage {
+        padding: 14px;
+        border-radius: 20px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      .float-card { animation: none; }
+      * { transition-duration: 0.01ms !important; }
+    }
   </style>
 </head>
 <body>
-  <main class="wrap">
-    <header>
-      <h1>Preenche SIGEduc — Download Direto</h1>
-      <p>Extensão local (Manifest V3) para importação de notas, frequências e extração de turmas/CETEP no SIGEduc-BA.</p>
-    </header>
+  <div class="nav-wrap">
+    <nav class="nav" aria-label="Navegação principal">
+      <a class="brand" href="#topo">
+        <svg viewBox="0 0 64 64" aria-hidden="true">
+          <defs>
+            <linearGradient id="navLogoGrad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#404E82" />
+              <stop offset="100%" stop-color="#27325B" />
+            </linearGradient>
+          </defs>
+          <rect width="64" height="64" rx="14" fill="url(#navLogoGrad)" />
+          <rect x="13" y="12" width="33" height="40" rx="3" fill="#ffffff" />
+          <rect x="13" y="12" width="33" height="9" rx="2" fill="#dbe4ff" />
+          <line x1="28" y1="21" x2="28" y2="52" stroke="#b4c2e4" stroke-width="2" />
+          <line x1="13" y1="31" x2="46" y2="31" stroke="#b4c2e4" stroke-width="2" />
+          <line x1="13" y1="41" x2="46" y2="41" stroke="#b4c2e4" stroke-width="2" />
+          <circle cx="46" cy="46" r="13" fill="#10b981" />
+          <path d="M40 46.5l4 4 8.5-8.5" fill="none" stroke="#ffffff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+        <span>Preenche SIGEduc</span>
+      </a>
 
-    <section class="grid" aria-label="Links diretos da última versão">
-      <article class="card">
-        <h2>Edge Mobile (Canary Android)</h2>
-        <p>Pacote assinado <code>.crx</code> pronto para instalação direta nas opções de desenvolvedor do Edge Canary no Android.</p>
-        <a class="btn edge" href="https://github.com/devmagary/preenchesigeduc/releases/latest/download/preenche-sigeduc-edge-mobile.crx">Baixar .crx (Edge Mobile)</a>
-        <small style="color:var(--muted);">Link curto: <a href="https://is.gd/sige_mobile" style="color:inherit;"><code>is.gd/sige_mobile</code></a></small>
-      </article>
+      <div class="nav-links">
+        <a href="#demo">Demo ao vivo</a>
+        <a href="#planilha">Planilha CETEP</a>
+        <a href="#download">Download</a>
+        <a href="#duvidas">Dúvidas</a>
+      </div>
 
-      <article class="card">
-        <h2>Chrome / Mises / Lemur</h2>
-        <p>Pacote <code>.zip</code> para Google Chrome (Windows/macOS/Linux) e navegadores Chromium Android (Mises e Lemur).</p>
-        <a class="btn" href="https://github.com/devmagary/preenchesigeduc/releases/latest/download/preenche-sigeduc-chrome.zip">Baixar .zip (Chrome / Android)</a>
-        <small style="color:var(--muted);">Link curto: <a href="https://is.gd/sige_navegador" style="color:inherit;"><code>is.gd/sige_navegador</code></a></small>
-      </article>
+      <div class="nav-actions">
+        <button id="theme-toggle" class="icon-btn" type="button" aria-label="Alternar tema claro ou escuro" title="Alternar tema">☾</button>
+        <a class="pill-btn primary nav-cta" href="#download">Baixar grátis</a>
+      </div>
+    </nav>
+  </div>
 
-      <article class="card">
-        <h2>Firefox / Firefox Android</h2>
-        <p>Pacote WebExtension MV3 (<code>.zip</code>) para Firefox Desktop e Firefox Nightly/Beta no Android.</p>
-        <a class="btn" href="https://github.com/devmagary/preenchesigeduc/releases/latest/download/preenche-sigeduc-firefox.zip">Baixar .zip (Firefox)</a>
-        <small style="color:var(--muted);">Link curto: <a href="https://is.gd/sige_firefox" style="color:inherit;"><code>is.gd/sige_firefox</code></a></small>
-      </article>
+  <header id="topo" class="hero">
+    <div class="float-layer" aria-hidden="true">
+      <div class="float-card fc-1">
+        <span class="fc-tag">Segurança</span>
+        <strong>Match 100% exato</strong>
+        <span>Homônimos bloqueados ou desambiguados por matrícula.</span>
+      </div>
+      <div class="float-card bg-blur fc-2">
+        <span class="fc-tag">Frequência</span>
+        <strong>Lógica invertida</strong>
+        <span>Falta na planilha → checkbox marcado no SIGEduc.</span>
+      </div>
+      <div class="float-card fc-3">
+        <span class="fc-tag">Exportação</span>
+        <strong>Painel CETEP .xlsx</strong>
+        <span>Fórmulas reais, subtotais e hiperlinks entre abas.</span>
+      </div>
+      <div class="float-card bg-blur fc-4">
+        <span class="fc-tag">Privacidade</span>
+        <strong>Zero servidores</strong>
+        <span>Tudo roda localmente na memória do seu navegador.</span>
+      </div>
+    </div>
+
+    <div class="container hero-inner">
+      <div class="eyebrow">
+        <span class="eyebrow-dot" aria-hidden="true"></span>
+        <span>Extensão Manifest V3 · 100% Local · SIGEduc-BA</span>
+      </div>
+      <h1>Notas e frequência no SIGEduc, sem retrabalho.</h1>
+      <p class="hero-sub">
+        Importe sua planilha ou cole os dados do diário, confira a prévia exata dos estudantes e deixe o painel lançar notas, marcar não realizações, registrar faltas e gerar o consolidado CETEP em segundos.
+      </p>
+      <div class="hero-ctas">
+        <a class="pill-btn primary" href="#download">Baixar extensão</a>
+        <a class="pill-btn ghost" href="#demo">Testar painel ao vivo</a>
+      </div>
+      <div class="hero-meta">
+        <span class="cws-badge">Em revisão na Chrome Web Store</span>
+        <span>Downloads diretos para Chrome, Edge Mobile e Firefox abaixo</span>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- Playground Interativo ao Vivo (Sunstill + SIGEduc Mock) -->
+    <section id="demo" class="block">
+      <div class="container">
+        <div class="sec-head">
+          <span class="sec-kicker">Experimente antes de instalar</span>
+          <h2>Veja o painel flutuante trabalhando ao vivo</h2>
+          <p>Alterne entre os três fluxos reais da extensão e teste o preenchimento passo a passo em uma turma fictícia.</p>
+        </div>
+
+        <div class="stage">
+          <!-- Esquerda: Mock do SIGEduc -->
+          <div class="sigeduc-mock" aria-label="Simulação da tela do SIGEduc-BA">
+            <div class="browser-bar">
+              <span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>
+              <span id="mock-url" class="url-pill">https://sigeduc.educacao.ba.gov.br/sigeduc/avaliacao/lancarNotas.jsf</span>
+              <span>Simulação</span>
+            </div>
+            <div class="sig-context">
+              <strong id="mock-context-title">ADMVES1SA • 3ª Unidade — Lançar Resultados</strong>
+              <span id="mock-context-badge" class="sig-tag">Fila AJAX RichFaces: pronta</span>
+            </div>
+            <div id="mock-screen-body" class="mock-table-wrap"></div>
+          </div>
+
+          <!-- Direita: Mini-painel flutuante da extensão -->
+          <aside id="demo-panel" class="demo-panel" aria-label="Painel interativo Preenche SIGEduc">
+            <div class="dp-header">
+              <div class="dp-title">
+                <span>Preenche SIGEduc</span>
+                <span class="dp-pill">100% LOCAL</span>
+              </div>
+              <div class="dp-tools">
+                <button id="demo-font-btn" class="dp-tool-btn" type="button" title="Alterar tamanho do texto">A+ 100%</button>
+                <button id="demo-theme-btn" class="dp-tool-btn" type="button" title="Alternar tema">☾</button>
+              </div>
+            </div>
+
+            <div class="dp-tabs" role="tablist" aria-label="Modos do simulador">
+              <button class="dp-tab" type="button" role="tab" aria-selected="true" data-demo-tab="notas">Notas</button>
+              <button class="dp-tab" type="button" role="tab" aria-selected="false" data-demo-tab="frequencia">Frequência</button>
+              <button class="dp-tab" type="button" role="tab" aria-selected="false" data-demo-tab="extrair">Extrair CETEP</button>
+            </div>
+
+            <div class="dp-body">
+              <div id="dp-kpis" class="dp-kpis"></div>
+              <div id="dp-note" class="dp-note"></div>
+              <div class="dp-progress-wrap">
+                <div class="dp-progress-head">
+                  <span id="dp-progress-label">Aguardando comando</span>
+                  <span id="dp-progress-pct">0%</span>
+                </div>
+                <div class="dp-progress-bar">
+                  <div id="dp-progress-fill" class="dp-progress-fill"></div>
+                </div>
+              </div>
+              <div class="dp-actions">
+                <button id="demo-run-btn" class="pill-btn emerald" type="button">Simular preenchimento</button>
+                <button id="demo-reset-btn" class="pill-btn ghost dp-reset" type="button">Resetar</button>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </div>
     </section>
 
-    <section class="steps">
-      <h3>Como instalar no Edge Canary (Android) via <code>.crx</code></h3>
-      <ol>
-        <li>Baixe o arquivo <code>preenche-sigeduc-edge-mobile.crx</code> no botão acima.</li>
-        <li>No Edge Canary Android, abra <strong>Configurações → Sobre o Microsoft Edge</strong> e toque 5 vezes no número da versão para ativar as <strong>Opções do desenvolvedor</strong>.</li>
-        <li>Entre em <strong>Opções do desenvolvedor → Extension install by crx</strong> (ou <em>Instalar extensão por .crx</em>) e selecione o arquivo baixado.</li>
-        <li>Acesse o portal <code>sigeduc.educacao.ba.gov.br</code> e toque no botão flutuante <strong>Preenche SIGEduc</strong>.</li>
-      </ol>
+    <!-- Amostra Interativa da Planilha CETEP -->
+    <section id="planilha" class="block">
+      <div class="container">
+        <div class="sec-head">
+          <span class="sec-kicker">Modelo Padrão CETEP (.xlsx)</span>
+          <h2>Planilha consolidada pronta para o conselho de classe</h2>
+          <p>Navegue pelas abas reais abaixo, clique nos hiperlinks das turmas para abrir a unidade regular ou o Resultado Final, ou baixe a amostra completa em Excel.</p>
+        </div>
+
+        <div class="sheet-shell" aria-label="Prévia interativa da planilha consolidada CETEP">
+          <div class="sheet-topbar">
+            <strong>amostra-cetep.xlsx — Padrão CETEP (Fórmulas + Hiperlinks)</strong>
+            <span>Dados 100% fictícios • Critério: Nota Geral &ge; 5,0</span>
+          </div>
+          <div id="sheet-banner" class="sheet-banner"></div>
+          <div id="sheet-table-wrap" class="sheet-scroll"></div>
+          <div class="sheet-tabs-bar" role="tablist" aria-label="Abas da amostra CETEP">
+            <button class="sheet-tab-btn" type="button" role="tab" aria-selected="true" data-sheet-tab="painel">Painel Consolidado</button>
+            <button class="sheet-tab-btn" type="button" role="tab" aria-selected="false" data-sheet-tab="adm">ADMVES1SA Ves 3U</button>
+            <button class="sheet-tab-btn" type="button" role="tab" aria-selected="false" data-sheet-tab="inf">INFNOTM1A2 Not RF</button>
+          </div>
+        </div>
+
+        <div class="sheet-footer-cta">
+          <p>Arquivo <code>amostra-cetep.xlsx</code> gerado pelo mesmo motor OOXML da extensão (fórmulas <code>SUM</code>, <code>AVERAGE</code>, <code>IF</code>, <code>COUNTIF</code> e hiperlinks internos).</p>
+          <a class="pill-btn emerald" href="amostra-cetep.xlsx" download="amostra-cetep.xlsx">Baixar amostra real (.xlsx)</a>
+        </div>
+      </div>
     </section>
 
-    <section class="steps">
-      <h3>Como instalar no Chrome Desktop / Mises / Lemur</h3>
-      <ol>
-        <li>Baixe e descompacte <code>preenche-sigeduc-chrome.zip</code> (no Mises/Lemur você também pode carregar o <code>.zip</code> diretamente em <em>Extensões</em>).</li>
-        <li>Abra <code>chrome://extensions</code>, ative o <strong>Modo do desenvolvedor</strong> e clique em <strong>Carregar sem compactação</strong> (PC) ou <strong>+(from .zip)</strong> (Android).</li>
-      </ol>
+    <!-- 4 Pilares Técnicos -->
+    <section class="block">
+      <div class="container">
+        <div class="sec-head">
+          <span class="sec-kicker">Engenharia pensada para o dia a dia</span>
+          <h2>Rápido no uso, rígido na segurança</h2>
+          <p>Cada detalhe respeita o funcionamento interno do JSF/RichFaces do SIGEduc e protege os dados da sua turma.</p>
+        </div>
+
+        <div class="pillars-grid">
+          <article class="pillar-card">
+            <div class="pillar-icon" aria-hidden="true">=</div>
+            <h3>Correspondência 100% exata</h3>
+            <p>Nomes são normalizados sem acentos e comparados de forma exata. Homônimos permanecem bloqueados até desambiguação por matrícula única.</p>
+          </article>
+          <article class="pillar-card">
+            <div class="pillar-icon" aria-hidden="true">↻</div>
+            <h3>Fila sequencial AJAX</h3>
+            <p>As notas são enviadas uma por vez aguardando a resposta de cada requisição <code>A4J.AJAX.Submit</code>, evitando perda de notas ou conflito de <code>ViewState</code>.</p>
+          </article>
+          <article class="pillar-card">
+            <div class="pillar-icon" aria-hidden="true">🔒</div>
+            <h3>Privacidade local e LGPD</h3>
+            <p>Sem servidor próprio, sem Google Analytics e sem envio de planilhas para fora. Se usar auto-gravação opcional, a senha fica apenas na RAM e é zerada ao concluir.</p>
+          </article>
+          <article class="pillar-card">
+            <div class="pillar-icon" aria-hidden="true">📱</div>
+            <h3>Desktop e Android</h3>
+            <p>Interface isolada em Shadow DOM responsiva tanto para telas largas no Windows quanto para navegadores com extensões no celular Android.</p>
+          </article>
+        </div>
+      </div>
     </section>
 
-    <footer>
-      Compartilhar esta página: <a href="https://is.gd/sigeduc"><code>https://is.gd/sigeduc</code></a> •
-      100% local e sem telemetria •
-      <a href="privacidade.html">Política de Privacidade</a> •
-      <a href="https://github.com/devmagary/preenchesigeduc/releases/latest">GitHub Releases</a>
-    </footer>
+    <!-- Seção de Download e Instalação -->
+    <section id="download" class="block">
+      <div class="container">
+        <div class="sec-head">
+          <span class="sec-kicker">Instalação gratuita</span>
+          <h2>Baixe para seu navegador</h2>
+          <p>Escolha o pacote compatível com seu computador ou celular Android e siga o passo a passo abaixo.</p>
+        </div>
+
+        <div class="dl-notice">
+          <span class="cws-badge">Chrome Web Store: em revisão · Instale agora pelos pacotes oficiais abaixo</span>
+        </div>
+
+        <div class="dl-grid">
+          <article class="dl-card">
+            <h3>Chrome / Mises / Lemur</h3>
+            <p>Pacote <code>.zip</code> para Google Chrome / Edge no PC e navegadores Chromium Android (Mises e Lemur).</p>
+            <a class="pill-btn primary" href="https://github.com/devmagary/preenchesigeduc/releases/latest/download/preenche-sigeduc-chrome.zip">Baixar .zip (Chrome / Android)</a>
+            <span class="dl-short">Link curto: <a href="https://is.gd/sige_navegador"><code>is.gd/sige_navegador</code></a></span>
+          </article>
+
+          <article class="dl-card featured">
+            <h3>Edge Mobile (Canary Android)</h3>
+            <p>Pacote assinado <code>.crx</code> pronto para instalação direta nas opções de desenvolvedor do Edge Canary no Android.</p>
+            <a class="pill-btn emerald" href="https://github.com/devmagary/preenchesigeduc/releases/latest/download/preenche-sigeduc-edge-mobile.crx">Baixar .crx (Edge Mobile)</a>
+            <span class="dl-short">Link curto: <a href="https://is.gd/sige_mobile"><code>is.gd/sige_mobile</code></a></span>
+          </article>
+
+          <article class="dl-card">
+            <h3>Firefox / Firefox Android</h3>
+            <p>Pacote WebExtension MV3 (<code>.zip</code>) para Firefox Desktop e Firefox Nightly/Beta no Android.</p>
+            <a class="pill-btn primary" href="https://github.com/devmagary/preenchesigeduc/releases/latest/download/preenche-sigeduc-firefox.zip">Baixar .zip (Firefox)</a>
+            <span class="dl-short">Link curto: <a href="https://is.gd/sige_firefox"><code>is.gd/sige_firefox</code></a></span>
+          </article>
+        </div>
+
+        <div class="guide-box">
+          <div class="guide-tabs" role="tablist" aria-label="Guias de instalação por navegador">
+            <button class="guide-tab" type="button" role="tab" aria-selected="true" data-guide-tab="pc">Chrome / Edge (PC)</button>
+            <button class="guide-tab" type="button" role="tab" aria-selected="false" data-guide-tab="edge-android">Edge Canary (Android .crx)</button>
+            <button class="guide-tab" type="button" role="tab" aria-selected="false" data-guide-tab="mises">Mises / Lemur (Android)</button>
+            <button class="guide-tab" type="button" role="tab" aria-selected="false" data-guide-tab="firefox">Firefox (PC / Android)</button>
+          </div>
+
+          <div id="guide-pc" class="guide-panel active">
+            <ol>
+              <li>Baixe <code>preenche-sigeduc-chrome.zip</code> e extraia a pasta em um local fixo no seu computador.</li>
+              <li>Abra <code>chrome://extensions</code> (ou <code>edge://extensions</code>) e ative o <strong>Modo do desenvolvedor</strong>.</li>
+              <li>Clique em <strong>Carregar sem compactação</strong> e selecione a pasta extraída.</li>
+              <li>Entre no portal <code>sigeduc.educacao.ba.gov.br</code> e clique no botão flutuante <strong>Preenche SIGEduc</strong>.</li>
+            </ol>
+          </div>
+
+          <div id="guide-edge-android" class="guide-panel">
+            <ol>
+              <li>Baixe <code>preenche-sigeduc-edge-mobile.crx</code> no botão verde acima.</li>
+              <li>No Edge Canary Android, abra <strong>Configurações → Sobre o Microsoft Edge</strong> e toque 5 vezes na versão para ativar as <strong>Opções do desenvolvedor</strong>.</li>
+              <li>Entre em <strong>Opções do desenvolvedor → Extension install by crx</strong> e selecione o arquivo <code>.crx</code> baixado.</li>
+              <li>Acesse o SIGEduc-BA normalmente e toque no botão flutuante para abrir o painel.</li>
+            </ol>
+          </div>
+
+          <div id="guide-mises" class="guide-panel">
+            <ol>
+              <li>Baixe <code>preenche-sigeduc-chrome.zip</code> pelo celular.</li>
+              <li>Abra o menu de <strong>Extensões</strong> do Mises ou Lemur Browser e ative o modo desenvolvedor.</li>
+              <li>Toque em <strong>+(from .zip)</strong> / <strong>Carregar .zip</strong> e selecione o arquivo baixado.</li>
+            </ol>
+          </div>
+
+          <div id="guide-firefox" class="guide-panel">
+            <ol>
+              <li>Baixe <code>preenche-sigeduc-firefox.zip</code>.</li>
+              <li>No Desktop, acesse <code>about:debugging#/runtime/this-firefox</code> e clique em <strong>Carregar extensão temporária</strong> selecionando o arquivo <code>manifest.json</code> (ou o <code>.zip</code>).</li>
+              <li>No Firefox Nightly/Beta Android, habilite extensões personalizadas nas configurações de desenvolvedor para instalar o pacote.</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ estilo Badgey -->
+    <section id="duvidas" class="block">
+      <div class="container">
+        <div class="sec-head">
+          <span class="sec-kicker">Bom saber</span>
+          <h2>Dúvidas frequentes</h2>
+          <p>Respostas diretas sobre segurança, correspondência de alunos e funcionamento no portal.</p>
+        </div>
+
+        <div class="faq-list">
+          <details class="faq-item">
+            <summary>
+              <span>A extensão envia notas ou dados dos alunos para algum servidor?</span>
+              <span class="faq-plus" aria-hidden="true">+</span>
+            </summary>
+            <div class="faq-ans">
+              Não. Todo o processamento — leitura de planilhas, normalização de nomes, preenchimento de notas/frequências e geração do arquivo <code>.xlsx</code> — acontece 100% localmente no seu navegador, sem servidor externo ou telemetria. Veja os detalhes na <a href="privacidade.html">Política de Privacidade</a>.
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary>
+              <span>Como funciona a diferença entre nota 0,0 e Não Realização?</span>
+              <span class="faq-plus" aria-hidden="true">+</span>
+            </summary>
+            <div class="faq-ans">
+              O valor numérico <code>0</code> ou <code>0,0</code> é tratado como nota zero real e lançado no campo da atividade. Já células em branco ou marcadas como <code>NF</code>, <code>Não Fez</code>, <code>FV</code> ou <code>NR</code> ficam vazias no lançamento e entram automaticamente na fila da tela de <em>Não Realização</em> para marcar os checkboxes correspondentes.
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary>
+              <span>E se houver dois alunos com o mesmo nome na turma ou na planilha?</span>
+              <span class="faq-plus" aria-hidden="true">+</span>
+            </summary>
+            <div class="faq-ans">
+              Por segurança, a extensão nunca faz "chute" por aproximação. Homônimos ficam bloqueados na prévia para evitar troca acidental de notas entre estudantes, exceto quando há desambiguação exata por número de matrícula único.
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary>
+              <span>Por que os checkboxes de frequência funcionam invertidos no SIGEduc?</span>
+              <span class="faq-plus" aria-hidden="true">+</span>
+            </summary>
+            <div class="faq-ans">
+              No diário do SIGEduc-BA, caixa marcada significa <strong>FALTA</strong> e desmarcada significa <strong>PRESENTE</strong>. Quando você importa <code>P</code>, <code>F</code> ou múltiplos horários (<code>2F</code>), o painel já realiza essa inversão automaticamente e exibe a prévia antes de aplicar.
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary>
+              <span>Consigo extrair todas as minhas turmas de uma só vez no modelo CETEP?</span>
+              <span class="faq-plus" aria-hidden="true">+</span>
+            </summary>
+            <div class="faq-ans">
+              Sim. Na tela inicial do Portal do Docente, o modo <strong>Extrair CETEP</strong> percorre sequencialmente as turmas selecionadas (separando Ensino Médio e Técnico, inclusive na aba <em>Resultado Final</em>), opcionalmente coleta matrículas via Frequência e exporta um único <code>.xlsx</code> com Painel Consolidado e hiperlinks.
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary>
+              <span>O projeto tem vínculo oficial com a SEC-BA ou com o Governo da Bahia?</span>
+              <span class="faq-plus" aria-hidden="true">+</span>
+            </summary>
+            <div class="faq-ans">
+              Não. O Preenche SIGEduc é uma ferramenta independente, gratuita e de código aberto para apoiar a rotina docente. Recomenda-se sempre conferir a prévia e os valores preenchidos antes da gravação definitiva no diário oficial.
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA Final -->
+    <section class="block">
+      <div class="container">
+        <div class="final-cta">
+          <h2>Menos cliques no diário. Mais tempo para ensinar.</h2>
+          <p>Instale gratuitamente no seu computador ou celular Android e baixe a amostra CETEP para conhecer o resultado.</p>
+          <div class="hero-ctas">
+            <a class="pill-btn primary" href="#download">Baixar extensão agora</a>
+            <a class="pill-btn ghost" href="amostra-cetep.xlsx" download="amostra-cetep.xlsx">Baixar amostra .xlsx</a>
+          </div>
+        </div>
+      </div>
+    </section>
   </main>
+
+  <footer>
+    <div class="container">
+      <div class="footer-links">
+        <span>Compartilhar esta página: <a href="https://is.gd/sigeduc"><code>https://is.gd/sigeduc</code></a></span>
+        <a href="privacidade.html">Política de Privacidade</a>
+        <a href="https://github.com/devmagary/preenchesigeduc/releases/latest">GitHub Releases</a>
+        <a href="https://github.com/devmagary/preenchesigeduc">Código-fonte no GitHub</a>
+      </div>
+      <div>100% local e sem telemetria • Projeto independente de código aberto sem vínculo com a SEC-BA.</div>
+    </div>
+  </footer>
+
+  <script>
+    (() => {
+      const root = document.documentElement;
+      const themeToggleBtn = document.getElementById('theme-toggle');
+      const demoThemeBtn = document.getElementById('demo-theme-btn');
+      const demoFontBtn = document.getElementById('demo-font-btn');
+      const demoPanel = document.getElementById('demo-panel');
+
+      function applyTheme(theme) {
+        root.setAttribute('data-theme', theme);
+        const icon = theme === 'dark' ? '☀' : '☾';
+        if (themeToggleBtn) themeToggleBtn.textContent = icon;
+        if (demoThemeBtn) demoThemeBtn.textContent = icon;
+        try { localStorage.setItem('ps_landing_theme', theme); } catch (_) {}
+      }
+
+      const savedTheme = (() => {
+        try { return localStorage.getItem('ps_landing_theme'); } catch (_) { return null; }
+      })();
+      const initialTheme = savedTheme === 'dark' || savedTheme === 'light'
+        ? savedTheme
+        : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      applyTheme(initialTheme);
+
+      function toggleTheme() {
+        const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        applyTheme(next);
+      }
+
+      themeToggleBtn?.addEventListener('click', toggleTheme);
+      demoThemeBtn?.addEventListener('click', toggleTheme);
+
+      const scales = [1, 1.12, 1.25];
+      let scaleIdx = 0;
+      demoFontBtn?.addEventListener('click', () => {
+        scaleIdx = (scaleIdx + 1) % scales.length;
+        const s = scales[scaleIdx];
+        demoPanel?.style.setProperty('--demo-scale', String(s));
+        demoFontBtn.textContent = `A+ ${Math.round(s * 100)}%`;
+      });
+
+      // --- Simulador ao Vivo ---
+      const mockUrl = document.getElementById('mock-url');
+      const mockCtxTitle = document.getElementById('mock-context-title');
+      const mockCtxBadge = document.getElementById('mock-context-badge');
+      const mockScreenBody = document.getElementById('mock-screen-body');
+      const dpKpis = document.getElementById('dp-kpis');
+      const dpNote = document.getElementById('dp-note');
+      const dpProgressLabel = document.getElementById('dp-progress-label');
+      const dpProgressPct = document.getElementById('dp-progress-pct');
+      const dpProgressFill = document.getElementById('dp-progress-fill');
+      const demoRunBtn = document.getElementById('demo-run-btn');
+      const demoResetBtn = document.getElementById('demo-reset-btn');
+
+      const DEMO_NOTAS_ROWS = [
+        { nome: 'ALINE BARBOSA FICTICIA', vals: ['2.5', '3.0', '3.0'], nr: [false, false, false] },
+        { nome: 'BRUNO CARVALHO DEMO', vals: ['2.0', '2.5', '2.0'], nr: [false, false, false] },
+        { nome: 'CAMILA DIAS EXEMPLO', vals: ['1.5', '2.0', 'NF'], nr: [false, false, true] },
+        { nome: 'DIEGO FERREIRA TESTE', vals: ['0.0', '2.5', '1.5'], nr: [false, false, false] },
+        { nome: 'EDUARDA GOMES MODELO', vals: ['3.0', 'NF', '3.5'], nr: [false, true, false] },
+      ];
+
+      const DEMO_FREQ_ROWS = [
+        { nome: 'ALINE BARBOSA FICTICIA', entrada: 'P', faltas: 0, obs: '—' },
+        { nome: 'BRUNO CARVALHO DEMO', entrada: 'F', faltas: 1, obs: 'Ausência justificada' },
+        { nome: 'CAMILA DIAS EXEMPLO', entrada: '2F', faltas: 2, obs: 'Saiu no 2º horário' },
+        { nome: 'DIEGO FERREIRA TESTE', entrada: 'P', faltas: 0, obs: '—' },
+        { nome: 'EDUARDA GOMES MODELO', entrada: 'F', faltas: 1, obs: 'Falta registrada' },
+      ];
+
+      const DEMO_TURMAS = [
+        { cod: 'ADMVES1SA', desc: 'Técnico em Administração • Ensino Médio • 3ª Un.', alunos: 8 },
+        { cod: 'AGRPMAT1SA', desc: 'Técnico em Agropecuária • Ensino Médio • 3ª Un.', alunos: 6 },
+        { cod: 'INFNOTM1A2', desc: 'Técnico em Informática • Técnico • Res. Final', alunos: 6 },
+      ];
+
+      let activeDemoTab = 'notas';
+      let simTimer = null;
+
+      function clearSimTimer() {
+        if (simTimer) {
+          clearInterval(simTimer);
+          simTimer = null;
+        }
+      }
+
+      function setProgress(pct, label) {
+        dpProgressFill.style.width = `${pct}%`;
+        dpProgressPct.textContent = `${pct}%`;
+        dpProgressLabel.textContent = label;
+      }
+
+      function renderDemoTab(tab) {
+        clearSimTimer();
+        activeDemoTab = tab;
+        document.querySelectorAll('[data-demo-tab]').forEach((btn) => {
+          btn.setAttribute('aria-selected', String(btn.dataset.demoTab === tab));
+        });
+
+        setProgress(0, 'Aguardando comando');
+
+        if (tab === 'notas') {
+          mockUrl.textContent = 'https://sigeduc.educacao.ba.gov.br/sigeduc/avaliacao/lancarNotas.jsf';
+          mockCtxTitle.textContent = 'ADMVES1SA • 3ª Unidade — Lançar Resultados';
+          mockCtxBadge.textContent = 'Fila AJAX RichFaces: pronta';
+          dpKpis.innerHTML = `
+            <div class="dp-kpi"><strong>5</strong><span>Casados</span></div>
+            <div class="dp-kpi"><strong>2</strong><span>Não realiz.</span></div>
+            <div class="dp-kpi"><strong>0</strong><span>Bloqueados</span></div>
+          `;
+          dpNote.innerHTML = '<strong>Nota 0,0 vs Não Realização:</strong> <code>0.0</code> (Diego) é lançado como nota real. <code>NF</code>/vazio (Camila e Eduarda) fica livre e marca os checkboxes na etapa de Não Realização.';
+          demoRunBtn.textContent = 'Simular preenchimento';
+          demoRunBtn.disabled = false;
+
+          mockScreenBody.innerHTML = `
+            <table class="mock-tbl">
+              <thead>
+                <tr>
+                  <th>Estudante</th>
+                  <th>Atividade (3.0)</th>
+                  <th>Feira (3.0)</th>
+                  <th>Simulado (4.0)</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${DEMO_NOTAS_ROWS.map((r, ri) => `
+                  <tr>
+                    <td>${r.nome}</td>
+                    ${r.vals.map((v, ci) => `
+                      <td><span class="cell-box" data-note-cell="${ri}-${ci}" data-target="${v}" data-nr="${r.nr[ci]}">—</span></td>
+                    `).join('')}
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+            <div id="demo-nr-modal" class="nr-modal" aria-live="polite">
+              <strong>SIGEduc → Não Realização de Atividades:</strong> modal confirmado automaticamente para 2 ocorrências.
+              <div class="nr-checks">
+                <label class="nr-chip"><input type="checkbox" checked disabled /> CAMILA DIAS (Simulado)</label>
+                <label class="nr-chip"><input type="checkbox" checked disabled /> EDUARDA GOMES (Feira)</label>
+              </div>
+            </div>
+          `;
+        } else if (tab === 'frequencia') {
+          mockUrl.textContent = 'https://sigeduc.educacao.ba.gov.br/sigeduc/diario/frequencia.jsf';
+          mockCtxTitle.textContent = 'ADMVES1SA • Lista de Frequência — 26/11/2026';
+          mockCtxBadge.textContent = 'Regra SIGEduc: ✓ marcado = FALTA';
+          dpKpis.innerHTML = `
+            <div class="dp-kpi"><strong>2</strong><span>Presentes (P)</span></div>
+            <div class="dp-kpi"><strong>3</strong><span>Faltosos (F/2F)</span></div>
+            <div class="dp-kpi"><strong>100%</strong><span>Inversão</span></div>
+          `;
+          dpNote.innerHTML = '<strong>Lógica invertida protegida:</strong> no SIGEduc, marcar a caixa registra <strong>FALTA</strong>. O painel converte <code>P</code> / <code>F</code> / <code>2F</code> e sanitiza quebras de linha nas observações.';
+          demoRunBtn.textContent = 'Simular frequência';
+          demoRunBtn.disabled = false;
+
+          mockScreenBody.innerHTML = `
+            <table class="mock-tbl">
+              <thead>
+                <tr>
+                  <th>Estudante</th>
+                  <th>Planilha</th>
+                  <th>1º Hor. (Falta?)</th>
+                  <th>2º Hor. (Falta?)</th>
+                  <th>Observação</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${DEMO_FREQ_ROWS.map((r, ri) => `
+                  <tr>
+                    <td>${r.nome}</td>
+                    <td><code>${r.entrada}</code></td>
+                    <td><input class="freq-chk" type="checkbox" data-freq-h1="${ri}" aria-label="Falta 1º horário ${r.nome}" /></td>
+                    <td><input class="freq-chk" type="checkbox" data-freq-h2="${ri}" aria-label="Falta 2º horário ${r.nome}" /></td>
+                    <td data-freq-obs="${ri}">—</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          `;
+        } else {
+          mockUrl.textContent = 'https://sigeduc.educacao.ba.gov.br/sigeduc/portal/docente/docente.jsf';
+          mockCtxTitle.textContent = 'Portal do Docente — 3 Turmas Selecionadas';
+          mockCtxBadge.textContent = 'Coleta sequencial JSF + CETEP';
+          dpKpis.innerHTML = `
+            <div class="dp-kpi"><strong>2</strong><span>Ens. Médio</span></div>
+            <div class="dp-kpi"><strong>1</strong><span>Técnico (RF)</span></div>
+            <div class="dp-kpi"><strong>20</strong><span>Estudantes</span></div>
+          `;
+          dpNote.innerHTML = '<strong>Varredura multi-turma:</strong> percorre cada turma selecionada preservando o <code>ViewState</code>, separa Ensino Médio e Técnico (inclusive <em>Resultado Final</em>) e gera o consolidado CETEP.';
+          demoRunBtn.textContent = 'Simular extração em lote';
+          demoRunBtn.disabled = false;
+
+          mockScreenBody.innerHTML = `
+            <table class="mock-tbl">
+              <thead>
+                <tr>
+                  <th>Turma</th>
+                  <th>Identificação</th>
+                  <th>Alunos</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${DEMO_TURMAS.map((t, ti) => `
+                  <tr>
+                    <td><strong>${t.cod}</strong></td>
+                    <td>${t.desc}</td>
+                    <td>${t.alunos}</td>
+                    <td><span class="badge-status badge-muted" data-turma-status="${ti}">Na fila</span></td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+            <div id="demo-extract-done" class="nr-modal">
+              <strong>Consolidado CETEP pronto!</strong> 3 turmas reunidas com Painel Consolidado, médias e hiperlinks.
+              <div style="margin-top:8px;">
+                <a class="pill-btn emerald" style="min-height:36px;padding:6px 14px;font-size:0.8rem;" href="#planilha">Ver planilha gerada ↓</a>
+              </div>
+            </div>
+          `;
+        }
+      }
+
+      demoRunBtn?.addEventListener('click', () => {
+        clearSimTimer();
+        demoRunBtn.disabled = true;
+
+        if (activeDemoTab === 'notas') {
+          const cells = Array.from(mockScreenBody.querySelectorAll('[data-note-cell]'));
+          const numericCells = cells.filter((c) => c.dataset.nr !== 'true');
+          let idx = 0;
+          setProgress(5, 'Iniciando fila sequencial...');
+          simTimer = setInterval(() => {
+            if (idx >= numericCells.length) {
+              clearSimTimer();
+              cells.filter((c) => c.dataset.nr === 'true').forEach((c) => {
+                c.textContent = 'NF';
+                c.classList.add('nr-pending');
+              });
+              const modal = document.getElementById('demo-nr-modal');
+              if (modal) modal.classList.add('visible');
+              mockCtxBadge.textContent = 'Concluído: 13 notas + 2 Não Realizações';
+              setProgress(100, 'Notas + Não Realização concluídos');
+              demoRunBtn.disabled = false;
+              return;
+            }
+            const cell = numericCells[idx];
+            const val = cell.dataset.target;
+            cell.textContent = val;
+            cell.classList.add(val === '0.0' ? 'zero' : 'filled');
+            idx++;
+            const pct = Math.round((idx / numericCells.length) * 88);
+            mockCtxBadge.textContent = `Fila AJAX RichFaces: ${idx}/${numericCells.length}`;
+            setProgress(pct, `Preenchendo campo ${idx} de ${numericCells.length}`);
+          }, 120);
+        } else if (activeDemoTab === 'frequencia') {
+          let row = 0;
+          setProgress(10, 'Invertendo P/F para checkboxes...');
+          simTimer = setInterval(() => {
+            if (row >= DEMO_FREQ_ROWS.length) {
+              clearSimTimer();
+              mockCtxBadge.textContent = '3 faltosos marcados (✓ = FALTA)';
+              setProgress(100, 'Frequência aplicada na prévia');
+              demoRunBtn.disabled = false;
+              return;
+            }
+            const data = DEMO_FREQ_ROWS[row];
+            const h1 = mockScreenBody.querySelector(`[data-freq-h1="${row}"]`);
+            const h2 = mockScreenBody.querySelector(`[data-freq-h2="${row}"]`);
+            const obs = mockScreenBody.querySelector(`[data-freq-obs="${row}"]`);
+            if (h1) h1.checked = data.faltas >= 1;
+            if (h2) h2.checked = data.faltas >= 2;
+            if (obs) obs.textContent = data.obs;
+            row++;
+            const pct = Math.round((row / DEMO_FREQ_ROWS.length) * 100);
+            setProgress(pct, `Aplicando estudante ${row} de ${DEMO_FREQ_ROWS.length}`);
+          }, 140);
+        } else {
+          let ti = 0;
+          setProgress(10, 'Acessando Portal Docente...');
+          simTimer = setInterval(() => {
+            if (ti >= DEMO_TURMAS.length) {
+              clearSimTimer();
+              const done = document.getElementById('demo-extract-done');
+              if (done) done.classList.add('visible');
+              mockCtxBadge.textContent = 'Exportado: amostra-cetep.xlsx';
+              setProgress(100, '3 turmas consolidadas');
+              demoRunBtn.disabled = false;
+              return;
+            }
+            const badge = mockScreenBody.querySelector(`[data-turma-status="${ti}"]`);
+            if (badge) {
+              badge.className = 'badge-status badge-ok';
+              badge.textContent = 'Coletada';
+            }
+            ti++;
+            const pct = Math.round((ti / DEMO_TURMAS.length) * 100);
+            mockCtxBadge.textContent = `Coletando turma ${ti}/${DEMO_TURMAS.length}...`;
+            setProgress(pct, `Turma ${ti} de ${DEMO_TURMAS.length} extraída`);
+          }, 260);
+        }
+      });
+
+      demoResetBtn?.addEventListener('click', () => renderDemoTab(activeDemoTab));
+
+      document.querySelectorAll('[data-demo-tab]').forEach((btn) => {
+        btn.addEventListener('click', () => renderDemoTab(btn.dataset.demoTab));
+      });
+
+      renderDemoTab('notas');
+
+      // --- Amostra Interativa da Planilha CETEP ---
+      const sheetBanner = document.getElementById('sheet-banner');
+      const sheetWrap = document.getElementById('sheet-table-wrap');
+
+      const SHEET_ADM_ROWS = [
+        { n: 1, nome: 'ALINE BARBOSA FICTICIA', mat: '202600101', a1: '2,5', a2: '3,0', a3: '3,0', ng: '8,5', sit: 'Aprovado', cls: 'badge-ok', obs: '' },
+        { n: 2, nome: 'BRUNO CARVALHO DEMO', mat: '202600102', a1: '2,0', a2: '2,5', a3: '2,0', ng: '6,5', sit: 'Aprovado', cls: 'badge-ok', obs: '' },
+        { n: 3, nome: 'CAMILA DIAS EXEMPLO', mat: '202600103', a1: '1,5', a2: '2,0', a3: '1,0', ng: '4,5', sit: 'Recuperação', cls: 'badge-warn', obs: '' },
+        { n: 4, nome: 'DIEGO FERREIRA TESTE', mat: '202600104', a1: '0,0', a2: '2,5', a3: '1,5', ng: '4,0', sit: 'Recuperação', cls: 'badge-warn', obs: 'Nota 0,0 na Atividade' },
+        { n: 5, nome: 'EDUARDA GOMES MODELO', mat: '202600105', a1: '3,0', a2: '3,0', a3: '3,5', ng: '9,5', sit: 'Aprovado', cls: 'badge-ok', obs: '' },
+        { n: 6, nome: 'FELIPE LIMA SIMULADO', mat: '202600106', a1: '2,5', a2: '2,5', a3: '—', ng: '5,0', sit: 'Aprovado', cls: 'badge-ok', obs: 'Não realização no Simulado' },
+        { n: 7, nome: 'GABRIELA MORAES PADRAO', mat: '202600107', a1: '—', a2: '—', a3: '—', ng: '—', sit: 'Sem Nota', cls: 'badge-muted', obs: 'Sem lançamentos' },
+        { n: 8, nome: 'HENRIQUE NUNES AMOSTRA', mat: '202600108', a1: '2,0', a2: '1,5', a3: '2,0', ng: '5,5', sit: 'Aprovado', cls: 'badge-ok', obs: '' },
+      ];
+
+      const SHEET_INF_ROWS = [
+        { n: 1, nome: 'OTAVIO ALMEIDA FICTICIO', mat: '202600301', u1: '7,5', u2: '8,0', u3: '7,0', ma: '7,5', rf: '—', mf: '7,5', fq: '94,0%', res: 'Aprovado', sit: 'Aprovado', cls: 'badge-ok' },
+        { n: 2, nome: 'PATRICIA BORGES DEMO', mat: '202600302', u1: '4,5', u2: '4,0', u3: '5,0', ma: '4,5', rf: '6,0', mf: '5,3', fq: '88,5%', res: 'Aprovado Rec.', sit: 'Aprovado', cls: 'badge-ok' },
+        { n: 3, nome: 'RAFAEL COSTA EXEMPLO', mat: '202600303', u1: '3,5', u2: '4,0', u3: '3,0', ma: '3,5', rf: '4,2', mf: '3,9', fq: '82,0%', res: 'Reprovado', sit: 'Recuperação', cls: 'badge-warn' },
+        { n: 4, nome: 'SOFIA DUARTE TESTE', mat: '202600304', u1: '8,5', u2: '9,0', u3: '8,0', ma: '8,5', rf: '—', mf: '8,5', fq: '98,0%', res: 'Aprovado', sit: 'Aprovado', cls: 'badge-ok' },
+        { n: 5, nome: 'THIAGO ESTEVES MODELO', mat: '202600305', u1: '5,0', u2: '5,5', u3: '6,0', ma: '5,5', rf: '—', mf: '5,5', fq: '91,0%', res: 'Aprovado', sit: 'Aprovado', cls: 'badge-ok' },
+        { n: 6, nome: 'VANESSA FARIAS SIMULADA', mat: '202600306', u1: '—', u2: '—', u3: '—', ma: '—', rf: '—', mf: '—', fq: '12,0%', res: 'Sem Nota', sit: 'Sem Nota', cls: 'badge-muted' },
+      ];
+
+      function renderSheetTab(tab) {
+        document.querySelectorAll('[data-sheet-tab]').forEach((btn) => {
+          btn.setAttribute('aria-selected', String(btn.dataset.sheetTab === tab));
+        });
+
+        if (tab === 'painel') {
+          sheetBanner.innerHTML = `
+            <div><strong>PAINEL CONSOLIDADO DE DESEMPENHO POR TURMA</strong> • Clique em uma turma para navegar até sua aba</div>
+            <span class="sig-tag">Hiperlinks internos ativos</span>
+          `;
+          sheetWrap.innerHTML = `
+            <table class="excel-tbl">
+              <thead>
+                <tr>
+                  <th>Turma (Curso • Série • Código • Turno)</th>
+                  <th>Modalidade</th>
+                  <th>Unidade</th>
+                  <th>Total</th>
+                  <th>Média Geral</th>
+                  <th>Aprovados (&ge; 5,0)</th>
+                  <th>Recuperação</th>
+                  <th>Sem Nota</th>
+                  <th>% Aprovação</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><button class="sheet-link-btn" type="button" data-jump-sheet="adm">Técnico em Administração • Ensino Médio • 1ª Série • ADMVES1SA • Vespertino</button></td>
+                  <td>Ensino Médio</td>
+                  <td>3ª Unidade</td>
+                  <td>8</td>
+                  <td>6,21</td>
+                  <td>5</td>
+                  <td>2</td>
+                  <td>1</td>
+                  <td>62,5%</td>
+                </tr>
+                <tr>
+                  <td>Técnico em Agropecuária • Ensino Médio • 1ª Série • AGRPMAT1SA • Matutino</td>
+                  <td>Ensino Médio</td>
+                  <td>3ª Unidade</td>
+                  <td>6</td>
+                  <td>6,10</td>
+                  <td>4</td>
+                  <td>1</td>
+                  <td>1</td>
+                  <td>66,7%</td>
+                </tr>
+                <tr class="subtotal-row">
+                  <td>SUBTOTAL — ENSINO MÉDIO</td>
+                  <td>Ensino Médio</td>
+                  <td>3ª Unidade</td>
+                  <td>14</td>
+                  <td>6,17</td>
+                  <td>9</td>
+                  <td>3</td>
+                  <td>2</td>
+                  <td>64,3%</td>
+                </tr>
+                <tr>
+                  <td><button class="sheet-link-btn" type="button" data-jump-sheet="inf">Técnico em Informática • Técnico • Módulo I • INFNOTM1A2 • Noturno</button></td>
+                  <td>Técnico</td>
+                  <td>Res. Final</td>
+                  <td>6</td>
+                  <td>6,14</td>
+                  <td>4</td>
+                  <td>1</td>
+                  <td>1</td>
+                  <td>66,7%</td>
+                </tr>
+                <tr class="subtotal-row">
+                  <td>SUBTOTAL — TÉCNICO</td>
+                  <td>Técnico</td>
+                  <td>Res. Final</td>
+                  <td>6</td>
+                  <td>6,14</td>
+                  <td>4</td>
+                  <td>1</td>
+                  <td>1</td>
+                  <td>66,7%</td>
+                </tr>
+                <tr class="total-row">
+                  <td>TOTAL GERAL</td>
+                  <td>Todas</td>
+                  <td>—</td>
+                  <td>20</td>
+                  <td>6,16</td>
+                  <td>13</td>
+                  <td>4</td>
+                  <td>3</td>
+                  <td>65,0%</td>
+                </tr>
+              </tbody>
+            </table>
+          `;
+        } else if (tab === 'adm') {
+          sheetBanner.innerHTML = `
+            <div><strong>Técnico em Administração • ADMVES1SA • 3ª Unidade</strong> (Ensino Médio Integrado)</div>
+            <button class="sheet-back-link" type="button" data-jump-sheet="painel">← Voltar ao Painel</button>
+          `;
+          sheetWrap.innerHTML = `
+            <table class="excel-tbl">
+              <thead>
+                <tr>
+                  <th>Nº</th>
+                  <th>Nome do Aluno</th>
+                  <th>Matrícula</th>
+                  <th>Atividade (3.0)</th>
+                  <th>Feira (3.0)</th>
+                  <th>Simulado (4.0)</th>
+                  <th>Nota Geral</th>
+                  <th>Situação</th>
+                  <th>Observações</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${SHEET_ADM_ROWS.map((r) => `
+                  <tr>
+                    <td>${r.n}</td>
+                    <td>${r.nome}</td>
+                    <td><code>${r.mat}</code></td>
+                    <td>${r.a1}</td>
+                    <td>${r.a2}</td>
+                    <td>${r.a3}</td>
+                    <td><strong>${r.ng}</strong></td>
+                    <td><span class="badge-status ${r.cls}">${r.sit}</span></td>
+                    <td>${r.obs || '—'}</td>
+                  </tr>
+                `).join('')}
+                <tr class="subtotal-row">
+                  <td></td>
+                  <td>MÉDIA DA TURMA</td>
+                  <td></td>
+                  <td>1,93</td>
+                  <td>2,43</td>
+                  <td>2,17</td>
+                  <td>6,21</td>
+                  <td></td>
+                  <td></td>
+                </tr>
+              </tbody>
+            </table>
+          `;
+        } else {
+          sheetBanner.innerHTML = `
+            <div><strong>Técnico em Informática • INFNOTM1A2 • Res. Final</strong> (Técnico Subsequente)</div>
+            <button class="sheet-back-link" type="button" data-jump-sheet="painel">← Voltar ao Painel</button>
+          `;
+          sheetWrap.innerHTML = `
+            <table class="excel-tbl">
+              <thead>
+                <tr>
+                  <th>Nº</th>
+                  <th>Nome do Aluno</th>
+                  <th>Matrícula</th>
+                  <th>1ª Un.</th>
+                  <th>2ª Un.</th>
+                  <th>3ª Un.</th>
+                  <th>Média Anual</th>
+                  <th>Rec. Final</th>
+                  <th>Média Final</th>
+                  <th>% Freq.</th>
+                  <th>Res. Parcial</th>
+                  <th>Situação</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${SHEET_INF_ROWS.map((r) => `
+                  <tr>
+                    <td>${r.n}</td>
+                    <td>${r.nome}</td>
+                    <td><code>${r.mat}</code></td>
+                    <td>${r.u1}</td>
+                    <td>${r.u2}</td>
+                    <td>${r.u3}</td>
+                    <td>${r.ma}</td>
+                    <td>${r.rf}</td>
+                    <td><strong>${r.mf}</strong></td>
+                    <td>${r.fq}</td>
+                    <td>${r.res}</td>
+                    <td><span class="badge-status ${r.cls}">${r.sit}</span></td>
+                  </tr>
+                `).join('')}
+                <tr class="subtotal-row">
+                  <td></td>
+                  <td>MÉDIA DA TURMA</td>
+                  <td></td>
+                  <td>5,80</td>
+                  <td>6,10</td>
+                  <td>5,80</td>
+                  <td>5,90</td>
+                  <td>5,10</td>
+                  <td>6,14</td>
+                  <td>77,6%</td>
+                  <td></td>
+                  <td></td>
+                </tr>
+              </tbody>
+            </table>
+          `;
+        }
+
+        sheetWrap.querySelectorAll('[data-jump-sheet]').forEach((el) => {
+          el.addEventListener('click', () => renderSheetTab(el.dataset.jumpSheet));
+        });
+        sheetBanner.querySelectorAll('[data-jump-sheet]').forEach((el) => {
+          el.addEventListener('click', () => renderSheetTab(el.dataset.jumpSheet));
+        });
+      }
+
+      document.querySelectorAll('[data-sheet-tab]').forEach((btn) => {
+        btn.addEventListener('click', () => renderSheetTab(btn.dataset.sheetTab));
+      });
+
+      renderSheetTab('painel');
+
+      // --- Abas do Guia de Instalação ---
+      document.querySelectorAll('[data-guide-tab]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const target = btn.dataset.guideTab;
+          document.querySelectorAll('[data-guide-tab]').forEach((b) => {
+            b.setAttribute('aria-selected', String(b === btn));
+          });
+          document.querySelectorAll('.guide-panel').forEach((p) => {
+            p.classList.toggle('active', p.id === `guide-${target}`);
+          });
+        });
+      });
+    })();
+  </script>
 </body>
 </html>
