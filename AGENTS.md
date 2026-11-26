@@ -6,6 +6,8 @@ Instruções de arquitetura, invariantes e verificação para agentes trabalhand
 
 **Preenche SIGEduc** é uma extensão de navegador **Manifest V3** (compatível com Chrome/Chromium Desktop e navegadores Android com suporte a extensões como Mises, Lemur, Edge Canary e Firefox Android) para automação local de preenchimento de notas, frequências e extração de dados no portal **SIGEduc-BA** (`https://sigeduc.educacao.ba.gov.br/sigeduc/*`).
 
+- **Status atual de distribuição (Google):** Pacote Chrome (`dist/preenche-sigeduc-chrome.zip`) **enviado para revisão na Chrome Web Store**, com Política de Privacidade pública em `https://devmagary.github.io/preenchesigeduc/privacidade.html` (`docs/privacidade.html`).
+
 ### Fluxo Técnico (SIGEduc JSF / RichFaces / PrimeFaces)
 1. O SIGEduc não expõe API REST pública; utiliza páginas JSF stateful (`javax.faces.ViewState`, `DOUBLE_CHECK_TOKEN`, cookie `JSESSIONID`) e submissões parciais RichFaces 3.3.3 (`A4J.AJAX.Submit`).
 2. **Menu Principal do Diário de Classe Digital (`JSCookMenu` / `ThemeOffice`):**
@@ -60,6 +62,11 @@ Instruções de arquitetura, invariantes e verificação para agentes trabalhand
 5. **Segurança do ambiente real:** Nunca executar testes automatizados de escrita contra `https://sigeduc.educacao.ba.gov.br`. Todo teste E2E deve rodar contra `trabalho/mock-server.mjs` carregando `trabalho/dist-e2e/` (no Chrome M137+, usar `--enable-unsafe-extension-debugging` + CDP `Extensions.loadUnpacked`).
 6. **Empacotamento limpo:** Nunca incluir `trabalho/`, fixtures ou `http://127.0.0.1/*` nos builds de produção `dist/chrome/` e `dist/firefox/`. Manter tamanho descompactado `< 1.5 MB` (`1536 KB`).
 7. **Versionamento contínuo (Git):** Toda alteração e implementação concluída e verificada deve ser registrada com `git commit` (mensagem clara, descritiva e **em português PT-BR**) e enviada (`git push`) para o repositório remoto `https://github.com/devmagary/preenchesigeduc.git`.
+8. **Conformidade com a Chrome Web Store (em revisão):**
+   - Manter apenas `"permissions": ["activeTab"]` e escopo de conteúdo/host restrito a `https://sigeduc.educacao.ba.gov.br/sigeduc/*`; nunca adicionar novas permissões (`tabs`, `storage`, `scripting`, `<all_urls>`, etc.) sem autorização explícita e atualização prévia das justificativas na loja.
+   - Proibido carregar ou executar código hospedado remotamente em runtime (zero scripts externos, CDNs ou `eval`).
+   - Manter `docs/privacidade.html` (`https://devmagary.github.io/preenchesigeduc/privacidade.html`) fielmente sincronizada com qualquer alteração no uso de `localStorage`/`sessionStorage` ou tratamento local de dados.
+   - A cada atualização submetida à loja, incrementar a versão (`npm run release`) e gerar o pacote limpo `dist/preenche-sigeduc-chrome.zip`.
 
 ## Verificação Obrigatória
 
