@@ -101,7 +101,7 @@ As sugestões são organizadas sob a ótica de engenharia sênior, equilibrando 
 - **Dificuldade:** Média
 - **Contexto:** A extensão foi aprovada na Chrome Web Store e está em análise no Firefox Add-ons (AMO). Automatizar o envio de atualizações para ambas as lojas a cada nova release.
 - **Comportamento esperado:**
-  - **Chrome Web Store:** Validar e ativar o fluxo existente (`scripts/cws-publish.mjs` + `.github/workflows/release.yml`) com os secrets `CWS_CLIENT_ID`, `CWS_CLIENT_SECRET`, `CWS_REFRESH_TOKEN` e `CWS_EXTENSION_ID`, atualizando o status público na landing page.
+  - **Chrome Web Store:** Validar e ativar o fluxo existente (`scripts/cws-publish.mjs` + `.github/workflows/release.yml`) com os secrets `CWS_CLIENT_ID`, `CWS_CLIENT_SECRET`, `CWS_REFRESH_TOKEN` e `CWS_EXTENSION_ID`, atualizar o status público na landing page (`docs/index.html`) removendo o aviso de "em revisão" e adicionar botão direto para a loja oficial (`https://chromewebstore.google.com/detail/preenche-sigeduc/fafdmobaohddjlphkfkhfhahlpeffeji?hl=pt-br`).
   - **Firefox Add-ons (AMO):** Criar script de publicação automática (ex.: `scripts/amo-publish.mjs` via API AMO / `web-ext sign` com `AMO_JWT_ISSUER` e `AMO_JWT_SECRET`) e integrá-lo ao `.github/workflows/release.yml` para envio automático em novas tags `v*`.
 - **Impacto técnico / Riscos:** Requer configuração de secrets no GitHub Actions, tratamento de erros/rate-limit das APIs das lojas e testes unitários de fluxo sem expor credenciais.
 
