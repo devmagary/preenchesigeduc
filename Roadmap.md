@@ -207,6 +207,15 @@ As sugestões são organizadas sob a ótica de engenharia sênior, equilibrando 
 - **Comportamento esperado:** Página responsiva (desktop e mobile), zero requisições externas, simulador funcional dos 3 fluxos, amostra CETEP navegável + arquivo `.xlsx` real baixável, mantendo todos os links oficiais (`is.gd`, Releases e `privacidade.html`).
 - **Impacto técnico / Riscos:** Alterações isoladas em `docs/index.html`, `docs/amostra-cetep.xlsx` e `scripts/generate-sample-cetep.mjs`, sem impacto nos pacotes `dist/` da extensão.
 
+### 10. Detecção Automática de Navegador e Sugestão de Instalação na Landing Page
+- **Prioridade:** P2 — Média
+- **Dificuldade:** Baixa
+- **Contexto:** Professores leigos frequentemente ficam em dúvida sobre qual pacote ou loja escolher ao acessar a página de download.
+- **Comportamento esperado:**
+  - Detectar localmente via `navigator.userAgent` / `navigator.userAgentData` o navegador e plataforma do visitante (Chrome Desktop, Edge Desktop, Edge Canary Android, Mises/Lemur Android, Firefox Desktop/Android).
+  - Destacar automaticamente o card/botão de instalação recomendado (ex.: Chrome Web Store, Edge Add-ons, `.crx` ou Firefox) e pré-selecionar a aba correspondente no guia passo a passo, mantendo os demais cards acessíveis como alternativa.
+- **Impacto técnico / Riscos:** JavaScript local isolado em `docs/index.html`, sem requisições externas e com fallback seguro para navegadores não reconhecidos.
+
 ## P3 — Baixa Prioridade / Futuro
 
 ### 1. Assistente de Relatório Final para Estudante PCD e Consulta de Turmas Consolidadas (`Relatórios`)
