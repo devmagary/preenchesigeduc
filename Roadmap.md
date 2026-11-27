@@ -106,6 +106,15 @@ As sugestões são organizadas sob a ótica de engenharia sênior, equilibrando 
   - **Firefox Add-ons (AMO):** Criar script de publicação automática (ex.: `scripts/amo-publish.mjs` via API AMO / `web-ext sign` com `AMO_JWT_ISSUER` e `AMO_JWT_SECRET`) e integrá-lo ao `.github/workflows/release.yml` para envio automático em novas tags `v*`.
 - **Impacto técnico / Riscos:** Requer configuração de secrets no GitHub Actions, tratamento de erros/rate-limit das APIs das lojas e testes unitários de fluxo sem expor credenciais.
 
+### 7. Localização Padrão `pt_BR` no Pacote (`default_locale` + `_locales/pt_BR`)
+- **Prioridade:** P1 — Alta
+- **Dificuldade:** Baixa
+- **Contexto:** Na Microsoft Edge Add-ons, a listagem da loja está sendo identificada apenas como `English (United States)` porque o pacote não declara idioma padrão em português do Brasil.
+- **Comportamento esperado:**
+  - Adicionar `"default_locale": "pt_BR"` no `manifest.json` gerado em `scripts/build.mjs` e incluir `_locales/pt_BR/messages.json` com nome e descrição da extensão.
+  - Garantir que a listagem do Edge Add-ons (e demais lojas) reconheça automaticamente **Português (Brasil)** para o público brasileiro.
+- **Impacto técnico / Riscos:** Alteração simples em `scripts/build.mjs`, mantendo tamanho do pacote dentro do SLA (`< 1536 KB`).
+
 ## P2 — Média Prioridade
 
 ### 1. Opção de Aumento do Tamanho do Texto (Acessibilidade) — `[Concluído]`
