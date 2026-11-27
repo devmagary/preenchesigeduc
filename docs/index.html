@@ -1108,9 +1108,26 @@
       margin-bottom: 22px;
     }
 
+    .detect-banner {
+      display: inline-flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 16px;
+      border-radius: 14px;
+      background: var(--indigo-soft);
+      border: 1px solid var(--border-strong);
+      color: var(--text);
+      font-size: 0.88rem;
+      font-weight: 600;
+      text-align: center;
+      max-width: 760px;
+    }
+
     .dl-grid {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 16px;
       margin-bottom: 22px;
     }
@@ -1126,9 +1143,47 @@
       box-shadow: var(--shadow-sm);
     }
 
-    .dl-card.featured {
-      border-color: var(--emerald);
-      box-shadow: 0 12px 30px rgba(16, 185, 129, 0.12);
+    .dl-card.featured,
+    .dl-card.recommended {
+      border: 2px solid var(--emerald);
+      box-shadow: 0 12px 30px rgba(16, 185, 129, 0.16);
+    }
+
+    .dl-card-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .rec-badge {
+      display: none;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: var(--emerald-strong);
+      color: #ffffff;
+      font-size: 0.74rem;
+      font-weight: 700;
+    }
+
+    .dl-card.recommended .rec-badge {
+      display: inline-flex;
+    }
+
+    .soon-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: var(--warn-bg);
+      border: 1px solid var(--warn-bd);
+      color: var(--warn-tx);
+      font-size: 0.74rem;
+      font-weight: 700;
     }
 
     .dl-card h3 {
@@ -1147,9 +1202,44 @@
       width: 100%;
     }
 
-    .dl-short {
+    .dl-short,
+    .dl-alt-actions {
       font-size: 0.82rem;
       color: var(--muted);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px 12px;
+    }
+
+    .dl-alt-actions a {
+      color: var(--indigo-link);
+      font-weight: 600;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+
+    details.guide-manual {
+      margin-top: 12px;
+      padding: 10px 14px;
+      border-radius: 12px;
+      background: var(--bg-alt);
+      border: 1px solid var(--border);
+    }
+
+    details.guide-manual summary {
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.88rem;
+      color: var(--text);
+      min-height: 36px;
+      display: flex;
+      align-items: center;
+    }
+
+    details.guide-manual ol {
+      margin-top: 10px;
     }
 
     code {
@@ -1458,6 +1548,9 @@
         padding: 8px 12px;
       }
       .dl-short a,
+      .dl-alt-actions a,
+      details.guide-manual summary,
+      details.guide-manual a,
       .footer-links a {
         display: inline-flex;
         align-items: center;
@@ -1616,12 +1709,12 @@
         Traga sua planilha do Excel ou cole os dados da sua tabela, confira tudo na tela e deixe a ferramenta lançar as notas, marcar quem não fez atividade, registrar faltas e montar o resumo das turmas em poucos segundos.
       </p>
       <div class="hero-ctas">
-        <a class="pill-btn primary" href="#download">Baixar agora</a>
+        <a id="hero-primary-cta" class="pill-btn primary" href="#download">Baixar agora</a>
         <a class="pill-btn ghost" href="#demo">Testar sem instalar</a>
       </div>
       <div class="hero-meta">
-        <span class="cws-badge">Em breve na loja do Chrome</span>
-        <span>Você já pode baixar e usar gratuitamente no computador e no celular logo abaixo</span>
+        <span id="hero-meta-badge" class="cws-badge">Disponível nas lojas do Chrome e do Edge</span>
+        <span id="hero-meta-text">Instale em 1 clique no computador ou baixe para celular Android e Firefox logo abaixo</span>
       </div>
     </div>
   </header>
@@ -1768,33 +1861,67 @@
         <div class="sec-head">
           <span class="sec-kicker">Download gratuito</span>
           <h2>Escolha onde você quer instalar</h2>
-          <p>Baixe o arquivo do seu navegador e siga os passos simples logo abaixo.</p>
+          <p>Instale direto pela loja no Chrome ou Edge, ou baixe o pacote manual para Android e Firefox.</p>
         </div>
 
         <div class="dl-notice">
-          <span class="cws-badge">Em breve na loja oficial do Chrome · Enquanto isso, você já pode baixar e instalar gratuitamente aqui</span>
+          <div id="dl-detect-banner" class="detect-banner" aria-live="polite">
+            Disponível oficialmente na Chrome Web Store e no Microsoft Edge Add-ons · Em breve na loja do Firefox
+          </div>
         </div>
 
         <div class="dl-grid">
-          <article class="dl-card">
-            <h3>Computador (Chrome ou Edge)</h3>
-            <p>Também serve para os navegadores <strong>Mises</strong> e <strong>Lemur</strong> no celular Android.</p>
-            <a class="pill-btn primary" href="https://github.com/devmagary/preenchesigeduc/releases/latest/download/preenche-sigeduc-chrome.zip">Baixar para PC / Mises / Lemur</a>
-            <span class="dl-short">Link curto: <a href="https://is.gd/sige_navegador"><code>is.gd/sige_navegador</code></a></span>
+          <article class="dl-card" data-dl-card="chrome">
+            <div class="dl-card-head">
+              <h3>Google Chrome (Computador)</h3>
+              <span class="rec-badge">★ Recomendado para você</span>
+            </div>
+            <p>Instale direto em 1 clique pela loja oficial da Chrome Web Store com atualizações automáticas.</p>
+            <a class="pill-btn primary" href="https://chromewebstore.google.com/detail/preenche-sigeduc/fafdmobaohddjlphkfkhfhahlpeffeji?hl=pt-br" target="_blank" rel="noopener noreferrer">Instalar na Chrome Web Store</a>
+            <div class="dl-alt-actions">
+              <a href="https://github.com/devmagary/preenchesigeduc/releases/latest/download/preenche-sigeduc-chrome.zip">Baixar .zip manual</a>
+              <span>Link curto: <a href="https://is.gd/sige_navegador"><code>is.gd/sige_navegador</code></a></span>
+            </div>
           </article>
 
-          <article class="dl-card featured">
-            <h3>Celular Android (Edge Canary)</h3>
-            <p>Arquivo direto para instalar no navegador Microsoft Edge Canary no seu celular Android.</p>
-            <a class="pill-btn emerald" href="https://github.com/devmagary/preenchesigeduc/releases/latest/download/preenche-sigeduc-edge-mobile.crx">Baixar para Edge no Celular</a>
-            <span class="dl-short">Link curto: <a href="https://is.gd/sige_mobile"><code>is.gd/sige_mobile</code></a></span>
+          <article class="dl-card" data-dl-card="edge">
+            <div class="dl-card-head">
+              <h3>Microsoft Edge (Computador)</h3>
+              <span class="rec-badge">★ Recomendado para você</span>
+            </div>
+            <p>Extensão oficial publicada na Microsoft Edge Add-ons. Clique para adicionar ao seu Edge sem extrair arquivos.</p>
+            <a class="pill-btn primary" href="https://microsoftedge.microsoft.com/addons/detail/gdcgkkoafnofbpalilnfnijlcfafnbfa" target="_blank" rel="noopener noreferrer">Instalar no Edge Add-ons</a>
+            <div class="dl-alt-actions">
+              <a href="https://github.com/devmagary/preenchesigeduc/releases/latest/download/preenche-sigeduc-chrome.zip">Baixar .zip alternativo</a>
+              <span>Atualizações automáticas pela loja</span>
+            </div>
           </article>
 
-          <article class="dl-card">
-            <h3>Firefox (Computador ou Android)</h3>
-            <p>Versão própria para quem usa o navegador Firefox no computador ou no celular Android.</p>
-            <a class="pill-btn primary" href="https://github.com/devmagary/preenchesigeduc/releases/latest/download/preenche-sigeduc-firefox.zip">Baixar para Firefox</a>
-            <span class="dl-short">Link curto: <a href="https://is.gd/sige_firefox"><code>is.gd/sige_firefox</code></a></span>
+          <article class="dl-card" data-dl-card="android">
+            <div class="dl-card-head">
+              <h3>Celular Android (Edge Canary / Mises / Lemur)</h3>
+              <span class="rec-badge">★ Recomendado para você</span>
+            </div>
+            <p>Para usar o painel no celular Android: instale o pacote <code>.crx</code> no Edge Canary ou o <code>.zip</code> no Mises/Lemur.</p>
+            <a class="pill-btn emerald" href="https://github.com/devmagary/preenchesigeduc/releases/latest/download/preenche-sigeduc-edge-mobile.crx">Baixar para Edge no Celular (.crx)</a>
+            <a class="pill-btn ghost" href="https://github.com/devmagary/preenchesigeduc/releases/latest/download/preenche-sigeduc-chrome.zip">Baixar .zip para Mises / Lemur</a>
+            <div class="dl-short">
+              <span>Edge Mobile: <a href="https://is.gd/sige_mobile"><code>is.gd/sige_mobile</code></a></span>
+              <span>Mises/Lemur: <a href="https://is.gd/sige_navegador"><code>is.gd/sige_navegador</code></a></span>
+            </div>
+          </article>
+
+          <article class="dl-card" data-dl-card="firefox">
+            <div class="dl-card-head">
+              <h3>Firefox (Computador ou Android)</h3>
+              <span class="rec-badge">★ Recomendado para você</span>
+            </div>
+            <div><span class="soon-badge">Em breve na loja do Firefox</span></div>
+            <p>Nossa publicação oficial na loja Mozilla Add-ons está em análise. Enquanto isso, você já pode instalar pelo pacote oficial <code>.zip</code> abaixo.</p>
+            <a class="pill-btn primary" href="https://github.com/devmagary/preenchesigeduc/releases/latest/download/preenche-sigeduc-firefox.zip">Baixar para Firefox (.zip)</a>
+            <div class="dl-short">
+              <span>Link curto: <a href="https://is.gd/sige_firefox"><code>is.gd/sige_firefox</code></a></span>
+            </div>
           </article>
         </div>
 
@@ -1808,17 +1935,22 @@
 
           <div id="guide-pc" class="guide-panel active">
             <ol>
-              <li>Clique em <strong>Baixar para PC</strong> acima e extraia a pasta do arquivo baixado (clique com o botão direito e escolha <em>Extrair tudo</em>) em um lugar fixo, como na sua pasta <em>Documentos</em>.</li>
-              <li>Abra o navegador, digite <code>chrome://extensions</code> (ou <code>edge://extensions</code>) na barra de endereço e aperte Enter.</li>
-              <li>No canto da tela, ligue a chave <strong>Modo do desenvolvedor</strong>.</li>
-              <li>Clique em <strong>Carregar sem compactação</strong> e escolha a pasta que você extraiu.</li>
-              <li>Pronto! Entre no portal do SIGEduc-BA e o botão azul <strong>Preenche SIGEduc</strong> aparecerá no canto da tela.</li>
+              <li>Clique em <strong>Instalar na Chrome Web Store</strong> (no Google Chrome) ou <strong>Instalar no Edge Add-ons</strong> (no Microsoft Edge) nos cards acima.</li>
+              <li>Na página da loja oficial, clique em <strong>Usar no Chrome</strong> / <strong>Obter</strong> e confirme em <strong>Adicionar extensão</strong>.</li>
+              <li>Pronto! Entre no portal do SIGEduc-BA e toque no botão flutuante <strong>Preenche SIGEduc</strong> no canto da tela.</li>
             </ol>
+            <details class="guide-manual">
+              <summary>Prefere instalar manualmente usando o arquivo .zip?</summary>
+              <ol>
+                <li>Baixe o arquivo <code>.zip</code> alternativo e extraia a pasta em um local fixo (ex.: <em>Documentos</em>).</li>
+                <li>Acesse <code>chrome://extensions</code> ou <code>edge://extensions</code>, ative o <strong>Modo do desenvolvedor</strong> e clique em <strong>Carregar sem compactação</strong> na pasta extraída.</li>
+              </ol>
+            </details>
           </div>
 
           <div id="guide-edge-android" class="guide-panel">
             <ol>
-              <li>Toque no botão verde <strong>Baixar para Edge no Celular</strong> acima para salvar o arquivo no aparelho.</li>
+              <li>Toque em <strong>Baixar para Edge no Celular (.crx)</strong> acima para salvar o arquivo no aparelho.</li>
               <li>Abra o Edge Canary no celular, toque no menu, entre em <strong>Configurações → Sobre o Microsoft Edge</strong> e toque 5 vezes seguidas no número da versão até liberar as <strong>Opções do desenvolvedor</strong>.</li>
               <li>Volte em Configurações, abra <strong>Opções do desenvolvedor → Extension install by crx</strong> e escolha o arquivo que você acabou de baixar.</li>
               <li>Entre normalmente no SIGEduc-BA e toque no botão flutuante para abrir o painel.</li>
@@ -1827,7 +1959,7 @@
 
           <div id="guide-mises" class="guide-panel">
             <ol>
-              <li>Baixe o arquivo clicando em <strong>Baixar para PC / Mises / Lemur</strong> pelo seu celular.</li>
+              <li>Baixe o arquivo clicando em <strong>Baixar .zip para Mises / Lemur</strong> pelo seu celular.</li>
               <li>Abra o menu de <strong>Extensões</strong> do Mises ou do Lemur e ative o <strong>Modo desenvolvedor</strong>.</li>
               <li>Toque em <strong>+(from .zip)</strong> e selecione o arquivo que você baixou (não precisa nem descompactar).</li>
             </ol>
@@ -1835,7 +1967,7 @@
 
           <div id="guide-firefox" class="guide-panel">
             <ol>
-              <li>Baixe o arquivo clicando em <strong>Baixar para Firefox</strong> e extraia a pasta no seu computador.</li>
+              <li>Baixe o arquivo clicando em <strong>Baixar para Firefox (.zip)</strong> e extraia a pasta no aparelho ou computador.</li>
               <li>No Firefox do computador, acesse <code>about:debugging#/runtime/this-firefox</code>, clique em <strong>Carregar extensão temporária</strong> e escolha o arquivo <code>manifest.json</code> dentro da pasta extraída.</li>
               <li>No celular (Firefox Nightly ou Beta), ative as extensões personalizadas nas configurações de desenvolvedor para instalar o pacote.</li>
             </ol>
@@ -2496,18 +2628,142 @@
 
       renderSheetTab('painel');
 
-      // --- Abas do Guia de Instalação ---
-      document.querySelectorAll('[data-guide-tab]').forEach((btn) => {
-        btn.addEventListener('click', () => {
-          const target = btn.dataset.guideTab;
-          document.querySelectorAll('[data-guide-tab]').forEach((b) => {
-            b.setAttribute('aria-selected', String(b === btn));
-          });
-          document.querySelectorAll('.guide-panel').forEach((p) => {
-            p.classList.toggle('active', p.id === `guide-${target}`);
-          });
+      // --- Abas do Guia de Instalação + Detecção Automática de Navegador ---
+      function activateGuideTab(target) {
+        document.querySelectorAll('[data-guide-tab]').forEach((b) => {
+          b.setAttribute('aria-selected', String(b.dataset.guideTab === target));
         });
+        document.querySelectorAll('.guide-panel').forEach((p) => {
+          p.classList.toggle('active', p.id === `guide-${target}`);
+        });
+      }
+
+      document.querySelectorAll('[data-guide-tab]').forEach((btn) => {
+        btn.addEventListener('click', () => activateGuideTab(btn.dataset.guideTab));
       });
+
+      const STORE_URLS = {
+        chrome: 'https://chromewebstore.google.com/detail/preenche-sigeduc/fafdmobaohddjlphkfkhfhahlpeffeji?hl=pt-br',
+        edge: 'https://microsoftedge.microsoft.com/addons/detail/gdcgkkoafnofbpalilnfnijlcfafnbfa',
+      };
+
+      function detectBrowserTarget(uaInput, uaDataInput) {
+        const ua = String(uaInput ?? (typeof navigator !== 'undefined' ? navigator.userAgent : '') ?? '');
+        const brands = Array.isArray(uaDataInput?.brands)
+          ? uaDataInput.brands.map((b) => String(b?.brand || '')).join(' ')
+          : '';
+        const isAndroid = /Android/i.test(ua) || uaDataInput?.mobile === true;
+
+        if (/Firefox|FxiOS/i.test(ua)) {
+          return {
+            key: isAndroid ? 'android-firefox' : 'desktop-firefox',
+            browserLabel: isAndroid ? 'Firefox no Android' : 'Firefox no Computador',
+            card: 'firefox',
+            guide: 'firefox',
+            heroText: 'Baixar para Firefox',
+            heroHref: '#download',
+            external: false,
+          };
+        }
+
+        if (isAndroid) {
+          if (/Mises|Lemur/i.test(ua)) {
+            return {
+              key: 'android-mises',
+              browserLabel: 'Mises / Lemur no Android',
+              card: 'android',
+              guide: 'mises',
+              heroText: 'Baixar para Mises / Lemur',
+              heroHref: '#download',
+              external: false,
+            };
+          }
+          return {
+            key: 'android-edge',
+            browserLabel: /EdgA/i.test(ua) ? 'Microsoft Edge no Android' : 'Navegador Android',
+            card: 'android',
+            guide: 'edge-android',
+            heroText: 'Baixar para Edge no Celular',
+            heroHref: '#download',
+            external: false,
+          };
+        }
+
+        if (/Edg\//i.test(ua) || /Microsoft Edge/i.test(brands)) {
+          return {
+            key: 'desktop-edge',
+            browserLabel: 'Microsoft Edge (Computador)',
+            card: 'edge',
+            guide: 'pc',
+            heroText: 'Instalar no Edge Add-ons',
+            heroHref: STORE_URLS.edge,
+            external: true,
+          };
+        }
+
+        if (/Chrome\/|Chromium\//i.test(ua) || /Google Chrome|Chromium/i.test(brands)) {
+          return {
+            key: 'desktop-chrome',
+            browserLabel: 'Google Chrome (Computador)',
+            card: 'chrome',
+            guide: 'pc',
+            heroText: 'Instalar na Chrome Web Store',
+            heroHref: STORE_URLS.chrome,
+            external: true,
+          };
+        }
+
+        return {
+          key: 'unknown',
+          browserLabel: '',
+          card: 'chrome',
+          guide: 'pc',
+          heroText: 'Baixar agora',
+          heroHref: '#download',
+          external: false,
+        };
+      }
+
+      window.__detectBrowserTarget = detectBrowserTarget;
+
+      function applyDetectedBrowser() {
+        const info = detectBrowserTarget(navigator.userAgent, navigator.userAgentData);
+        document.querySelectorAll('[data-dl-card]').forEach((cardEl) => {
+          cardEl.classList.toggle('recommended', cardEl.dataset.dlCard === info.card);
+        });
+        activateGuideTab(info.guide);
+
+        const bannerEl = document.getElementById('dl-detect-banner');
+        if (bannerEl) {
+          if (info.browserLabel) {
+            bannerEl.innerHTML = '';
+            const strong = document.createElement('strong');
+            strong.textContent = `Navegador detectado: ${info.browserLabel}.`;
+            bannerEl.appendChild(strong);
+            const span = document.createElement('span');
+            span.textContent =
+              info.card === 'firefox'
+                ? ' Loja do Firefox em análise; use o pacote .zip recomendado abaixo.'
+                : ' Destacamos a opção recomendada para você abaixo.';
+            bannerEl.appendChild(span);
+          }
+        }
+
+        const heroCta = document.getElementById('hero-primary-cta');
+        if (heroCta && info.heroText) {
+          heroCta.textContent = info.heroText;
+          heroCta.setAttribute('href', info.heroHref);
+          if (info.external) {
+            heroCta.setAttribute('target', '_blank');
+            heroCta.setAttribute('rel', 'noopener noreferrer');
+          } else {
+            heroCta.removeAttribute('target');
+            heroCta.removeAttribute('rel');
+          }
+        }
+      }
+
+      applyDetectedBrowser();
     })();
   </script>
 </body>

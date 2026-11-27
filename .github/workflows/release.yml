@@ -100,9 +100,26 @@ jobs:
           fi
 
       - name: Publicar atualização na Chrome Web Store (quando secrets configurados)
+        continue-on-error: true
         env:
           CWS_CLIENT_ID: ${{ secrets.CWS_CLIENT_ID }}
           CWS_CLIENT_SECRET: ${{ secrets.CWS_CLIENT_SECRET }}
           CWS_REFRESH_TOKEN: ${{ secrets.CWS_REFRESH_TOKEN }}
           CWS_EXTENSION_ID: ${{ secrets.CWS_EXTENSION_ID }}
         run: node scripts/cws-publish.mjs
+
+      - name: Publicar atualização no Microsoft Edge Add-ons (quando secrets configurados)
+        continue-on-error: true
+        env:
+          EDGE_PRODUCT_ID: ${{ secrets.EDGE_PRODUCT_ID }}
+          EDGE_CLIENT_ID: ${{ secrets.EDGE_CLIENT_ID }}
+          EDGE_API_KEY: ${{ secrets.EDGE_API_KEY }}
+        run: node scripts/edge-publish.mjs
+
+      - name: Publicar atualização no Firefox Add-ons AMO (quando secrets configurados)
+        continue-on-error: true
+        env:
+          AMO_JWT_ISSUER: ${{ secrets.AMO_JWT_ISSUER }}
+          AMO_JWT_SECRET: ${{ secrets.AMO_JWT_SECRET }}
+          AMO_ADDON_ID: ${{ secrets.AMO_ADDON_ID }}
+        run: node scripts/amo-publish.mjs

@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { fetchWithRetry } from './store-http.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, '..');
@@ -18,6 +19,7 @@ export async function publishToChromeWebStore({
   zipPath = path.join(rootDir, 'dist', 'preenche-sigeduc-chrome.zip'),
   env = process.env,
   fetchImpl = globalThis.fetch,
+  retryOptions = { maxRetries: 3, baseDelayMs: 500 },
 } = {}) {
   if (!hasCwsCredentials(env)) {
     console.log(
@@ -36,16 +38,21 @@ export async function publishToChromeWebStore({
   const extensionId = env.CWS_EXTENSION_ID.trim();
 
   // 1. Obter Access Token OAuth2
-  const tokenRes = await fetchImpl('https://oauth2.googleapis.com/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      client_id: clientId,
-      client_secret: clientSecret,
-      refresh_token: refreshToken,
-      grant_type: 'refresh_token',
-    }).toString(),
-  });
+  const tokenRes = await fetchWithRetry(
+    fetchImpl,
+    'https://oauth2.googleapis.com/token',
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        client_id: clientId,
+        client_secret: clientSecret,
+        refresh_token: refreshToken,
+        grant_type: 'refresh_token',
+      }).toString(),
+    },
+    retryOptions
+  );
   if (!tokenRes.ok) {
     throw new Error(`Falha ao obter token OAuth2 da Chrome Web Store (${tokenRes.status}).`);
   }
@@ -57,7 +64,8 @@ export async function publishToChromeWebStore({
 
   // 2. Enviar arquivo .zip para a Chrome Web Store
   const zipBytes = fs.readFileSync(zipPath);
-  const uploadRes = await fetchImpl(
+  const uploadRes = await fetchWithRetry(
+    fetchImpl,
     `https://www.googleapis.com/upload/chromewebstore/v1.1/items/${encodeURIComponent(extensionId)}`,
     {
       method: 'PUT',
@@ -66,7 +74,8 @@ export async function publishToChromeWebStore({
         'x-goog-api-version': '2',
       },
       body: zipBytes,
-    }
+    },
+    retryOptions
   );
   const uploadJson = await uploadRes.json().catch(() => ({}));
   if (!uploadRes.ok || uploadJson.uploadState === 'FAILURE') {
@@ -76,7 +85,8 @@ export async function publishToChromeWebStore({
   }
 
   // 3. Submeter para revisão/publicação
-  const publishRes = await fetchImpl(
+  const publishRes = await fetchWithRetry(
+    fetchImpl,
     `https://www.googleapis.com/chromewebstore/v1.1/items/${encodeURIComponent(extensionId)}/publish`,
     {
       method: 'POST',
@@ -85,7 +95,8 @@ export async function publishToChromeWebStore({
         'x-goog-api-version': '2',
         'Content-Length': '0',
       },
-    }
+    },
+    retryOptions
   );
   const publishJson = await publishRes.json().catch(() => ({}));
   if (!publishRes.ok) {

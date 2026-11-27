@@ -23,23 +23,25 @@ Compatível com Chrome/Chromium Desktop e navegadores Android com suporte a exte
 - `tests/unit/` — Testes unitários com Vitest.
 - `tests/e2e/` — Testes E2E com Playwright contra servidor mock local (`trabalho/mock-server.mjs`).
 
-## Links Rápidos de Download (URLs Fixas)
+## Lojas Oficiais e Links Rápidos de Download
 
-Os lançamentos publicados em **GitHub Releases** mantêm nomes de arquivos constantes para permitir redirecionamento direto via domínio próprio ou encurtador externo sem precisar atualizar o link a cada versão:
+A extensão já está **publicada e aprovada** nas lojas oficiais do Chrome e do Edge (com envio para análise na loja do Firefox):
 
-| Plataforma / Navegador | Artefato | Link Curto | URL Direta (`latest`) |
-| :--- | :--- | :--- | :--- |
-| **Edge Canary (Android)** | `preenche-sigeduc-edge-mobile.crx` | https://is.gd/sige_mobile | `https://github.com/devmagary/preenchesigeduc/releases/latest/download/preenche-sigeduc-edge-mobile.crx` |
-| **Chrome Desktop / Mises / Lemur** | `preenche-sigeduc-chrome.zip` | https://is.gd/sige_navegador | `https://github.com/devmagary/preenchesigeduc/releases/latest/download/preenche-sigeduc-chrome.zip` |
-| **Firefox Desktop / Android** | `preenche-sigeduc-firefox.zip` | https://is.gd/sige_firefox | `https://github.com/devmagary/preenchesigeduc/releases/latest/download/preenche-sigeduc-firefox.zip` |
+| Plataforma / Navegador | Instalação Principal / Artefato | Link / URL Direta |
+| :--- | :--- | :--- |
+| **Google Chrome (PC)** | **Chrome Web Store (Oficial — 1 clique)** | [Instalar na Chrome Web Store](https://chromewebstore.google.com/detail/preenche-sigeduc/fafdmobaohddjlphkfkhfhahlpeffeji?hl=pt-br) |
+| **Microsoft Edge (PC)** | **Edge Add-ons (Oficial — 1 clique)** | [Instalar no Edge Add-ons](https://microsoftedge.microsoft.com/addons/detail/gdcgkkoafnofbpalilnfnijlcfafnbfa) |
+| **Edge Canary (Android)** | `preenche-sigeduc-edge-mobile.crx` ([`is.gd/sige_mobile`](https://is.gd/sige_mobile)) | `https://github.com/devmagary/preenchesigeduc/releases/latest/download/preenche-sigeduc-edge-mobile.crx` |
+| **Chrome Manual / Mises / Lemur** | `preenche-sigeduc-chrome.zip` ([`is.gd/sige_navegador`](https://is.gd/sige_navegador)) | `https://github.com/devmagary/preenchesigeduc/releases/latest/download/preenche-sigeduc-chrome.zip` |
+| **Firefox Desktop / Android** *(em análise na AMO)* | `preenche-sigeduc-firefox.zip` ([`is.gd/sige_firefox`](https://is.gd/sige_firefox)) | `https://github.com/devmagary/preenchesigeduc/releases/latest/download/preenche-sigeduc-firefox.zip` |
 
-> **Portal Web de Download Direto (GitHub Pages):** https://is.gd/sigeduc → https://devmagary.github.io/preenchesigeduc/ (publicado a partir de [docs/index.html](docs/index.html)) com os botões e passo a passo para cada navegador.
+> **Portal Web de Download Direto (GitHub Pages):** https://is.gd/sigeduc → https://devmagary.github.io/preenchesigeduc/ (publicado a partir de [docs/index.html](docs/index.html)) com **detecção automática do navegador**, botões diretos para as lojas e passo a passo interativo.
 
 ## Instalação (PC e Android)
 
-### Google Chrome / Chromium (PC)
-1. Baixe e descompacte `preenche-sigeduc-chrome.zip` (ou gere localmente via `npm run build && npm run package`).
-2. Acesse `chrome://extensions`, ative o **Modo do desenvolvedor** e clique em **Carregar sem compactação**, selecionando a pasta extraída (ou `dist/chrome/`).
+### Google Chrome / Microsoft Edge (PC — Recomendado via Loja Oficial)
+1. Acesse a [Chrome Web Store](https://chromewebstore.google.com/detail/preenche-sigeduc/fafdmobaohddjlphkfkhfhahlpeffeji?hl=pt-br) (no Chrome) ou o [Microsoft Edge Add-ons](https://microsoftedge.microsoft.com/addons/detail/gdcgkkoafnofbpalilnfnijlcfafnbfa) (no Edge) e clique em **Usar no Chrome** / **Obter**.
+2. *(Opcional — pacote manual `.zip`)* Caso prefira instalar manualmente, baixe e descompacte `preenche-sigeduc-chrome.zip` (ou gere via `npm run build && npm run package`), abra `chrome://extensions` ou `edge://extensions`, ative o **Modo do desenvolvedor** e clique em **Carregar sem compactação** selecionando a pasta extraída (ou `dist/chrome/`).
 
 ### Edge Canary (Android) via `.crx`
 1. Baixe `preenche-sigeduc-edge-mobile.crx` diretamente no celular.
@@ -50,9 +52,9 @@ Os lançamentos publicados em **GitHub Releases** mantêm nomes de arquivos cons
 1. Baixe `preenche-sigeduc-chrome.zip`.
 2. Abra a página de **Extensões**, ative o modo desenvolvedor e importe diretamente o `.zip`.
 
-### Firefox Desktop / Firefox Android
-1. Baixe `preenche-sigeduc-firefox.zip`.
-2. No Desktop, abra `about:debugging#/runtime/this-firefox` → **Carregar extensão temporária** selecionando o `.zip` ou `dist/firefox/manifest.json` (ou instale via arquivo assinado/coleção no Firefox Android).
+### Firefox Desktop / Firefox Android *(AMO em análise)*
+1. Enquanto a análise na Mozilla Add-ons (AMO) é concluída, baixe `preenche-sigeduc-firefox.zip`.
+2. No Desktop, abra `about:debugging#/runtime/this-firefox` → **Carregar extensão temporária** selecionando `manifest.json` dentro da pasta extraída (ou `dist/firefox/manifest.json`), ou ative extensões personalizadas no Firefox Nightly/Beta Android.
 
 ## Desenvolvimento e Verificação
 
@@ -67,10 +69,13 @@ npm run build && npm run package
 npm run harness
 ```
 
-### Assinatura `.crx`, Releases Automáticos e Chrome Web Store
+### Assinatura `.crx`, Releases Automáticos e Lojas Oficiais
 - O comando `npm run package` gera automaticamente `dist/preenche-sigeduc-edge-mobile.crx` no formato **CRX3** usando a chave privada RSA em `.keys/preenche-sigeduc.pem` (criada localmente na primeira execução e ignorada pelo `.gitignore`, mantendo o ID `mdckmbhobjcoaamkcfloofpdmciidjjg` estável entre versões).
 - Em pipelines de CI (`.github/workflows/release.yml`), alterações enviadas para `main` (ou tags `v*`) publicam automaticamente uma nova release no GitHub Releases com os 3 artefatos fixos (`preenche-sigeduc-chrome.zip`, `preenche-sigeduc-firefox.zip` e `preenche-sigeduc-edge-mobile.crx`), usando o secret **`CRX_PRIVATE_KEY_PEM`** para preservar o ID da extensão.
-- Para publicação automática também na **Chrome Web Store**, configure no repositório GitHub os secrets `CWS_CLIENT_ID`, `CWS_CLIENT_SECRET`, `CWS_REFRESH_TOKEN` e `CWS_EXTENSION_ID`.
+- Para publicação automática nas lojas oficiais a cada release (com fallback gracioso sem interromper a release se alguma loja não estiver configurada), configure os secrets opcionais no repositório GitHub:
+  - **Chrome Web Store** (`scripts/cws-publish.mjs`): `CWS_CLIENT_ID`, `CWS_CLIENT_SECRET`, `CWS_REFRESH_TOKEN`, `CWS_EXTENSION_ID`
+  - **Microsoft Edge Add-ons** (`scripts/edge-publish.mjs`): `EDGE_PRODUCT_ID`, `EDGE_CLIENT_ID`, `EDGE_API_KEY`
+  - **Firefox Add-ons (AMO)** (`scripts/amo-publish.mjs`): `AMO_JWT_ISSUER`, `AMO_JWT_SECRET`, `AMO_ADDON_ID`
 - Para disparar manualmente uma release local com bump de versão (`patch`, `minor`, `major` ou `X.Y.Z`), utilize:
   ```bash
   # Simular sem alterar arquivos

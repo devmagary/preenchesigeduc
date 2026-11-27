@@ -96,9 +96,10 @@ As sugestões são organizadas sob a ótica de engenharia sênior, equilibrando 
   - Validar visualmente no Playwright nas resoluções `360×800` e `375×667`.
 - **Impacto técnico / Riscos:** Alteração isolada em `docs/index.html`, sem impacto nos pacotes `dist/` da extensão.
 
-### 6. Automação de Publicação nas Lojas (Chrome Web Store, Edge Add-ons e Firefox AMO)
+### 6. Automação de Publicação nas Lojas (Chrome Web Store, Edge Add-ons e Firefox AMO) — `[Concluído]`
 - **Prioridade:** P1 — Alta
 - **Dificuldade:** Média
+- **Status:** Concluído (`scripts/store-http.mjs` com `fetchWithRetry` para `429`/`5xx`, `scripts/cws-publish.mjs` atualizado, novos publicadores `scripts/edge-publish.mjs` [Partner Center API v1.1] e `scripts/amo-publish.mjs` [AMO API v5 JWT HS256] integrados ao `.github/workflows/release.yml` com `continue-on-error: true` e skip seguro quando faltam secrets, suíte unitária `tests/unit/store-publish.test.ts` e botões oficiais diretos na landing page `docs/index.html` para Chrome Web Store e Microsoft Edge Add-ons + selo `"Em breve na loja do Firefox"` com fallback `.zip`).
 - **Contexto:** A extensão foi aprovada na **Chrome Web Store** e no **Microsoft Edge Add-ons**, e está em análise no **Firefox Add-ons (AMO)**. Automatizar o envio de atualizações para essas lojas a cada nova release.
 - **Comportamento esperado:**
   - **Chrome Web Store:** Validar e ativar o fluxo existente (`scripts/cws-publish.mjs` + `.github/workflows/release.yml`) com os secrets `CWS_CLIENT_ID`, `CWS_CLIENT_SECRET`, `CWS_REFRESH_TOKEN` e `CWS_EXTENSION_ID`, atualizar o status público na landing page (`docs/index.html`) removendo o aviso de "em revisão" e adicionar botão direto para a loja oficial (`https://chromewebstore.google.com/detail/preenche-sigeduc/fafdmobaohddjlphkfkhfhahlpeffeji?hl=pt-br`).
@@ -216,9 +217,10 @@ As sugestões são organizadas sob a ótica de engenharia sênior, equilibrando 
 - **Comportamento esperado:** Página responsiva (desktop e mobile), zero requisições externas, simulador funcional dos 3 fluxos, amostra CETEP navegável + arquivo `.xlsx` real baixável, mantendo todos os links oficiais (`is.gd`, Releases e `privacidade.html`).
 - **Impacto técnico / Riscos:** Alterações isoladas em `docs/index.html`, `docs/amostra-cetep.xlsx` e `scripts/generate-sample-cetep.mjs`, sem impacto nos pacotes `dist/` da extensão.
 
-### 10. Detecção Automática de Navegador e Sugestão de Instalação na Landing Page
+### 10. Detecção Automática de Navegador e Sugestão de Instalação na Landing Page — `[Concluído]`
 - **Prioridade:** P2 — Média
 - **Dificuldade:** Baixa
+- **Status:** Concluído (`docs/index.html` com `detectBrowserTarget()` 100% local via `navigator.userAgent` / `navigator.userAgentData` cobrindo Chrome, Edge Desktop, Firefox Desktop/Android, Edge Android e Mises/Lemur; adapta `#hero-primary-cta`, atualiza o banner `#dl-detect-banner`, destaca o card recomendado `.recommended` com `"★ Recomendado para você"`, pré-seleciona a aba correspondente do guia rápido e foi aprovado na auditoria visual em Modo Cego com `0 grave, 0 médio, 0 menor`).
 - **Contexto:** Professores leigos frequentemente ficam em dúvida sobre qual pacote ou loja escolher ao acessar a página de download.
 - **Comportamento esperado:**
   - Detectar localmente via `navigator.userAgent` / `navigator.userAgentData` o navegador e plataforma do visitante (Chrome Desktop, Edge Desktop, Edge Canary Android, Mises/Lemur Android, Firefox Desktop/Android).
