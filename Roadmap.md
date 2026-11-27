@@ -96,6 +96,15 @@ As sugestões são organizadas sob a ótica de engenharia sênior, equilibrando 
   - Validar visualmente no Playwright nas resoluções `360×800` e `375×667`.
 - **Impacto técnico / Riscos:** Alteração isolada em `docs/index.html`, sem impacto nos pacotes `dist/` da extensão.
 
+### 6. Automação de Publicação na Chrome Web Store e Firefox Add-ons (AMO)
+- **Prioridade:** P1 — Alta
+- **Dificuldade:** Média
+- **Contexto:** A extensão foi aprovada na Chrome Web Store e está em análise no Firefox Add-ons (AMO). Automatizar o envio de atualizações para ambas as lojas a cada nova release.
+- **Comportamento esperado:**
+  - **Chrome Web Store:** Validar e ativar o fluxo existente (`scripts/cws-publish.mjs` + `.github/workflows/release.yml`) com os secrets `CWS_CLIENT_ID`, `CWS_CLIENT_SECRET`, `CWS_REFRESH_TOKEN` e `CWS_EXTENSION_ID`, atualizando o status público na landing page.
+  - **Firefox Add-ons (AMO):** Criar script de publicação automática (ex.: `scripts/amo-publish.mjs` via API AMO / `web-ext sign` com `AMO_JWT_ISSUER` e `AMO_JWT_SECRET`) e integrá-lo ao `.github/workflows/release.yml` para envio automático em novas tags `v*`.
+- **Impacto técnico / Riscos:** Requer configuração de secrets no GitHub Actions, tratamento de erros/rate-limit das APIs das lojas e testes unitários de fluxo sem expor credenciais.
+
 ## P2 — Média Prioridade
 
 ### 1. Opção de Aumento do Tamanho do Texto (Acessibilidade) — `[Concluído]`
