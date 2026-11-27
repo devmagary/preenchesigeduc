@@ -28,10 +28,10 @@ function createManifest({ firefox = false, e2e = false, version = readPackageVer
 
   const manifest = {
     manifest_version: 3,
-    name: 'Preenche SIGEduc',
+    name: '__MSG_extName__',
     version,
-    description:
-      'Importa planilhas de notas e frequências para preenchimento assistido no SIGEduc-BA e extrai turmas, alunos e atividades.',
+    default_locale: 'pt_BR',
+    description: '__MSG_extDesc__',
     permissions: ['activeTab'],
     icons: {
       16: 'icons/icon16.png',
@@ -39,7 +39,7 @@ function createManifest({ firefox = false, e2e = false, version = readPackageVer
       128: 'icons/icon128.png',
     },
     action: {
-      default_title: 'Preenche SIGEduc',
+      default_title: '__MSG_extName__',
       default_popup: 'popup.html',
       default_icon: {
         16: 'icons/icon16.png',
@@ -120,6 +120,23 @@ function copyDirContents(srcDir, destDir) {
   }
 }
 
+function writeDefaultLocalePtBr(destDir) {
+  const localeDir = path.join(destDir, '_locales', 'pt_BR');
+  fs.mkdirSync(localeDir, { recursive: true });
+  const messages = {
+    extName: {
+      message: 'Preenche SIGEduc',
+      description: 'Nome oficial da extensão exibido no navegador e nas lojas.',
+    },
+    extDesc: {
+      message:
+        'Importa planilhas de notas e frequências para preenchimento assistido no SIGEduc-BA e extrai turmas, alunos e atividades.',
+      description: 'Descrição curta da extensão exibida no navegador e nas lojas.',
+    },
+  };
+  fs.writeFileSync(path.join(localeDir, 'messages.json'), JSON.stringify(messages, null, 2), 'utf8');
+}
+
 export function getDirSizeBytes(dir) {
   let total = 0;
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -144,6 +161,7 @@ async function runBuild() {
   fs.copyFileSync(path.join(rootDir, 'src/popup/popup.html'), path.join(stageDir, 'popup.html'));
   fs.copyFileSync(path.join(rootDir, 'src/popup/popup.css'), path.join(stageDir, 'popup.css'));
   generateIcons(stageDir);
+  writeDefaultLocalePtBr(stageDir);
 
   // Copy to targets
   copyDirContents(stageDir, distChrome);

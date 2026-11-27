@@ -17,13 +17,26 @@ describe('release script & manifest version sync', () => {
     expect(() => computeNextVersion('1.0.0', 'invalida')).toThrow(/Especificação de versão inválida/);
   });
 
-  it('mantém manifest.json de dist/chrome e dist/firefox sincronizados com package.json', () => {
+  it('mantém manifest.json e _locales/pt_BR/messages.json válidos e sincronizados em dist/chrome e dist/firefox', () => {
     const pkg = JSON.parse(fs.readFileSync(path.join(rootDir, 'package.json'), 'utf8'));
     for (const target of ['chrome', 'firefox']) {
-      const mPath = path.join(rootDir, 'dist', target, 'manifest.json');
+      const targetDir = path.join(rootDir, 'dist', target);
+      const mPath = path.join(targetDir, 'manifest.json');
       if (fs.existsSync(mPath)) {
         const manifest = JSON.parse(fs.readFileSync(mPath, 'utf8'));
         expect(manifest.version).toBe(pkg.version);
+        expect(manifest.default_locale).toBe('pt_BR');
+        expect(manifest.name).toBe('__MSG_extName__');
+        expect(manifest.description).toBe('__MSG_extDesc__');
+        expect(manifest.action?.default_title).toBe('__MSG_extName__');
+
+        const localePath = path.join(targetDir, '_locales', 'pt_BR', 'messages.json');
+        expect(fs.existsSync(localePath)).toBe(true);
+        const messages = JSON.parse(fs.readFileSync(localePath, 'utf8'));
+        expect(messages.extName?.message).toBe('Preenche SIGEduc');
+        expect(messages.extName?.message.length).toBeLessThanOrEqual(45);
+        expect(messages.extDesc?.message).toContain('SIGEduc-BA');
+        expect(messages.extDesc?.message.length).toBeLessThanOrEqual(132);
       }
     }
   });
