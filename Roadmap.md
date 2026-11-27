@@ -96,12 +96,13 @@ As sugestões são organizadas sob a ótica de engenharia sênior, equilibrando 
   - Validar visualmente no Playwright nas resoluções `360×800` e `375×667`.
 - **Impacto técnico / Riscos:** Alteração isolada em `docs/index.html`, sem impacto nos pacotes `dist/` da extensão.
 
-### 6. Automação de Publicação na Chrome Web Store e Firefox Add-ons (AMO)
+### 6. Automação de Publicação nas Lojas (Chrome Web Store, Edge Add-ons e Firefox AMO)
 - **Prioridade:** P1 — Alta
 - **Dificuldade:** Média
-- **Contexto:** A extensão foi aprovada na Chrome Web Store e está em análise no Firefox Add-ons (AMO). Automatizar o envio de atualizações para ambas as lojas a cada nova release.
+- **Contexto:** A extensão foi aprovada na **Chrome Web Store** e no **Microsoft Edge Add-ons**, e está em análise no **Firefox Add-ons (AMO)**. Automatizar o envio de atualizações para essas lojas a cada nova release.
 - **Comportamento esperado:**
   - **Chrome Web Store:** Validar e ativar o fluxo existente (`scripts/cws-publish.mjs` + `.github/workflows/release.yml`) com os secrets `CWS_CLIENT_ID`, `CWS_CLIENT_SECRET`, `CWS_REFRESH_TOKEN` e `CWS_EXTENSION_ID`, atualizar o status público na landing page (`docs/index.html`) removendo o aviso de "em revisão" e adicionar botão direto para a loja oficial (`https://chromewebstore.google.com/detail/preenche-sigeduc/fafdmobaohddjlphkfkhfhahlpeffeji?hl=pt-br`).
+  - **Microsoft Edge Add-ons:** Adicionar script de publicação automática (API v1.1 da Partner Center / Edge Add-ons) no `.github/workflows/release.yml` e incluir o botão/link oficial da loja do Edge na landing page (`docs/index.html`).
   - **Firefox Add-ons (AMO):** Criar script de publicação automática (ex.: `scripts/amo-publish.mjs` via API AMO / `web-ext sign` com `AMO_JWT_ISSUER` e `AMO_JWT_SECRET`) e integrá-lo ao `.github/workflows/release.yml` para envio automático em novas tags `v*`.
 - **Impacto técnico / Riscos:** Requer configuração de secrets no GitHub Actions, tratamento de erros/rate-limit das APIs das lojas e testes unitários de fluxo sem expor credenciais.
 
